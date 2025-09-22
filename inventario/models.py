@@ -108,6 +108,9 @@ class Bodega(models.Model):
     activa = models.BooleanField(default=True)
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     
+    def __str__(self):
+        return f"{self.nombre} ({self.codigo})"
+    
 
 
 

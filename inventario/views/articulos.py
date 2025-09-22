@@ -5,20 +5,7 @@ from django.views.decorators.http import require_http_methods
 import json
 from ..models import Articulo, Producto, Bodega, MovimientoArticulo
 
-def producto_articulos(request, producto_id):
-    producto = get_object_or_404(Producto, id=producto_id)
-    articulos = Articulo.objects.filter(producto=producto)
-    data = []
-    for articulo in articulos:
-        data.append({
-            'id': articulo.pk,
-            'codigo_interno': articulo.codigo_interno,
-            'numero_serie': articulo.numero_serie,
-            'estado': articulo.estado,
-            'bodega': articulo.bodega.nombre,
-            'fecha_entrada': articulo.fecha_entrada.isoformat(),
-        })
-    return JsonResponse({'articulos': data})
+
 
 @csrf_exempt
 @require_http_methods(["POST"])
