@@ -224,6 +224,192 @@ class MovimientoArticulo(models.Model):
         verbose_name_plural = "Movimientos de Artículos"
 
 
+class Pedido(models.Model):
+    """Modelo para manejar pedidos de productos"""
+    ESTADOS_PEDIDO = [
+        ('pendiente', 'Pendiente'),
+        ('preparando', 'Preparando'),
+        ('listo', 'Listo para Envío'),
+        ('enviado', 'Enviado'),
+        ('entregado', 'Entregado'),
+        ('cancelado', 'Cancelado'),
+        ('devuelto', 'Devuelto'),
+    ]
+    
+    TIPOS_PEDIDO = [
+        ('venta', 'Venta'),
+        ('transferencia', 'Transferencia'),
+        ('interno', 'Uso Interno'),
+        ('devolucion', 'Devolución'),
+    ]
+    
+    # Identificación
+    numero_pedido = models.CharField(max_length=50, unique=True, help_text="Número único del pedido")
+    tipo_pedido = models.CharField(max_length=15, choices=TIPOS_PEDIDO, default='venta')
+    estado = models.CharField(max_length=15, choices=ESTADOS_PEDIDO, default='pendiente')
+    
+    # Fechas
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+    fecha_requerida = models.DateTimeField(help_text="Fecha cuando se necesita el pedido")
+    fecha_completado = models.DateTimeField(null=True, blank=True)
+    
+    # Referencias
+    usuario_creador = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='pedidos_creados')
+    usuario_asignado = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='pedidos_asignados')
+    
+    # Información del cliente/destino
+    cliente_nombre = models.CharField(max_length=200, blank=True, null=True)
+    cliente_email = models.EmailField(blank=True, null=True)
+    cliente_telefono = models.CharField(max_length=20, blank=True, null=True)
+    direccion_entrega = models.TextField(blank=True, null=True)
+    
+    # Notas y observaciones
+    notas = models.TextField(blank=True, null=True)
+    observaciones_internas = models.TextField(blank=True, null=True)
+    
+    # Totales (se calculan automáticamente)
+    total_articulos = models.PositiveIntegerField(default=0)
+    valor_total = models.DecimalField(max_digits=12, decimal_places=2, default=Decimal('0.00'))
+    
+    def save(self, *args, **kwargs):
+        # Generar número de pedido si no existe
+        if not self.numero_pedido:
+            import uuid
+            self.numero_pedido = f"PED-{uuid.uuid4().hex[:8].upper()}"
+        super().save(*args, **kwargs)
+    
+    def calcular_totales(self):
+        """Calcula y actualiza los totales del pedido"""
+        detalles = self.detalles.all()
+        self.total_articulos = sum(detalle.cantidad for detalle in detalles)
+        self.valor_total = sum(detalle.subtotal() for detalle in detalles)
+        self.save(update_fields=['total_articulos', 'valor_total'])
+    
+    def puede_ser_procesado(self):
+        """Verifica si el pedido puede ser procesado (hay stock suficiente)"""
+        for detalle in self.detalles.all():
+            if not detalle.verificar_disponibilidad():
+                return False
+        return True
+    
+    def obtener_ubicaciones_productos(self):
+        """Retorna productos, cantidades y ubicaciones en bodega para este pedido"""
+        ubicaciones = []
+        for detalle in self.detalles.select_related('producto'):
+            # Buscar artículos disponibles del producto
+            articulos_disponibles = Articulo.objects.filter(
+                producto=detalle.producto,
+                estado='disponible'
+            ).select_related('bodega', 'zona')
+            
+            cantidad_requerida = detalle.cantidad
+            cantidad_encontrada = 0
+            ubicaciones_producto = []
+            
+            # Agrupar por bodega
+            bodegas_disponibles = {}
+            for articulo in articulos_disponibles:
+                bodega_key = articulo.bodega.nombre
+                if bodega_key not in bodegas_disponibles:
+                    bodegas_disponibles[bodega_key] = {
+                        'bodega': articulo.bodega,
+                        'articulos': [],
+                        'cantidad': 0
+                    }
+                bodegas_disponibles[bodega_key]['articulos'].append(articulo)
+                bodegas_disponibles[bodega_key]['cantidad'] += 1
+            
+            # Seleccionar artículos hasta cumplir la cantidad requerida
+            for bodega_info in bodegas_disponibles.values():
+                if cantidad_encontrada >= cantidad_requerida:
+                    break
+                
+                cantidad_en_esta_bodega = min(
+                    bodega_info['cantidad'],
+                    cantidad_requerida - cantidad_encontrada
+                )
+                
+                if cantidad_en_esta_bodega > 0:
+                    ubicaciones_producto.append({
+                        'bodega': bodega_info['bodega'].nombre,
+                        'bodega_id': bodega_info['bodega'].id,
+                        'codigo_bodega': bodega_info['bodega'].codigo,
+                        'cantidad_disponible': cantidad_en_esta_bodega,
+                        'articulos': bodega_info['articulos'][:cantidad_en_esta_bodega]
+                    })
+                    cantidad_encontrada += cantidad_en_esta_bodega
+            
+            ubicaciones.append({
+                'producto_id': detalle.producto.id,
+                'producto_nombre': detalle.producto.nombre,
+                'producto_sku': detalle.producto.sku,
+                'cantidad_pedida': detalle.cantidad,
+                'cantidad_disponible': cantidad_encontrada,
+                'cantidad_faltante': max(0, detalle.cantidad - cantidad_encontrada),
+                'precio_unitario': detalle.precio_unitario,
+                'subtotal': detalle.subtotal(),
+                'ubicaciones': ubicaciones_producto,
+                'completamente_disponible': cantidad_encontrada >= detalle.cantidad
+            })
+        
+        return ubicaciones
+    
+    def __str__(self):
+        return f"{self.numero_pedido} - {self.cliente_nombre or 'Sin cliente'}"
+    
+    class Meta:
+        ordering = ['-fecha_creacion']
+        verbose_name_plural = "Pedidos"
+
+
+class DetallePedido(models.Model):
+    """Detalle de productos en un pedido"""
+    pedido = models.ForeignKey(Pedido, on_delete=models.CASCADE, related_name='detalles')
+    producto = models.ForeignKey(Producto, on_delete=models.CASCADE)
+    
+    cantidad = models.PositiveIntegerField(validators=[MinValueValidator(1)])
+    precio_unitario = models.DecimalField(max_digits=10, decimal_places=2, validators=[MinValueValidator(Decimal('0.00'))])
+    
+    # Información adicional
+    notas = models.TextField(blank=True, null=True)
+    fecha_agregado = models.DateTimeField(auto_now_add=True)
+    
+    def subtotal(self):
+        """Calcula el subtotal para este detalle"""
+        return self.cantidad * self.precio_unitario
+    
+    def verificar_disponibilidad(self):
+        """Verifica si hay suficiente stock disponible del producto"""
+        cantidad_disponible = Articulo.objects.filter(
+            producto=self.producto,
+            estado='disponible'
+        ).count()
+        return cantidad_disponible >= self.cantidad
+    
+    def save(self, *args, **kwargs):
+        # Si no se especifica precio, usar el precio de venta del producto
+        if not self.precio_unitario:
+            self.precio_unitario = self.producto.precio_venta
+        super().save(*args, **kwargs)
+        
+        # Recalcular totales del pedido
+        self.pedido.calcular_totales()
+    
+    def delete(self, *args, **kwargs):
+        pedido = self.pedido
+        result = super().delete(*args, **kwargs)
+        # Recalcular totales después de eliminar
+        pedido.calcular_totales()
+        return result
+    
+    def __str__(self):
+        return f"{self.pedido.numero_pedido} - {self.producto.nombre} x{self.cantidad}"
+    
+    class Meta:
+        unique_together = ['pedido', 'producto']  # Un producto por pedido
+        verbose_name_plural = "Detalles de Pedidos"
+
+
 
 
 

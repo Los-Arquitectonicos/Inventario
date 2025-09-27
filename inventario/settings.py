@@ -37,7 +37,7 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-^nwv(u%i^tnp$!6iv^g^4+ye=g
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'True').lower() == 'true'
 
-ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', 'localhost,127.0.0.1,testserver').split(',')
 
 
 # Application definition
@@ -88,11 +88,14 @@ WSGI_APPLICATION = 'inventario.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'provesi_db',
-        'USER': 'provesi_user',
-        'PASSWORD': 'provesi',
-        'HOST': '172.31.18.62',
-        'PORT': '5432',
+        'NAME': os.getenv('DB_NAME', 'provesi_db'),
+        'USER': os.getenv('DB_USER', 'provesi_user'),
+        'PASSWORD': os.getenv('DB_PASSWORD', 'provesi'),
+        'HOST': os.getenv('DB_HOST', '172.31.18.62'),
+        'PORT': os.getenv('DB_PORT', '5432'),
+        'OPTIONS': {
+            'connect_timeout': 10,
+        }
     }
 }
 

@@ -1,13 +1,26 @@
-# Inventario
+# 🏪 Sistema de Inventario y Pedidos
 
-A Django web application for inventory management with PostgreSQL database support.
+Sistema integral de gestión de inventario con manejo de pedidos, desarrollado en Django con base de datos PostgreSQL.
 
-## Features
+## ✨ Características Principales
 
-- Django 5.2.6 framework
-- PostgreSQL database integration
-- Environment-based configuration
-- Ready-to-deploy structure
+- **🎯 Gestión Completa de Inventario:** Productos, artículos, bodegas y movimientos
+- **📦 Sistema de Pedidos:** Creación y seguimiento de pedidos con ubicaciones automáticas
+- **🐘 PostgreSQL:** Base de datos robusta para producción
+- **🔧 API RESTful:** Endpoints completos para todas las operaciones
+- **⚡ JMeter Testing:** Suite de pruebas de carga incluida
+- **🌍 Configuración Flexible:** Variables de entorno para diferentes ambientes
+
+## 🚀 Configuración Rápida
+
+### **Opción 1: Script Automático (Recomendado)**
+```bash
+# Instalar dependencias y configurar automáticamente
+pip install -r requirements.txt
+python setup_postgresql.py
+```
+
+### **Opción 2: Configuración Manual**
 
 ## Prerequisites
 
@@ -34,46 +47,29 @@ A Django web application for inventory management with PostgreSQL database suppo
    pip install -r requirements.txt
    ```
 
-4. **Configure environment variables:**
+4. **Configurar PostgreSQL:**
    ```bash
    cp .env.example .env
-   ```
-   
-   Edit `.env` file with your database credentials:
-   ```
-   DB_NAME=inventario_db
-   DB_USER=your_db_user
-   DB_PASSWORD=your_db_password
-   DB_HOST=localhost
-   DB_PORT=5432
-   SECRET_KEY=your-secret-key-here
-   DEBUG=True
-   ALLOWED_HOSTS=localhost,127.0.0.1
+   # Editar .env con tus credenciales de PostgreSQL
    ```
 
-5. **Create PostgreSQL database:**
-   ```sql
-   CREATE DATABASE inventario_db;
-   CREATE USER inventario_user WITH PASSWORD 'your_password';
-   GRANT ALL PRIVILEGES ON DATABASE inventario_db TO inventario_user;
-   ```
-
-6. **Run database migrations:**
+5. **Ejecutar migraciones:**
    ```bash
    python manage.py migrate
    ```
 
-7. **Create a superuser (optional):**
-   ```bash
-   python manage.py createsuperuser
-   ```
-
-8. **Run the development server:**
+6. **Iniciar servidor:**
    ```bash
    python manage.py runserver
    ```
 
-The application will be available at `http://localhost:8000`
+🌐 **Aplicación disponible en:** `http://localhost:8000`
+
+## 📋 Documentación Completa
+
+- **📖 [Configuración PostgreSQL](POSTGRESQL_README.md)** - Guía detallada de base de datos
+- **🎯 [Sistema de Pedidos](PEDIDOS_README.md)** - API y funcionalidades de pedidos  
+- **⚡ [Pruebas JMeter](tests/JMeter_README.md)** - Suite de pruebas de carga
 
 ## Configuration
 
@@ -93,22 +89,50 @@ The application uses PostgreSQL as the default database. Configuration is handle
 - `DEBUG`: Debug mode (True/False)
 - `ALLOWED_HOSTS`: Comma-separated list of allowed hosts
 
-## Project Structure
+## 📁 Estructura del Proyecto
 
 ```
 inventario/
-├── inventario/         # Main Django project directory
-│   ├── __init__.py
-│   ├── asgi.py        # ASGI configuration
-│   ├── settings.py    # Django settings with PostgreSQL config
-│   ├── urls.py        # URL configuration
-│   └── wsgi.py        # WSGI configuration
-├── manage.py          # Django management script
-├── requirements.txt   # Python dependencies
-├── .env.example       # Environment variables template
-├── .gitignore        # Git ignore rules
-└── README.md         # This file
+├── 🏪 inventario/              # Aplicación principal Django
+│   ├── 📝 models.py           # Modelos: Productos, Pedidos, Artículos
+│   ├── ⚙️  settings.py        # Configuración PostgreSQL
+│   ├── 🌐 urls.py             # URLs principales
+│   └── 📂 views/              # Controladores API
+│       ├── pedidos.py         # 📦 API de Pedidos  
+│       ├── productos.py       # 🏷️  API de Productos
+│       ├── articulos.py       # 📋 API de Artículos
+│       └── bodegas.py         # 🏬 API de Bodegas
+├── 🧪 tests/                  # Suite completa de pruebas
+│   ├── ⚡ inventario_load_test.jmx    # Pruebas JMeter
+│   ├── 📊 test_complete_api.py         # Tests API Python
+│   └── 📋 create_orders_test_data.py  # Datos de prueba
+├── 🐘 setup_postgresql.py     # Script de configuración automática
+├── 📋 requirements.txt        # Dependencias Python
+├── 🔧 .env.example           # Plantilla variables de entorno
+└── 📖 DOCUMENTACIÓN/
+    ├── README.md              # Esta guía
+    ├── PEDIDOS_README.md      # Sistema de Pedidos
+    └── POSTGRESQL_README.md   # Configuración PostgreSQL
 ```
+
+## 🎯 Funcionalidades Principales
+
+### **📦 Sistema de Pedidos**
+- ✅ Creación y gestión de pedidos
+- ✅ Función `obtener_ubicaciones_productos()` - **Característica Principal**
+- ✅ API RESTful completa (7 endpoints)
+- ✅ Seguimiento automático de ubicaciones en bodega
+
+### **🏪 Gestión de Inventario**
+- ✅ Catálogo de productos con categorías
+- ✅ Control de artículos individuales
+- ✅ Gestión de bodegas y zonas
+- ✅ Movimientos de inventario
+
+### **⚡ Testing y Performance**
+- ✅ Suite JMeter para pruebas de carga
+- ✅ Tests unitarios Python
+- ✅ Datos de prueba automatizados
 
 ## Development
 

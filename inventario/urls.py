@@ -16,7 +16,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from .views import productos, bodegas, articulos, movimientos
+from .views import productos, bodegas, articulos, movimientos, pedidos
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -37,4 +37,13 @@ urlpatterns = [
     
     # Movement endpoints
     path('api/articulos/<int:articulo_id>/movimientos/', movimientos.movimientos_articulo, name='movimientos_articulo'),
+    
+    # Order endpoints
+    path('api/pedidos/', pedidos.listar_pedidos, name='listar_pedidos'),
+    path('api/pedidos/crear/', pedidos.crear_pedido, name='crear_pedido'),
+    path('api/pedidos/<int:pedido_id>/', pedidos.obtener_pedido, name='obtener_pedido'),
+    path('api/pedidos/<int:pedido_id>/actualizar/', pedidos.actualizar_pedido, name='actualizar_pedido'),
+    path('api/pedidos/<int:pedido_id>/eliminar/', pedidos.eliminar_pedido, name='eliminar_pedido'),
+    path('api/pedidos/<int:pedido_id>/ubicaciones/', pedidos.ubicaciones_productos_pedido, name='ubicaciones_productos_pedido'),
+    path('api/pedidos/<int:pedido_id>/estado/', pedidos.cambiar_estado_pedido, name='cambiar_estado_pedido'),
 ]

@@ -7,7 +7,13 @@ This comprehensive JMeter test suite is designed to perform load testing on the 
 ### 1. `inventario_load_test.jmx` - Complete Load Test Suite
 Comprehensive load testing covering all API endpoints with realistic scenarios.
 
-### 2. `product_creation_test.jmx` - Product Creation Focus
+### 2. `inventario_get_only_test.jmx` - Product Inventory GET Tests
+Focused testing on product and inventory GET operations only.
+
+### 3. `pedidos_get_test.jmx` - Order Management GET Tests ⭐ NEW
+Specialized testing for order management system GET operations, including the main `obtener_ubicaciones_productos()` function.
+
+### 4. `product_creation_test.jmx` - Product Creation Focus
 Focused testing on product creation endpoint with high concurrency.
 
 ## Test Configuration
@@ -69,7 +75,33 @@ jmeter -t tests/inventario_load_test.jmx
 jmeter -n -t tests/inventario_load_test.jmx -l results.jtl -e -o report/
 ```
 
-### Option 2: Product Creation Focus Test
+### Option 2: Product Inventory GET Tests
+```bash
+# GUI Mode
+jmeter -t tests/inventario_get_only_test.jmx
+
+# Command Line Mode
+jmeter -n -t tests/inventario_get_only_test.jmx -l inventory_results.jtl -e -o inventory_report/
+```
+
+### Option 3: Order Management GET Tests (PEDIDOS) ⭐
+```bash
+# GUI Mode
+jmeter -t tests/pedidos_get_test.jmx
+
+# Command Line Mode - Tests the main obtener_ubicaciones_productos() function
+jmeter -n -t tests/pedidos_get_test.jmx -l orders_results.jtl -e -o orders_report/
+
+# With custom parameters
+jmeter -n -t tests/pedidos_get_test.jmx \
+  -Jthreads=20 \
+  -Jramp.time=30 \
+  -Jloops=5 \
+  -l orders_stress.jtl \
+  -e -o orders_stress_report/
+```
+
+### Option 4: Product Creation Focus Test
 ```bash
 # GUI Mode
 jmeter -t tests/product_creation_test.jmx
@@ -78,7 +110,55 @@ jmeter -t tests/product_creation_test.jmx
 jmeter -n -t tests/product_creation_test.jmx -l product_results.jtl -e -o product_report/
 ```
 
-### Option 3: Custom Parameters for Load Test
+## Test Focus: Order Management System (`pedidos_get_test.jmx`)
+
+### Endpoints Tested
+1. **GET /pedidos/** - Lista todos los pedidos
+2. **GET /pedidos/{id}/** - Obtiene pedido específico
+3. **GET /pedidos/{id}/detalles/** - Detalles del pedido
+4. **GET /pedidos/{id}/ubicaciones/** - 🎯 **FUNCIÓN PRINCIPAL** `obtener_ubicaciones_productos()`
+
+### Test Configuration for Orders
+- **Threads**: 15 concurrent users (configurable)
+- **Ramp-up**: 20 seconds
+- **Loops**: 3 iterations per thread
+- **Timer**: 800ms between requests
+- **Timeouts**: 10s normal, 15s for ubicaciones (complex query)
+
+### What Makes This Test Special
+This test specifically validates the **core requested functionality**:
+- **Products**: Returns product names and quantities
+- **Quantities**: Shows requested amounts per order
+- **Locations**: Shows warehouse locations for each product
+- **Performance**: Tests the complex join queries in `obtener_ubicaciones_productos()`
+
+### Expected JSON Response for Main Function
+```json
+{
+  "pedido_id": 1,
+  "productos_ubicaciones": [
+    {
+      "producto_nombre": "Laptop Dell",
+      "cantidad_solicitada": 2,
+      "articulos_disponibles": [
+        {
+          "articulo_id": 101,
+          "codigo": "LAP001", 
+          "ubicacion": "Bodega A - Zona Electrónicos"
+        }
+      ]
+    }
+  ]
+}
+```
+
+### Assertions for Orders Test
+- **HTTP 200**: All requests must succeed
+- **JSON Structure**: Validates pedidos array, detalles structure
+- **Core Function**: Validates pedido_id and productos_ubicaciones fields
+- **Data Integrity**: Ensures all required fields are present
+
+### Option 5: Custom Parameters for Load Test
 You can override default settings:
 ```bash
 jmeter -n -t tests/inventario_load_test.jmx \
