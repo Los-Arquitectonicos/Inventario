@@ -87,8 +87,12 @@ WSGI_APPLICATION = 'inventario.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'provesi_db',
+        'USER': 'provesi_user',
+        'PASSWORD': 'provesi',
+        'HOST': '172.31.18.62',
+        'PORT': '5432',
     }
 }
 
