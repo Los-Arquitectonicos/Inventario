@@ -1,27 +1,45 @@
-# JMeter Load Test for Product Creation
+# JMeter Load Testing Suite for Inventario System
 
-This JMX file is designed to test the product creation endpoint of the inventory management system using Apache JMeter.
+This comprehensive JMeter test suite is designed to perform load testing on the entire Inventario management system, covering all API endpoints with realistic usage patterns.
+
+## Available Test Files
+
+### 1. `inventario_load_test.jmx` - Complete Load Test Suite
+Comprehensive load testing covering all API endpoints with realistic scenarios.
+
+### 2. `product_creation_test.jmx` - Product Creation Focus
+Focused testing on product creation endpoint with high concurrency.
 
 ## Test Configuration
 
-### Default Settings
-- **Threads (Users)**: 10 concurrent users
+### Default Settings for Complete Suite (`inventario_load_test.jmx`)
+- **Read Operations**: 15 concurrent users (GET requests)
+- **Write Operations**: 5 concurrent users (POST/PUT requests)
 - **Ramp-up Time**: 30 seconds (gradual user increase)
-- **Loops**: 5 iterations per user
-- **Server**: http://127.0.0.1:8000 (Django development server)
+- **Loops**: 3 iterations per thread
+- **Server**: http://127.0.0.1:8000 (configurable)
 
-### What the Test Does
+### What the Complete Suite Tests
 
-1. **Product Creation Test**: 
-   - Creates unique products using dynamic data
-   - Uses thread numbers and random values for uniqueness
-   - Validates successful creation (200/201 status codes)
-   - Checks JSON response structure
+#### **Read Operations Thread Group (GET Requests)**
+1. **Get All Products** - Tests product listing performance
+2. **Get Product by ID** - Tests individual product retrieval with random IDs
+3. **Get All Warehouses** - Tests warehouse listing
+4. **Get Warehouse Inventory** - Tests complex inventory queries
+5. **Get Product Articles** - Tests product-article relationships
+6. **Get Article Movements** - Tests movement history tracking
 
-2. **Product Listing Test**:
-   - Fetches all products after creation
-   - Validates the response (200 status code)
-   - Includes 1-second delay between requests
+#### **Write Operations Thread Group (POST/PUT Requests)**
+1. **Create Products** - Tests product creation with unique data
+2. **Add Articles** - Tests article addition to existing products
+3. **Update Article Status** - Tests status changes and movement tracking
+
+### Dynamic Data Generation
+- **Unique Product Names**: Uses thread numbers and timestamps
+- **Random Pricing**: Realistic cost and sale price ranges
+- **Random SKUs**: Prevents conflicts during concurrent testing
+- **Variable Status Updates**: Tests different article states
+- **Time-based Identifiers**: Ensures data uniqueness
 
 ## Prerequisites
 
@@ -30,68 +48,128 @@ This JMX file is designed to test the product creation endpoint of the inventory
 
 ## How to Run
 
-### Option 1: GUI Mode (Recommended for Development)
-```bash
-# Start your Django server first
-cd /Users/pedropablosanintrujillo/GitHub/Inventario
-python manage.py runserver 8000
+### Preparation
+1. **Ensure Test Data Exists**:
+   ```bash
+   cd /Users/pedropablosanintrujillo/GitHub/Inventario
+   python tests/create_test_data.py
+   ```
 
-# In another terminal, open JMeter
+2. **Start Django Server**:
+   ```bash
+   python manage.py runserver 8000
+   ```
+
+### Option 1: Complete Load Test Suite (Recommended)
+```bash
+# GUI Mode (for development and monitoring)
+jmeter -t tests/inventario_load_test.jmx
+
+# Command Line Mode (for CI/CD)
+jmeter -n -t tests/inventario_load_test.jmx -l results.jtl -e -o report/
+```
+
+### Option 2: Product Creation Focus Test
+```bash
+# GUI Mode
 jmeter -t tests/product_creation_test.jmx
+
+# Command Line Mode
+jmeter -n -t tests/product_creation_test.jmx -l product_results.jtl -e -o product_report/
 ```
 
-### Option 2: Command Line Mode (for CI/CD)
-```bash
-# Start Django server
-python manage.py runserver 8000 &
-
-# Run JMeter test
-jmeter -n -t tests/product_creation_test.jmx -l results.jtl -e -o report/
-
-# Stop Django server when done
-kill %1
-```
-
-### Option 3: Custom Parameters
+### Option 3: Custom Parameters for Load Test
 You can override default settings:
 ```bash
-jmeter -n -t tests/product_creation_test.jmx \
-  -Jserver.host=localhost \
+jmeter -n -t tests/inventario_load_test.jmx \
+  -Jserver.host=127.0.0.1 \
   -Jserver.port=8000 \
-  -JTHREADS=20 \
-  -JRAMP_TIME=60 \
-  -JLOOPS=10 \
-  -l results.jtl
+  -Jread.threads=25 \
+  -Jwrite.threads=8 \
+  -Jramp.time=45 \
+  -Jloops=5 \
+  -l custom_results.jtl \
+  -e -o custom_report/
+```
+
+### Option 4: High Load Testing
+For stress testing:
+```bash
+jmeter -n -t tests/inventario_load_test.jmx \
+  -Jread.threads=50 \
+  -Jwrite.threads=15 \
+  -Jramp.time=60 \
+  -Jloops=10 \
+  -l stress_test.jtl \
+  -e -o stress_report/
 ```
 
 ## Test Results Interpretation
 
 ### Key Metrics to Monitor
-- **Response Time**: How long each request takes
-- **Throughput**: Requests per second
-- **Error Rate**: Percentage of failed requests
-- **Success Rate**: Should be 100% for healthy API
 
-### Expected Behavior
-- All requests should return 200 or 201 status codes
-- Product creation should return JSON with product ID
-- Response times should be consistent (< 1000ms typically)
+#### **Performance Metrics**
+- **Average Response Time**: Should be < 500ms for GET, < 1000ms for POST/PUT
+- **95th Percentile**: Should be < 1000ms for GET, < 2000ms for POST/PUT
+- **Throughput**: Target 50+ req/sec for reads, 10+ req/sec for writes
+- **Error Rate**: Should be 0% under normal load
 
-## Test Data
+#### **Expected Response Times by Endpoint**
+- **GET /api/productos/**: 50-200ms (simple list)
+- **GET /api/bodegas/{id}/inventario/**: 200-800ms (complex query)
+- **POST /api/productos/crear/**: 300-1000ms (database write)
+- **POST /api/articulos/agregar/**: 200-600ms (simple insert)
+- **PUT /api/articulos/{id}/estado/**: 300-800ms (update + movement log)
 
-The test creates products with:
-- **Name**: "Test Product JMeter {thread}-{random}"
-- **SKU**: "SKU-JMETER-{thread}-{random}"
-- **Cost Price**: Random between $10-100
-- **Sale Price**: Random between $150-300
-- **Description**: Includes thread information
-- **Stock Limits**: Random minimum (5-20) and maximum (50-200)
+#### **Scalability Indicators**
+- **Linear Response Time**: Response times should scale linearly with load
+- **Stable Throughput**: Throughput should remain stable during test
+- **Memory Usage**: Django server memory should remain stable
+- **Database Connections**: Should not exceed connection pool limits
 
-## Assertions Included
+## Test Data Patterns
 
-1. **HTTP Status Code**: Validates 200/201 responses
-2. **JSON Structure**: Ensures product ID is returned
-3. **Response Format**: Validates JSON content type
+### Products Created
+- **Name**: "Load Test Product {thread}-{random}"
+- **SKU**: "LOAD-{thread}-{random}" (unique identifier)
+- **Cost Price**: $50-200 (random with cents)
+- **Sale Price**: $250-500 (realistic markup)
+- **Description**: Includes thread info and timestamp
+- **Stock Limits**: Min 5-25, Max 100-300
+
+### Articles Added
+- **Product ID**: Random from existing products (1-6)
+- **Warehouse ID**: Random from existing warehouses (1-2)
+- **Serial Number**: "LOAD-{thread}-{random6digits}"
+- **Barcode**: 13-digit random number
+- **Lot**: "LOTE-{random4digits}"
+
+### Status Updates
+- **States**: Random from "reservado", "vendido", "mantenimiento"
+- **Reasons**: Include thread info and timestamp
+- **Movement Tracking**: Automatically logged in MovimientoArticulo
+
+## Assertions and Validations
+
+### HTTP Response Assertions
+- **GET Requests**: Must return 200 OK
+- **POST Requests**: Must return 200 OK or 201 Created
+- **PUT Requests**: Must return 200 OK
+
+### JSON Structure Assertions
+- **Product Lists**: Must contain "productos" array
+- **Product Creation**: Must return product with "id" field
+- **Article Addition**: Must return "success": true
+- **Status Updates**: Must return success confirmation
+
+### Performance Assertions (Optional)
+Can be enabled for performance requirements:
+- **Response Time**: < 2000ms for all requests
+- **Throughput**: > 10 requests/second minimum
+
+### Content Type Validation
+- All responses must be "application/json"
+- Request headers properly set for JSON content
 
 ## Troubleshooting
 
@@ -121,29 +199,150 @@ The test creates products with:
 ## Customization
 
 ### Modify Test Parameters
-Edit the "User Defined Variables" section in the Test Plan:
-- `BASE_URL`: Server address
-- `THREADS`: Number of concurrent users
-- `RAMP_TIME`: Time to reach full load
-- `LOOPS`: Iterations per thread
+The complete load test supports these variables:
+- `SERVER_HOST`: Server address (default: 127.0.0.1)
+- `SERVER_PORT`: Server port (default: 8000)
+- `READ_THREADS`: Concurrent read operations (default: 15)
+- `WRITE_THREADS`: Concurrent write operations (default: 5)
+- `RAMP_TIME`: Time to reach full load (default: 30s)
+- `LOOPS`: Iterations per thread (default: 3)
 
-### Add More Test Scenarios
-You can extend this test to include:
-- Product updates (PUT requests)
+### Test Scenarios Extension
+You can extend these tests to include:
+
+#### **Additional Read Scenarios**
+- Category-based product filtering
+- Supplier-based queries
+- Date-range movement queries
+- Advanced inventory reporting
+
+#### **Additional Write Scenarios**
+- Product updates (PUT /api/productos/{id}/)
 - Product deletion (DELETE requests)
-- Article creation after product creation
-- Error handling tests (invalid data)
+- Bulk operations
+- Category and supplier management
+
+#### **Error Handling Tests**
+- Invalid product IDs
+- Malformed JSON data
+- Missing required fields
+- Database constraint violations
+
+### Thread Group Customization
+```xml
+<!-- Example: Add a third thread group for admin operations -->
+<ThreadGroup testname="Admin Operations">
+  <stringProp name="ThreadGroup.num_threads">2</stringProp>
+  <stringProp name="ThreadGroup.ramp_time">10</stringProp>
+  <!-- Add admin-specific endpoints -->
+</ThreadGroup>
+```
 
 ## Integration with CI/CD
 
-Example GitHub Actions workflow:
+### GitHub Actions Example
 ```yaml
-- name: Load Test
-  run: |
-    python manage.py runserver 8000 &
-    sleep 5
-    jmeter -n -t tests/product_creation_test.jmx -l results.jtl
-    kill %1
+name: Load Testing
+on: [push, pull_request]
+
+jobs:
+  load-test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.9
+    
+    - name: Install dependencies
+      run: |
+        pip install -r requirements.txt
+    
+    - name: Setup database
+      run: |
+        python manage.py migrate
+        python tests/create_test_data.py
+    
+    - name: Start Django server
+      run: |
+        python manage.py runserver 8000 &
+        sleep 10
+    
+    - name: Install JMeter
+      run: |
+        wget https://dlcdn.apache.org/jmeter/binaries/apache-jmeter-5.6.2.tgz
+        tar -xzf apache-jmeter-5.6.2.tgz
+    
+    - name: Run Load Tests
+      run: |
+        ./apache-jmeter-5.6.2/bin/jmeter -n \
+          -t tests/inventario_load_test.jmx \
+          -Jread.threads=10 \
+          -Jwrite.threads=3 \
+          -Jloops=2 \
+          -l load_test_results.jtl \
+          -e -o load_test_report/
+    
+    - name: Upload Results
+      uses: actions/upload-artifact@v2
+      with:
+        name: load-test-results
+        path: load_test_report/
 ```
 
-This JMX file provides a comprehensive load testing solution for your product creation API endpoint.
+### Jenkins Pipeline Example
+```groovy
+pipeline {
+    agent any
+    stages {
+        stage('Setup') {
+            steps {
+                sh 'pip install -r requirements.txt'
+                sh 'python manage.py migrate'
+                sh 'python tests/create_test_data.py'
+            }
+        }
+        stage('Load Test') {
+            steps {
+                sh 'python manage.py runserver 8000 &'
+                sh 'sleep 10'
+                sh '''
+                    jmeter -n -t tests/inventario_load_test.jmx \
+                    -l results.jtl -e -o report/
+                '''
+            }
+            post {
+                always {
+                    publishHTML([
+                        allowMissing: false,
+                        alwaysLinkToLastBuild: true,
+                        keepAll: true,
+                        reportDir: 'report',
+                        reportFiles: 'index.html',
+                        reportName: 'JMeter Load Test Report'
+                    ])
+                }
+            }
+        }
+    }
+}
+```
+
+## Test Results Analysis
+
+### Report Files Generated
+- **index.html**: Main dashboard with overview
+- **content/pages/**: Detailed reports by request type
+- **content/js/**: Interactive charts and graphs
+- **statistics.json**: Raw performance data
+
+### Key Reports to Review
+1. **Dashboard**: Overall performance summary
+2. **APDEX**: Application Performance Index
+3. **Requests Summary**: Per-endpoint performance
+4. **Errors Report**: Failed request analysis
+5. **Response Times Over Time**: Performance trends
+
+This comprehensive JMeter suite provides enterprise-grade load testing for your complete Inventario system.
