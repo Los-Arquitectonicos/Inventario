@@ -1,0 +1,2 @@
+timeStamp,elapsed,label,responseCode,responseMessage,threadName,dataType,success,failureMessage,bytes,sentBytes,grpThreads,allThreads,URL,Latency,IdleTime,Connect
+1758944347227,35,GET - Lista Pedidos (Debug),200,OK,Debug Thread Group 1-1,text,true,,7669,128,1,1,http://127.0.0.1:8001/api/pedidos/,33,0,8

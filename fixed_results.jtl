@@ -1,0 +1,4 @@
+timeStamp,elapsed,label,responseCode,responseMessage,threadName,dataType,success,failureMessage,bytes,sentBytes,grpThreads,allThreads,URL,Latency,IdleTime,Connect
+1758944428341,0,,Non HTTP response code: java.net.MalformedURLException,Non HTTP response message: Illegal character found in host: '{',Pedidos GET Tests 1-1,text,false,Test failed: code expected to match /200/,863,0,1,1,null,0,0,0
+1758944428352,0,,Non HTTP response code: java.net.MalformedURLException,Non HTTP response message: Illegal character found in host: '{',Pedidos GET Tests 1-1,text,false,Test failed: code expected to match /200/,863,0,1,1,null,0,0,0
+1758944428352,0,,Non HTTP response code: java.net.MalformedURLException,Non HTTP response message: Illegal character found in host: '{',Pedidos GET Tests 1-1,text,false,Test failed: code expected to match /200/,863,0,1,1,null,0,0,0

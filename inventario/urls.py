@@ -17,6 +17,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from .views import productos, bodegas, articulos, movimientos, pedidos
+import views_ 
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -46,4 +47,6 @@ urlpatterns = [
     path('api/pedidos/<int:pedido_id>/eliminar/', pedidos.eliminar_pedido, name='eliminar_pedido'),
     path('api/pedidos/<int:pedido_id>/ubicaciones/', pedidos.ubicaciones_productos_pedido, name='ubicaciones_productos_pedido'),
     path('api/pedidos/<int:pedido_id>/estado/', pedidos.cambiar_estado_pedido, name='cambiar_estado_pedido'),
-]
+    path('health-check/', views_.healthCheck)
+]   
+ 

@@ -1,0 +1,4 @@
+timeStamp,elapsed,label,responseCode,responseMessage,threadName,dataType,success,failureMessage,bytes,sentBytes,grpThreads,allThreads,URL,Latency,IdleTime,Connect
+1758944514749,32,GET - Lista Pedidos,200,OK,Pedidos GET Tests 1-1,text,true,,7669,128,1,1,http://127.0.0.1:8001/api/pedidos/,31,0,7
+1758944514792,7,GET - Pedido Individual,200,OK,Pedidos GET Tests 1-1,text,true,,3499,130,1,1,http://127.0.0.1:8001/api/pedidos/1/,7,0,0
+1758944514799,6,GET - Ubicaciones Productos,200,OK,Pedidos GET Tests 1-1,text,true,,2961,142,1,1,http://127.0.0.1:8001/api/pedidos/1/ubicaciones/,6,0,0
