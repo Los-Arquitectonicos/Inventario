@@ -85,19 +85,54 @@ WSGI_APPLICATION = 'inventario.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': os.getenv('DB_NAME', 'provesi_db'),
-        'USER': os.getenv('DB_USER', 'provesi_user'),
-        'PASSWORD': os.getenv('DB_PASSWORD', 'provesi'),
-        'HOST': os.getenv('DB_HOST', '172.31.18.62'),
-        'PORT': os.getenv('DB_PORT', '5432'),
-        'OPTIONS': {
-            'connect_timeout': 10,
+# Database
+# https://docs.djangoproject.com/en/5.1/ref/settings/#databases
+
+def get_database_config():
+    """
+    Configuración inteligente de base de datos con fallback automático
+    Prioridad: PostgreSQL -> SQLite (si PostgreSQL no disponible)
+    """
+    postgres_config = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql_psycopg2',
+            'NAME': 'provesi_db',
+            'USER': 'provesi_user',
+            'PASSWORD': 'provesi',
+            'HOST': '172.31.16.93',
+            'PORT': '5432',
+            'OPTIONS': {
+                'connect_timeout': 5,
+            }
         }
     }
-}
+    
+    sqlite_config = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
+    
+    # Intentar conectar a PostgreSQL primero
+    try:
+        import psycopg2
+        conn = psycopg2.connect(
+            host=postgres_config['default']['HOST'],
+            port=postgres_config['default']['PORT'],
+            database=postgres_config['default']['NAME'],
+            user=postgres_config['default']['USER'],
+            password=postgres_config['default']['PASSWORD'],
+            connect_timeout=3
+        )
+        conn.close()
+        print("🐘 PostgreSQL conectado exitosamente")
+        return postgres_config
+    except Exception as e:
+        print(f"⚠️ PostgreSQL no disponible ({type(e).__name__}), usando SQLite como fallback")
+        return sqlite_config
+
+DATABASES = get_database_config()
 
 
 # Password validation
