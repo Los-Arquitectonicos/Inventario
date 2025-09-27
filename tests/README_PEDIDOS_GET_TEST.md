@@ -83,34 +83,39 @@ curl http://localhost:8000/pedidos/1/ubicaciones/
 **Respuesta Esperada:**
 ```json
 {
+  "success": true,
   "pedido_id": 1,
-  "productos_ubicaciones": [
+  "numero_pedido": "PED-B15DF370",
+  "estado": "pendiente",
+  "ubicaciones_productos": [
     {
-      "producto_nombre": "Laptop Dell XPS 13",
-      "cantidad_solicitada": 2,
-      "articulos_disponibles": [
+      "producto_id": 1,
+      "producto_nombre": "Laptop HP EliteBook",
+      "producto_sku": "LAPTOP-001",
+      "cantidad_pedida": 2,
+      "cantidad_disponible": 2,
+      "cantidad_faltante": 0,
+      "precio_unitario": "1150.00",
+      "subtotal": "2300.00",
+      "ubicaciones": [
         {
-          "articulo_id": 15,
-          "codigo": "LAP001",
-          "ubicacion": "Bodega Principal - Zona Electrónicos"
-        },
-        {
-          "articulo_id": 16,
-          "codigo": "LAP002",
-          "ubicacion": "Bodega Principal - Zona Electrónicos"
+          "bodega": "Bodega Principal",
+          "bodega_id": 1,
+          "codigo_bodega": "BOD-001",
+          "cantidad_disponible": 2,
+          "articulos": [
+            {
+              "id": 1,
+              "codigo_interno": "LAPTOP-001-61C76D2C",
+              "numero_serie": "LAPTOP-001-7A4985CE",
+              "lote": "LOTE-202509-001",
+              "zona": "Zona A",
+              "ubicacion_completa": "Bodega Principal - Zona A"
+            }
+          ]
         }
-      ]
-    },
-    {
-      "producto_nombre": "Mouse Logitech",
-      "cantidad_solicitada": 1,
-      "articulos_disponibles": [
-        {
-          "articulo_id": 23,
-          "codigo": "MOU001",
-          "ubicacion": "Bodega Secundaria - Zona Accesorios"
-        }
-      ]
+      ],
+      "completamente_disponible": true
     }
   ]
 }

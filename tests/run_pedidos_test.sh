@@ -9,7 +9,7 @@ echo "================================================="
 
 # Variables de configuración
 HOST=${1:-127.0.0.1}
-PORT=${2:-8000}
+PORT=${2:-8001}
 THREADS=${3:-15}
 RAMP_TIME=${4:-20}
 LOOPS=${5:-3}

@@ -330,12 +330,25 @@ class Pedido(models.Model):
                 )
                 
                 if cantidad_en_esta_bodega > 0:
+                    # Serializar los artículos a diccionarios para JSON
+                    articulos_serializados = []
+                    for articulo in bodega_info['articulos'][:cantidad_en_esta_bodega]:
+                        articulos_serializados.append({
+                            'id': articulo.id,
+                            'codigo_interno': articulo.codigo_interno,
+                            'numero_serie': articulo.numero_serie,
+                            'codigo_barras': articulo.codigo_barras,
+                            'lote': articulo.lote,
+                            'zona': articulo.zona.nombre if articulo.zona else 'Sin zona',
+                            'ubicacion_completa': f"{articulo.bodega.nombre} - {articulo.zona.nombre if articulo.zona else 'Sin zona'}"
+                        })
+                    
                     ubicaciones_producto.append({
                         'bodega': bodega_info['bodega'].nombre,
                         'bodega_id': bodega_info['bodega'].id,
                         'codigo_bodega': bodega_info['bodega'].codigo,
                         'cantidad_disponible': cantidad_en_esta_bodega,
-                        'articulos': bodega_info['articulos'][:cantidad_en_esta_bodega]
+                        'articulos': articulos_serializados
                     })
                     cantidad_encontrada += cantidad_en_esta_bodega
             
