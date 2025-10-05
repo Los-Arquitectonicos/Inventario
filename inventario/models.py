@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator
 from decimal import Decimal
 import uuid
@@ -421,8 +422,21 @@ class DetallePedido(models.Model):
     class Meta:
         unique_together = ['pedido', 'producto']  # Un producto por pedido
         verbose_name_plural = "Detalles de Pedidos"
+class CargaMasiva(models.Model):
+    ESTADOS = [('PENDIENTE','PENDIENTE'),('PROCESANDO','PROCESANDO'),('OK','OK'),('FALLA','FALLA')]
+    usuario  = models.ForeignKey(get_user_model(), null=True, on_delete=models.SET_NULL)
+    clave_s3 = models.TextField()
+    estado   = models.CharField(max_length=12, choices=ESTADOS, default='PENDIENTE')
+    filas    = models.IntegerField(default=0)
+    creada   = models.DateTimeField(auto_now_add=True)
+    inicio   = models.DateTimeField(null=True, blank=True)
+    fin      = models.DateTimeField(null=True, blank=True)
+    error    = models.TextField(null=True, blank=True)
 
+    class Meta:
+        verbose_name = "Carga masiva"
+        verbose_name_plural = "Cargas masivas"
 
-
-
+    def __str__(self):
+        return f"Carga {self.id} - {self.estado}"
 
