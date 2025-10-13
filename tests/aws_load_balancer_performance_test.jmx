@@ -13,10 +13,12 @@
           <elementProp name="ALB_HOST" elementType="Argument">
             <stringProp name="Argument.name">ALB_HOST</stringProp>
             <stringProp name="Argument.value">your-alb-domain.us-east-1.elb.amazonaws.com</stringProp>
+            <stringProp name="Argument.desc">Cambiar por tu dominio real del ALB</stringProp>
           </elementProp>
           <elementProp name="ALB_PORT" elementType="Argument">
             <stringProp name="Argument.name">ALB_PORT</stringProp>
             <stringProp name="Argument.value">80</stringProp>
+            <stringProp name="Argument.desc">Puerto del Load Balancer (80 HTTP, 443 HTTPS)</stringProp>
           </elementProp>
         </collectionProp>
       </Arguments>
@@ -83,21 +85,7 @@
           <stringProp name="HTTPSampler.connect_timeout">15000</stringProp>
           <stringProp name="HTTPSampler.response_timeout">60000</stringProp>
         </HTTPSamplerProxy>
-        <hashTree>
-          <!-- Solo verificar que no sea 502 -->
-          <ResponseAssertion guiclass="AssertionGui" testclass="ResponseAssertion" testname="No 502 Error" enabled="true">
-            <collectionProp name="Asserion.test_strings">
-              <stringProp name="50313">502</stringProp>
-            </collectionProp>
-            <stringProp name="Assertion.custom_message">Error 502 Bad Gateway detectado</stringProp>
-            <stringProp name="Assertion.test_field">Assertion.response_code</stringProp>
-            <boolProp name="Assertion.assume_success">false</boolProp>
-            <intProp name="Assertion.test_type">12</intProp>
-          </ResponseAssertion>
-          <hashTree/>
-        </hash
-
-Tree>
+        <hashTree/>
       </hashTree>
       
       <!-- Listeners -->

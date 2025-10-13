@@ -1,9 +1,9 @@
 """
-WSGI config for inventario project.
+Configuración WSGI para el proyecto inventario.
 
-It exposes the WSGI callable as a module-level variable named ``application``.
+Expone el callable WSGI como una variable a nivel de módulo llamada ``application``.
 
-For more information on this file, see
+Para más información sobre este archivo, ver
 https://docs.djangoproject.com/en/5.2/howto/deployment/wsgi/
 """
 
