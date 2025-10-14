@@ -10,6 +10,10 @@ Requerimiento Arquitecturalmente Significativo:
 - Soportar carga sin degradación
 - Mantener registros correctos en caso de errores parciales
 - Notificar con resumen del proceso
+
+CONFIGURACIÓN DE ENTORNOS:
+- Ver config_entornos.py para cambiar entre local/AWS/producción
+- Solo necesitas cambiar BASE_URL en config_entornos.py
 """
 
 import time
@@ -25,13 +29,36 @@ from django.urls import reverse
 from django.db import connection
 from inventario.models import Producto, Articulo, UbicacionBodega, Bodega
 
+# Importar configuración de entorno
+try:
+    from .config_entornos import (
+        BASE_URL, TIMEOUT, HEADERS,
+        WORKERS_TEST_1000, WORKERS_TEST_10000,
+        TIEMPO_MAX_10000, REQUISITO_REQ_MIN
+    )
+except ImportError:
+    # Valores por defecto si no existe config_entornos.py
+    BASE_URL = "http://127.0.0.1:8000"
+    TIMEOUT = 30
+    HEADERS = {"Content-Type": "application/json"}
+    WORKERS_TEST_1000 = 10
+    WORKERS_TEST_10000 = 50
+    TIEMPO_MAX_10000 = 300
+    REQUISITO_REQ_MIN = 2000
+
 
 class TestCargaMasivaArticulos(TransactionTestCase):
     """
-    Suite de pruebas para validar el requerimiento de carga masiva
+    Suite de pruebas para validar el requerimiento de carga masiva.
+    
+    CAMBIAR ENTORNO:
+    - Edita config_entornos.py y cambia BASE_URL
+    - Para AWS ALB: Descomenta la línea correspondiente
+    - Para local: Usa http://127.0.0.1:8000 (por defecto)
     """
     
-    BASE_URL = "http://127.0.0.1:8000"
+    BASE_URL = BASE_URL
+    TIMEOUT = TIMEOUT
     
     @classmethod
     def setUpClass(cls):
@@ -95,7 +122,11 @@ class TestCargaMasivaArticulos(TransactionTestCase):
         return base + str(check_digit)
     
     def crear_articulo_request(self, producto_id, ubicacion_id, codigo_barras):
-        """Crea un artículo mediante POST request"""
+        """
+        Crea un artículo mediante POST request.
+        
+        Usa TIMEOUT de config_entornos.py (30s local, 60s AWS)
+        """
         url = f"{self.BASE_URL}/inventario/articulos/crear/"
         data = {
             'producto': producto_id,
@@ -104,10 +135,29 @@ class TestCargaMasivaArticulos(TransactionTestCase):
         }
         
         try:
-            response = requests.post(url, data=data, timeout=10)
+            response = requests.post(
+                url, 
+                data=data, 
+                timeout=self.TIMEOUT,
+                headers=HEADERS
+            )
             return {
                 'success': response.status_code == 302 or response.status_code == 200,
                 'status_code': response.status_code,
+                'codigo_barras': codigo_barras
+            }
+        except requests.exceptions.Timeout:
+            return {
+                'success': False,
+                'status_code': 504,  # Gateway Timeout
+                'error': f'Request timeout ({self.TIMEOUT}s)',
+                'codigo_barras': codigo_barras
+            }
+        except requests.exceptions.ConnectionError as e:
+            return {
+                'success': False,
+                'status_code': 503,  # Service Unavailable
+                'error': f'Connection error: {str(e)}',
                 'codigo_barras': codigo_barras
             }
         except Exception as e:
