@@ -1,0 +1,61 @@
+{% extends 'inventario/base.html' %}
+
+{% block title %}Bodegas - ProvesiWMS{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Gestión de Bodegas</h2>
+</div>
+
+<div class="row">
+    {% for bodega in object_list %}
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">{{ bodega.nombre }}</h5>
+            </div>
+            <div class="card-body">
+                <p class="card-text">
+                    <strong>Ciudad:</strong> {{ bodega.ciudad }}<br>
+                    <strong>Código:</strong> {{ bodega.codigo }}<br>
+                    <strong>Capacidad:</strong> {{ bodega.obtener_capacidad_total }} unidades
+                </p>
+                <div class="d-flex justify-content-between">
+                    <a href="{% url 'inventario:bodega_detalle' bodega.pk %}" class="btn btn-primary btn-sm">Ver Detalle</a>
+                    <small class="text-muted">{{ bodega.ubicacionbodega_set.count }} ubicaciones</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="alert alert-info">
+            <h4>No hay bodegas registradas</h4>
+            <p>Aún no hay bodegas en el sistema.</p>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% if is_paginated %}
+<nav aria-label="Paginación de bodegas">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Anterior</a>
+            </li>
+        {% endif %}
+        
+        <li class="page-item active">
+            <span class="page-link">{{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+        </li>
+        
+        {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}">Siguiente</a>
+            </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+{% endblock %}

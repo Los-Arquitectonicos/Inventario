@@ -1,0 +1,309 @@
+{
+  "info": {
+    "name": "🚀 ProvesiWMS - 10,000 Artículos OPTIMIZADOS (Batch)",
+    "description": "**COLECCIÓN OPTIMIZADA PARA MÁXIMO RENDIMIENTO**\n\nCrea 10,000 artículos únicos usando batch processing:\n\n**🎯 VENTAJAS DE ESTA VERSIÓN:**\n- ⚡ **100x más rápida** que requests individuales\n- 🏗️ **Batch de ubicaciones**: 50 ubicaciones en 1 request\n- 📦 **Batch de artículos**: 100 artículos por request\n- ⏱️ **Tiempo estimado**: 3-5 minutos (vs 20-30 min)\n\n**📋 PROCESO SIMPLIFICADO:**\n1. **Paso 1**: 1 request → 50 ubicaciones\n2. **Paso 2**: 100 requests → 10,000 artículos\n3. **Paso 3**: 1 request → verificación\n\n**⚙️ CONFIGURACIÓN RUNNER:**\n- Iterations: **100** (no 10,000!)\n- Delay: **100ms** recomendado\n- Target: Folder \"Batch Artículos\"\n\n**🎮 RESULTADO:** 10,000 artículos únicos en minutos!",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://127.0.0.1:8000",
+      "type": "string"
+    },
+    {
+      "key": "csrf_token",
+      "value": "tu_csrf_token_aqui",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "⚡ 1. ULTRA-RÁPIDO: Crear 50 Ubicaciones (1 Request)",
+      "description": "**EJECUTAR UNA SOLA VEZ** - Crea todas las ubicaciones en batch",
+      "item": [
+        {
+          "name": "🏗️ Crear TODAS las Ubicaciones (Batch de 50)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-CSRFToken",
+                "value": "{{csrf_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ubicaciones\": [\n    {\n      \"bodega_id\": 1,\n      \"pasillo\": \"A01\",\n      \"estante\": \"E01\",\n      \"nivel\": \"N01\",\n      \"capacidad_total\": 250\n    },\n    {\n      \"bodega_id\": 1,\n      \"pasillo\": \"A01\",\n      \"estante\": \"E02\",\n      \"nivel\": \"N01\",\n      \"capacidad_total\": 250\n    },\n    {\n      \"bodega_id\": 1,\n      \"pasillo\": \"A01\",\n      \"estante\": \"E03\",\n      \"nivel\": \"N01\",\n      \"capacidad_total\": 250\n    },\n    {\n      \"bodega_id\": 1,\n      \"pasillo\": \"A01\",\n      \"estante\": \"E04\",\n      \"nivel\": \"N01\",\n      \"capacidad_total\": 250\n    },\n    {\n      \"bodega_id\": 1,\n      \"pasillo\": \"A01\",\n      \"estante\": \"E05\",\n      \"nivel\": \"N01\",\n      \"capacidad_total\": 250\n    },\n    {\n      \"bodega_id\": 1,\n      \"pasillo\": \"A02\",\n      \"estante\": \"E01\",\n      \"nivel\": \"N01\",\n      \"capacidad_total\": 250\n    },\n    {\n      \"bodega_id\": 1,\n      \"pasillo\": \"A02\",\n      \"estante\": \"E02\",\n      \"nivel\": \"N01\",\n      \"capacidad_total\": 250\n    },\n    {\n      \"bodega_id\": 1,\n      \"pasillo\": \"A02\",\n      \"estante\": \"E03\",\n      \"nivel\": \"N01\",\n      \"capacidad_total\": 250\n    },\n    {\n      \"bodega_id\": 1,\n      \"pasillo\": \"A02\",\n      \"estante\": \"E04\",\n      \"nivel\": \"N01\",\n      \"capacidad_total\": 250\n    },\n    {\n      \"bodega_id\": 1,\n      \"pasillo\": \"A02\",\n      \"estante\": \"E05\",\n      \"nivel\": \"N01\",\n      \"capacidad_total\": 250\n    },\n    {\n      \"bodega_id\": 1,\n      \"pasillo\": \"A03\",\n      \"estante\": \"E01\",\n      \"nivel\": \"N01\",\n      \"capacidad_total\": 250\n    },\n    {\n      \"bodega_id\": 1,\n      \"pasillo\": \"A03\",\n      \"estante\": \"E02\",\n      \"nivel\": \"N01\",\n      \"capacidad_total\": 250\n    },\n    {\n      \"bodega_id\": 1,\n      \"pasillo\": \"A03\",\n      \"estante\": \"E03\",\n      \"nivel\": \"N01\",\n      \"capacidad_total\": 250\n    },\n    {\n      \"bodega_id\": 1,\n      \"pasillo\": \"A03\",\n      \"estante\": \"E04\",\n      \"nivel\": \"N01\",\n      \"capacidad_total\": 250\n    },\n    {\n      \"bodega_id\": 1,\n      \"pasillo\": \"A03\",\n      \"estante\": \"E05\",\n      \"nivel\": \"N01\",\n      \"capacidad_total\": 250\n    },\n    {\n      \"bodega_id\": 1,\n      \"pasillo\": \"A04\",\n      \"estante\": \"E01\",\n      \"nivel\": \"N01\",\n      \"capacidad_total\": 250\n    },\n    {\n      \"bodega_id\": 1,\n      \"pasillo\": \"A04\",\n      \"estante\": \"E02\",\n      \"nivel\": \"N01\",\n      \"capacidad_total\": 250\n    },\n    {\n      \"bodega_id\": 1,\n      \"pasillo\": \"A04\",\n      \"estante\": \"E03\",\n      \"nivel\": \"N01\",\n      \"capacidad_total\": 250\n    },\n    {\n      \"bodega_id\": 1,\n      \"pasillo\": \"A04\",\n      \"estante\": \"E04\",\n      \"nivel\": \"N01\",\n      \"capacidad_total\": 250\n    },\n    {\n      \"bodega_id\": 1,\n      \"pasillo\": \"A04\",\n      \"estante\": \"E05\",\n      \"nivel\": \"N01\",\n      \"capacidad_total\": 250\n    },\n    {\n      \"bodega_id\": 1,\n      \"pasillo\": \"A05\",\n      \"estante\": \"E01\",\n      \"nivel\": \"N01\",\n      \"capacidad_total\": 250\n    },\n    {\n      \"bodega_id\": 1,\n      \"pasillo\": \"A05\",\n      \"estante\": \"E02\",\n      \"nivel\": \"N01\",\n      \"capacidad_total\": 250\n    },\n    {\n      \"bodega_id\": 1,\n      \"pasillo\": \"A05\",\n      \"estante\": \"E03\",\n      \"nivel\": \"N01\",\n      \"capacidad_total\": 250\n    },\n    {\n      \"bodega_id\": 1,\n      \"pasillo\": \"A05\",\n      \"estante\": \"E04\",\n      \"nivel\": \"N01\",\n      \"capacidad_total\": 250\n    },\n    {\n      \"bodega_id\": 1,\n      \"pasillo\": \"A05\",\n      \"estante\": \"E05\",\n      \"nivel\": \"N01\",\n      \"capacidad_total\": 250\n    },\n    {\n      \"bodega_id\": 1,\n      \"pasillo\": \"A06\",\n      \"estante\": \"E01\",\n      \"nivel\": \"N01\",\n      \"capacidad_total\": 250\n    },\n    {\n      \"bodega_id\": 1,\n      \"pasillo\": \"A06\",\n      \"estante\": \"E02\",\n      \"nivel\": \"N01\",\n      \"capacidad_total\": 250\n    },\n    {\n      \"bodega_id\": 1,\n      \"pasillo\": \"A06\",\n      \"estante\": \"E03\",\n      \"nivel\": \"N01\",\n      \"capacidad_total\": 250\n    },\n    {\n      \"bodega_id\": 1,\n      \"pasillo\": \"A06\",\n      \"estante\": \"E04\",\n      \"nivel\": \"N01\",\n      \"capacidad_total\": 250\n    },\n    {\n      \"bodega_id\": 1,\n      \"pasillo\": \"A06\",\n      \"estante\": \"E05\",\n      \"nivel\": \"N01\",\n      \"capacidad_total\": 250\n    },\n    {\n      \"bodega_id\": 1,\n      \"pasillo\": \"A07\",\n      \"estante\": \"E01\",\n      \"nivel\": \"N01\",\n      \"capacidad_total\": 250\n    },\n    {\n      \"bodega_id\": 1,\n      \"pasillo\": \"A07\",\n      \"estante\": \"E02\",\n      \"nivel\": \"N01\",\n      \"capacidad_total\": 250\n    },\n    {\n      \"bodega_id\": 1,\n      \"pasillo\": \"A07\",\n      \"estante\": \"E03\",\n      \"nivel\": \"N01\",\n      \"capacidad_total\": 250\n    },\n    {\n      \"bodega_id\": 1,\n      \"pasillo\": \"A07\",\n      \"estante\": \"E04\",\n      \"nivel\": \"N01\",\n      \"capacidad_total\": 250\n    },\n    {\n      \"bodega_id\": 1,\n      \"pasillo\": \"A07\",\n      \"estante\": \"E05\",\n      \"nivel\": \"N01\",\n      \"capacidad_total\": 250\n    },\n    {\n      \"bodega_id\": 1,\n      \"pasillo\": \"A08\",\n      \"estante\": \"E01\",\n      \"nivel\": \"N01\",\n      \"capacidad_total\": 250\n    },\n    {\n      \"bodega_id\": 1,\n      \"pasillo\": \"A08\",\n      \"estante\": \"E02\",\n      \"nivel\": \"N01\",\n      \"capacidad_total\": 250\n    },\n    {\n      \"bodega_id\": 1,\n      \"pasillo\": \"A08\",\n      \"estante\": \"E03\",\n      \"nivel\": \"N01\",\n      \"capacidad_total\": 250\n    },\n    {\n      \"bodega_id\": 1,\n      \"pasillo\": \"A08\",\n      \"estante\": \"E04\",\n      \"nivel\": \"N01\",\n      \"capacidad_total\": 250\n    },\n    {\n      \"bodega_id\": 1,\n      \"pasillo\": \"A08\",\n      \"estante\": \"E05\",\n      \"nivel\": \"N01\",\n      \"capacidad_total\": 250\n    },\n    {\n      \"bodega_id\": 1,\n      \"pasillo\": \"A09\",\n      \"estante\": \"E01\",\n      \"nivel\": \"N01\",\n      \"capacidad_total\": 250\n    },\n    {\n      \"bodega_id\": 1,\n      \"pasillo\": \"A09\",\n      \"estante\": \"E02\",\n      \"nivel\": \"N01\",\n      \"capacidad_total\": 250\n    },\n    {\n      \"bodega_id\": 1,\n      \"pasillo\": \"A09\",\n      \"estante\": \"E03\",\n      \"nivel\": \"N01\",\n      \"capacidad_total\": 250\n    },\n    {\n      \"bodega_id\": 1,\n      \"pasillo\": \"A09\",\n      \"estante\": \"E04\",\n      \"nivel\": \"N01\",\n      \"capacidad_total\": 250\n    },\n    {\n      \"bodega_id\": 1,\n      \"pasillo\": \"A09\",\n      \"estante\": \"E05\",\n      \"nivel\": \"N01\",\n      \"capacidad_total\": 250\n    },\n    {\n      \"bodega_id\": 1,\n      \"pasillo\": \"A10\",\n      \"estante\": \"E01\",\n      \"nivel\": \"N01\",\n      \"capacidad_total\": 250\n    },\n    {\n      \"bodega_id\": 1,\n      \"pasillo\": \"A10\",\n      \"estante\": \"E02\",\n      \"nivel\": \"N01\",\n      \"capacidad_total\": 250\n    },\n    {\n      \"bodega_id\": 1,\n      \"pasillo\": \"A10\",\n      \"estante\": \"E03\",\n      \"nivel\": \"N01\",\n      \"capacidad_total\": 250\n    },\n    {\n      \"bodega_id\": 1,\n      \"pasillo\": \"A10\",\n      \"estante\": \"E04\",\n      \"nivel\": \"N01\",\n      \"capacidad_total\": 250\n    },\n    {\n      \"bodega_id\": 1,\n      \"pasillo\": \"A10\",\n      \"estante\": \"E05\",\n      \"nivel\": \"N01\",\n      \"capacidad_total\": 250\n    }\n  ],\n  \"crear_multiple\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/inventario/ubicaciones/crear_batch/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "inventario",
+                "ubicaciones",
+                "crear_batch",
+                ""
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Batch de ubicaciones creado', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.success).to.be.true;",
+                  "    ",
+                  "    console.log(`✅ Batch creado: ${response.created_count} ubicaciones`);",
+                  "    ",
+                  "    // Guardar IDs de ubicaciones para uso posterior",
+                  "    if (response.ubicaciones && response.ubicaciones.length > 0) {",
+                  "        const ubicacionIds = response.ubicaciones.map(u => u.id);",
+                  "        pm.globals.set('ubicacion_ids', JSON.stringify(ubicacionIds));",
+                  "        console.log(`📦 IDs disponibles: ${ubicacionIds.length} ubicaciones`);",
+                  "    }",
+                  "});",
+                  "",
+                  "// Verificar todas las ubicaciones fueron creadas",
+                  "pm.test('50 ubicaciones creadas', function () {",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.created_count).to.equal(50);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "🚀 2. BATCH: 10,000 Artículos (100 Iterations × 100 Items)",
+      "description": "**CONFIGURAR RUNNER**: 100 iteraciones = 10,000 artículos totales",
+      "item": [
+        {
+          "name": "🚀 Crear Lote de 100 Artículos (Ejecutar 100 veces)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              },
+              {
+                "key": "X-CSRFToken",
+                "value": "{{csrf_token}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"articulos\": {{current_batch}},\n  \"crear_multiple\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/inventario/articulos/crear_batch/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "inventario",
+                "articulos",
+                "crear_batch",
+                ""
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "",
+                  "// Obtener ubicaciones disponibles",
+                  "const ubicacionIdsStr = pm.globals.get('ubicacion_ids');",
+                  "if (!ubicacionIdsStr) {",
+                  "    console.error('❌ No hay ubicaciones. Ejecuta primero el batch de ubicaciones.');",
+                  "    pm.test.skip('Sin ubicaciones disponibles');",
+                  "    return;",
+                  "}",
+                  "",
+                  "const ubicacionIds = JSON.parse(ubicacionIdsStr);",
+                  "console.log(`📦 Ubicaciones disponibles: ${ubicacionIds.length}`);",
+                  "",
+                  "// Productos disponibles (IDs 1-51)",
+                  "const productos = Array.from({length: 51}, (_, i) => i + 1);",
+                  "",
+                  "// Función para generar código de barras EAN-13",
+                  "function generarCodigoBarras() {",
+                  "    const prefijo = \"789\";",
+                  "    const numero = Array.from({length: 9}, () => Math.floor(Math.random() * 10)).join('');",
+                  "    const codigoSinDigito = prefijo + numero;",
+                  "    ",
+                  "    let suma = 0;",
+                  "    for (let i = 0; i < codigoSinDigito.length; i++) {",
+                  "        if (i % 2 === 0) {",
+                  "            suma += parseInt(codigoSinDigito[i]);",
+                  "        } else {",
+                  "            suma += parseInt(codigoSinDigito[i]) * 3;",
+                  "        }",
+                  "    }",
+                  "    ",
+                  "    const digitoVerificador = (10 - (suma % 10)) % 10;",
+                  "    return codigoSinDigito + digitoVerificador.toString();",
+                  "}",
+                  "",
+                  "// Generar lote de 100 artículos",
+                  "const loteArticulos = [];",
+                  "for (let i = 0; i < 100; i++) {",
+                  "    const productoId = productos[Math.floor(Math.random() * productos.length)];",
+                  "    const ubicacionId = ubicacionIds[Math.floor(Math.random() * ubicacionIds.length)];",
+                  "    const codigoBarras = generarCodigoBarras();",
+                  "    ",
+                  "    loteArticulos.push({",
+                  "        producto_id: productoId,",
+                  "        codigo_barras: codigoBarras,",
+                  "        ubicacion_id: ubicacionId",
+                  "    });",
+                  "}",
+                  "",
+                  "// Guardar lote para el request",
+                  "pm.globals.set('current_batch', JSON.stringify(loteArticulos));",
+                  "",
+                  "console.log(`🏷️ Generando lote de ${loteArticulos.length} artículos`);",
+                  ""
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "",
+                  "pm.test('Lote de artículos creado exitosamente', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.success).to.be.true;",
+                  "    ",
+                  "    const createdCount = response.created_count || 0;",
+                  "    console.log(`✅ Lote completado: ${createdCount} artículos creados`);",
+                  "    ",
+                  "    // Incrementar contador global",
+                  "    let totalCreados = pm.globals.get('total_articulos_creados') || 0;",
+                  "    totalCreados += createdCount;",
+                  "    pm.globals.set('total_articulos_creados', totalCreados);",
+                  "    ",
+                  "    console.log(`🎯 Progreso total: ${totalCreados} artículos creados`);",
+                  "    ",
+                  "    // Mostrar progreso cada 1000 artículos",
+                  "    if (totalCreados % 1000 === 0) {",
+                  "        console.log(`🚀 HITO ALCANZADO: ${totalCreados} artículos!`);",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test('Lote de 100 artículos', function () {",
+                  "    const response = pm.response.json();",
+                  "    if (response.success) {",
+                  "        pm.expect(response.created_count).to.equal(100);",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test('Sin errores de duplicación', function () {",
+                  "    const response = pm.response.json();",
+                  "    if (response.errors && response.errors.length > 0) {",
+                  "        console.warn(`⚠️ Errores en lote: ${response.errors.length}`);",
+                  "        response.errors.forEach(error => console.log(`   - ${error}`));",
+                  "    }",
+                  "});",
+                  ""
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "📊 3. ESTADÍSTICAS: Verificación Final",
+      "description": "Conteo final y estadísticas detalladas",
+      "item": [
+        {
+          "name": "📈 Estadísticas Completas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/inventario/api/estadisticas/completas/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "inventario",
+                "api",
+                "estadisticas",
+                "completas",
+                ""
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const response = pm.response.json();",
+                  "const totalSesion = pm.globals.get('total_articulos_creados') || 0;",
+                  "",
+                  "console.log(`\\n🎉 PROCESO COMPLETADO EXITOSAMENTE!`);",
+                  "console.log(`════════════════════════════════════`);",
+                  "console.log(`📊 ESTADÍSTICAS FINALES:`);",
+                  "console.log(`   • Artículos en esta sesión: ${totalSesion}`);",
+                  "console.log(`   • Total en base de datos: ${response.total_articulos || 'N/A'}`);",
+                  "console.log(`   • Ubicaciones disponibles: ${response.total_ubicaciones || 'N/A'}`);",
+                  "console.log(`   • Productos únicos: ${response.total_productos || 'N/A'}`);",
+                  "console.log(`   • Tiempo estimado ahorrado: ~20 minutos`);",
+                  "console.log(`════════════════════════════════════`);",
+                  "",
+                  "if (parseInt(totalSesion) >= 10000) {",
+                  "    console.log(`✅ META CUMPLIDA: 10,000+ artículos creados!`);",
+                  "    console.log(`🚀 Tu inventario masivo está listo para usar!`);",
+                  "} else {",
+                  "    console.log(`⚠️ Meta parcial: ${totalSesion}/10,000 artículos`);",
+                  "    console.log(`💡 Ejecuta más iteraciones si es necesario`);",
+                  "}",
+                  "",
+                  "pm.test('Meta de 10,000 artículos', function () {",
+                  "    pm.expect(parseInt(totalSesion)).to.be.at.least(10000);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

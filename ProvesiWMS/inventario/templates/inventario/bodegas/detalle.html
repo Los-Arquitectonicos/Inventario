@@ -1,0 +1,66 @@
+{% extends 'inventario/base.html' %}
+
+{% block title %}{{ object.nombre }} - Detalle Bodega{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h3>{{ object.nombre }}</h3>
+            </div>
+            <div class="card-body">
+                <p><strong>Dirección:</strong> {{ object.direccion }}</p>
+                <p><strong>Ciudad:</strong> {{ object.ciudad }}</p>
+                <p><strong>Código:</strong> {{ object.codigo }}</p>
+                <p><strong>Capacidad Total:</strong> {{ object.obtener_capacidad_total }} unidades</p>
+                
+                <h5 class="mt-4">Ubicaciones en esta Bodega</h5>
+                {% if object.ubicacionbodega_set.all %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Zona</th>
+                                    <th>Código</th>
+                                    <th>Capacidad</th>
+                                    <th>Estado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for ubicacion in object.ubicacionbodega_set.all %}
+                                <tr>
+                                    <td>{{ ubicacion.zona_nombre }}</td>
+                                    <td>{{ ubicacion.codigo_ubicacion }}</td>
+                                    <td>{{ ubicacion.capacidad_maxima }}</td>
+                                    <td>
+                                        {% if ubicacion.esta_llena %}
+                                            <span class="badge bg-danger">Llena</span>
+                                        {% else %}
+                                            <span class="badge bg-success">Disponible</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted">No hay ubicaciones registradas en esta bodega.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5>Acciones</h5>
+            </div>
+            <div class="card-body">
+                <a href="{% url 'inventario:bodegas_lista' %}" class="btn btn-secondary">Volver a Bodegas</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,21 @@
+{
+  "fecha": "2025-10-13T20:43:19.481976",
+  "servidor": "http://127.0.0.1:8000",
+  "resultados": [
+    {
+      "test": "objetivo_10000",
+      "cantidad": 10000,
+      "workers": 50,
+      "exitosos": 9542,
+      "fallidos": 458,
+      "tiempo_total": 202.63583493232727,
+      "req_por_minuto": 2960.976769979394,
+      "tasa_exito": 95.42,
+      "cumple_tiempo": true,
+      "cumple_tasa": true,
+      "latencia_promedio": 106181.10138316154,
+      "latencia_p95": 196259.85641479492,
+      "latencia_p99": 202446.20893478394
+    }
+  ]
+}

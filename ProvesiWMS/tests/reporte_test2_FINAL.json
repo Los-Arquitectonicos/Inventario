@@ -1,0 +1,15 @@
+{
+  "fecha": "2025-10-13T20:46:31.866665",
+  "servidor": "http://127.0.0.1:8000",
+  "resultados": [
+    {
+      "test": "concurrente_1000",
+      "cantidad": 1000,
+      "workers": 10,
+      "exitosos": 32,
+      "tiempo_total": 1.0017127990722656,
+      "req_por_minuto": 59897.407775530955,
+      "tasa_exito": 3.2
+    }
+  ]
+}

@@ -1,0 +1,412 @@
+{% extends 'inventario/base.html' %}
+
+{% block title %}Crear Nuevo Pedido{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Crear Nuevo Pedido</h2>
+    <a href="{% url 'inventario:pedidos_lista' %}" class="btn btn-secondary">
+        <i class="fas fa-arrow-left"></i> Volver a Pedidos
+    </a>
+</div>
+
+<form method="post" id="crear-pedido-form">
+    {% csrf_token %}
+    
+    <div class="row">
+        <!-- Información del cliente -->
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>Información del Cliente</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="cliente" class="form-label">Cliente *</label>
+                        <select class="form-select" id="cliente" name="cliente" required>
+                            <option value="">Seleccionar cliente...</option>
+                            {% for cliente in clientes %}
+                                <option value="{{ cliente.id }}" data-email="{{ cliente.email }}" 
+                                        data-telefono="{{ cliente.telefono }}" data-direccion="{{ cliente.direccion }}">
+                                    {{ cliente.nombre }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div id="info-cliente" style="display: none;">
+                        <div class="alert alert-light">
+                            <h6 id="cliente-nombre"></h6>
+                            <p class="mb-1"><i class="fas fa-envelope"></i> <span id="cliente-email"></span></p>
+                            <p class="mb-1"><i class="fas fa-phone"></i> <span id="cliente-telefono"></span></p>
+                            <p class="mb-0"><i class="fas fa-map-marker-alt"></i> <span id="cliente-direccion"></span></p>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 mt-3">
+                        <button type="button" class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#nuevoClienteModal">
+                            <i class="fas fa-plus"></i> Crear Nuevo Cliente
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Información del pedido -->
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>Información del Pedido</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="fecha_creacion" class="form-label">Fecha de Creación</label>
+                                <input type="datetime-local" class="form-control" id="fecha_creacion" 
+                                       name="fecha_creacion" value="{{ fecha_actual|date:'Y-m-d\\TH:i' }}" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="estado" class="form-label">Estado Inicial</label>
+                                <select class="form-select" id="estado" name="estado">
+                                    <option value="pendiente" selected>Pendiente</option>
+                                    <option value="preparando">Preparando</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="notas" class="form-label">Notas del Pedido</label>
+                        <textarea class="form-control" id="notas" name="notas" rows="3" 
+                                  placeholder="Instrucciones especiales o comentarios..."></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Productos del pedido -->
+    <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h5>Productos del Pedido</h5>
+            <button type="button" class="btn btn-primary btn-sm" onclick="agregarProducto()">
+                <i class="fas fa-plus"></i> Agregar Producto
+            </button>
+        </div>
+        <div class="card-body">
+            <div id="productos-container">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i> 
+                    Haga clic en "Agregar Producto" para empezar a agregar productos al pedido.
+                </div>
+            </div>
+            
+            <div class="row mt-3">
+                <div class="col-md-8"></div>
+                <div class="col-md-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <strong>Total del Pedido:</strong>
+                        <strong class="text-primary fs-5" id="total-pedido">$0.00</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Botones de acción -->
+    <div class="d-flex justify-content-end gap-2">
+        <a href="{% url 'inventario:pedidos_lista' %}" class="btn btn-secondary">Cancelar</a>
+        <button type="submit" class="btn btn-success" id="btn-crear-pedido" disabled>
+            <i class="fas fa-save"></i> Crear Pedido
+        </button>
+    </div>
+</form>
+
+<!-- Modal para nuevo cliente -->
+<div class="modal fade" id="nuevoClienteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Crear Nuevo Cliente</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="nuevo-cliente-form">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="nuevo-cliente-nombre" class="form-label">Nombre *</label>
+                        <input type="text" class="form-control" id="nuevo-cliente-nombre" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="nuevo-cliente-email" class="form-label">Email *</label>
+                        <input type="email" class="form-control" id="nuevo-cliente-email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="nuevo-cliente-telefono" class="form-label">Teléfono</label>
+                        <input type="tel" class="form-control" id="nuevo-cliente-telefono">
+                    </div>
+                    <div class="mb-3">
+                        <label for="nuevo-cliente-direccion" class="form-label">Dirección</label>
+                        <textarea class="form-control" id="nuevo-cliente-direccion" rows="2"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="nuevo-cliente-ciudad" class="form-label">Ciudad</label>
+                        <input type="text" class="form-control" id="nuevo-cliente-ciudad">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Crear Cliente</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Template para fila de producto -->
+<template id="producto-row-template">
+    <div class="producto-row border rounded p-3 mb-3">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+            <h6>Producto #<span class="producto-numero"></span></h6>
+            <button type="button" class="btn btn-sm btn-outline-danger" onclick="eliminarProducto(this)">
+                <i class="fas fa-trash"></i>
+            </button>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label class="form-label">Producto *</label>
+                    <select class="form-select producto-select" name="productos[]" required onchange="actualizarPrecio(this)">
+                        <option value="">Seleccionar producto...</option>
+                        {% for producto in productos %}
+                            <option value="{{ producto.id }}" data-precio="{{ producto.precio }}" data-stock="{{ producto.stock_total }}">
+                                {{ producto.nombre }} - ${{ producto.precio|floatformat:2 }} (Stock: {{ producto.stock_total }})
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            
+            <div class="col-md-2">
+                <div class="mb-3">
+                    <label class="form-label">Cantidad *</label>
+                    <input type="number" class="form-control cantidad-input" name="cantidades[]" 
+                           min="1" required onchange="calcularSubtotal(this)">
+                </div>
+            </div>
+            
+            <div class="col-md-2">
+                <div class="mb-3">
+                    <label class="form-label">Precio Unit.</label>
+                    <input type="number" class="form-control precio-input" name="precios[]" 
+                           step="0.01" readonly>
+                </div>
+            </div>
+            
+            <div class="col-md-2">
+                <div class="mb-3">
+                    <label class="form-label">Subtotal</label>
+                    <div class="form-control-plaintext subtotal-display">$0.00</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="stock-warning alert alert-warning" style="display: none;">
+            <i class="fas fa-exclamation-triangle"></i>
+            <span class="stock-message"></span>
+        </div>
+    </div>
+</template>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let productoCounter = 0;
+
+// Manejo del selector de cliente
+document.getElementById('cliente').addEventListener('change', function() {
+    const select = this;
+    const infoDiv = document.getElementById('info-cliente');
+    
+    if (select.value) {
+        const option = select.selectedOptions[0];
+        document.getElementById('cliente-nombre').textContent = option.textContent;
+        document.getElementById('cliente-email').textContent = option.dataset.email || 'No disponible';
+        document.getElementById('cliente-telefono').textContent = option.dataset.telefono || 'No disponible';
+        document.getElementById('cliente-direccion').textContent = option.dataset.direccion || 'No disponible';
+        infoDiv.style.display = 'block';
+    } else {
+        infoDiv.style.display = 'none';
+    }
+    
+    validarFormulario();
+});
+
+// Agregar producto
+function agregarProducto() {
+    productoCounter++;
+    
+    const template = document.getElementById('producto-row-template');
+    const clone = template.content.cloneNode(true);
+    
+    clone.querySelector('.producto-numero').textContent = productoCounter;
+    
+    const container = document.getElementById('productos-container');
+    
+    // Ocultar el mensaje de información si existe
+    const alertInfo = container.querySelector('.alert-info');
+    if (alertInfo) {
+        alertInfo.remove();
+    }
+    
+    container.appendChild(clone);
+    validarFormulario();
+}
+
+// Eliminar producto
+function eliminarProducto(button) {
+    button.closest('.producto-row').remove();
+    actualizarTotal();
+    validarFormulario();
+}
+
+// Actualizar precio cuando se selecciona un producto
+function actualizarPrecio(select) {
+    const row = select.closest('.producto-row');
+    const precioInput = row.querySelector('.precio-input');
+    const cantidadInput = row.querySelector('.cantidad-input');
+    const stockWarning = row.querySelector('.stock-warning');
+    const stockMessage = row.querySelector('.stock-message');
+    
+    if (select.value) {
+        const option = select.selectedOptions[0];
+        const precio = parseFloat(option.dataset.precio);
+        const stock = parseInt(option.dataset.stock);
+        
+        precioInput.value = precio.toFixed(2);
+        
+        // Verificar stock
+        if (stock <= 0) {
+            stockMessage.textContent = 'Producto sin stock disponible';
+            stockWarning.style.display = 'block';
+            cantidadInput.max = 0;
+        } else if (stock <= 5) {
+            stockMessage.textContent = `Stock bajo: solo ${stock} unidades disponibles`;
+            stockWarning.style.display = 'block';
+            cantidadInput.max = stock;
+        } else {
+            stockWarning.style.display = 'none';
+            cantidadInput.max = stock;
+        }
+        
+        calcularSubtotal(cantidadInput);
+    } else {
+        precioInput.value = '';
+        stockWarning.style.display = 'none';
+        cantidadInput.max = '';
+        calcularSubtotal(cantidadInput);
+    }
+    
+    validarFormulario();
+}
+
+// Calcular subtotal
+function calcularSubtotal(input) {
+    const row = input.closest('.producto-row');
+    const precioInput = row.querySelector('.precio-input');
+    const subtotalDisplay = row.querySelector('.subtotal-display');
+    
+    const cantidad = parseFloat(input.value) || 0;
+    const precio = parseFloat(precioInput.value) || 0;
+    const subtotal = cantidad * precio;
+    
+    subtotalDisplay.textContent = '$' + subtotal.toFixed(2);
+    
+    actualizarTotal();
+    validarFormulario();
+}
+
+// Actualizar total del pedido
+function actualizarTotal() {
+    let total = 0;
+    
+    document.querySelectorAll('.producto-row').forEach(row => {
+        const cantidadInput = row.querySelector('.cantidad-input');
+        const precioInput = row.querySelector('.precio-input');
+        
+        const cantidad = parseFloat(cantidadInput.value) || 0;
+        const precio = parseFloat(precioInput.value) || 0;
+        
+        total += cantidad * precio;
+    });
+    
+    document.getElementById('total-pedido').textContent = '$' + total.toFixed(2);
+}
+
+// Validar formulario
+function validarFormulario() {
+    const cliente = document.getElementById('cliente').value;
+    const productosRows = document.querySelectorAll('.producto-row');
+    const btnCrear = document.getElementById('btn-crear-pedido');
+    
+    let todosProductosCompletos = true;
+    
+    productosRows.forEach(row => {
+        const productoSelect = row.querySelector('.producto-select');
+        const cantidadInput = row.querySelector('.cantidad-input');
+        
+        if (!productoSelect.value || !cantidadInput.value || cantidadInput.value <= 0) {
+            todosProductosCompletos = false;
+        }
+    });
+    
+    const formularioValido = cliente && productosRows.length > 0 && todosProductosCompletos;
+    btnCrear.disabled = !formularioValido;
+}
+
+// Crear nuevo cliente
+document.getElementById('nuevo-cliente-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    // Aquí iría la lógica para crear el cliente via AJAX
+    // Por ahora solo simularemos la creación
+    
+    const nombre = document.getElementById('nuevo-cliente-nombre').value;
+    const email = document.getElementById('nuevo-cliente-email').value;
+    const telefono = document.getElementById('nuevo-cliente-telefono').value;
+    const direccion = document.getElementById('nuevo-cliente-direccion').value;
+    const ciudad = document.getElementById('nuevo-cliente-ciudad').value;
+    
+    // Agregar el nuevo cliente al selector
+    const clienteSelect = document.getElementById('cliente');
+    const option = document.createElement('option');
+    option.value = 'new_' + Date.now(); // ID temporal
+    option.textContent = nombre;
+    option.dataset.email = email;
+    option.dataset.telefono = telefono;
+    option.dataset.direccion = direccion;
+    option.dataset.ciudad = ciudad;
+    option.selected = true;
+    
+    clienteSelect.appendChild(option);
+    clienteSelect.dispatchEvent(new Event('change'));
+    
+    // Cerrar modal y limpiar formulario
+    const modal = bootstrap.Modal.getInstance(document.getElementById('nuevoClienteModal'));
+    modal.hide();
+    document.getElementById('nuevo-cliente-form').reset();
+    
+    // Mostrar mensaje de éxito
+    alert('Cliente creado exitosamente y seleccionado para el pedido.');
+});
+
+// Validar al cargar la página
+document.addEventListener('DOMContentLoaded', function() {
+    validarFormulario();
+});
+</script>
+{% endblock %}

@@ -1,0 +1,85 @@
+{% extends 'inventario/base.html' %}
+
+{% block title %}Productos - ProvesiWMS{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Gestión de Productos</h2>
+    <div>
+        <form method="get" class="d-flex">
+            <input class="form-control me-2" type="search" name="search" placeholder="Buscar productos..." value="{{ request.GET.search }}">
+            <button class="btn btn-outline-success" type="submit">Buscar</button>
+        </form>
+    </div>
+</div>
+
+{% if request.GET.search %}
+<div class="alert alert-info">
+    Resultados para: <strong>{{ request.GET.search }}</strong>
+</div>
+{% endif %}
+
+<div class="row">
+    {% for producto in productos %}
+    <div class="col-md-6 col-lg-4 mb-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="card-title mb-0">{{ producto.nombre }}</h6>
+                {% if not producto.hay_stock %}
+                    <span class="badge bg-danger">Sin Stock</span>
+                {% else %}
+                    <span class="badge bg-success">En Stock</span>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                <p class="card-text">
+                    <strong>Marca:</strong> {{ producto.marca }}<br>
+                    <strong>Color:</strong> {{ producto.color }}<br>
+                    <strong>Talla:</strong> {{ producto.talla }}<br>
+                    <strong>Stock:</strong> {{ producto.cantidad_stock }} unidades<br>
+                    <strong>Precio:</strong> ${{ producto.precio_venta }}
+                </p>
+                <div class="d-flex justify-content-between">
+                    <a href="{% url 'inventario:producto_detalle' producto.pk %}" class="btn btn-primary btn-sm">Ver Detalle</a>
+                    <small class="text-muted">Margen: {{ producto.calcular_margen_ganancia }}%</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="alert alert-info">
+            {% if request.GET.search %}
+                <h4>No se encontraron productos</h4>
+                <p>No hay productos que coincidan con "{{ request.GET.search }}"</p>
+            {% else %}
+                <h4>No hay productos registrados</h4>
+                <p>Aún no hay productos en el sistema.</p>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% if is_paginated %}
+<nav aria-label="Paginación de productos">
+    <ul class="pagination justify-content-center">
+        {% if page_obj.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">Anterior</a>
+            </li>
+        {% endif %}
+        
+        <li class="page-item active">
+            <span class="page-link">{{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+        </li>
+        
+        {% if page_obj.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.search %}&search={{ request.GET.search }}{% endif %}">Siguiente</a>
+            </li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+{% endblock %}

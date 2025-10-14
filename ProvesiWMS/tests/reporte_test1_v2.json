@@ -1,0 +1,14 @@
+{
+  "fecha": "2025-10-13T20:39:34.308474",
+  "servidor": "http://127.0.0.1:8000",
+  "resultados": [
+    {
+      "test": "baseline_100",
+      "cantidad": 100,
+      "exitosos": 100,
+      "tiempo_total": 0.28444886207580566,
+      "req_por_minuto": 21093.42240364104,
+      "tasa_exito": 100.0
+    }
+  ]
+}
