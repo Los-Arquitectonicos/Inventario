@@ -16,37 +16,6 @@
 # 4. Target Group para el ALB
 # ******************************************************************
 
-variable "region" {
-  description = "AWS region for deployment"
-  type        = string
-  default     = "us-east-1"
-}
-
-variable "project_prefix" {
-  description = "Prefix used for naming AWS resources"
-  type        = string
-  default     = "provesi"
-}
-
-variable "instance_type" {
-  description = "EC2 instance type for application servers"
-  type        = string
-  default     = "t2.small"
-}
-
-variable "db_instance_type" {
-  description = "EC2 instance type for database server"
-  type        = string
-  default     = "t2.micro"
-}
-
-variable "db_password" {
-  description = "Password for PostgreSQL database"
-  type        = string
-  default     = "inventario2024"
-  sensitive   = true
-}
-
 provider "aws" {
   region = var.region
 }
@@ -398,39 +367,5 @@ resource "aws_lb_listener" "http" {
   default_action {
     type             = "forward"
     target_group_arn = aws_lb_target_group.app.arn
-  }
-}
-
-# Outputs
-output "alb_dns_name" {
-  description = "DNS name of the Application Load Balancer"
-  value       = aws_lb.main.dns_name
-}
-
-output "alb_url" {
-  description = "URL to access the application through the ALB"
-  value       = "http://${aws_lb.main.dns_name}/inventario/"
-}
-
-output "app_server_1_public_ip" {
-  description = "Public IP of application server 1"
-  value       = aws_instance.app_server[0].public_ip
-}
-
-output "app_server_2_public_ip" {
-  description = "Public IP of application server 2"
-  value       = aws_instance.app_server[1].public_ip
-}
-
-output "database_private_ip" {
-  description = "Private IP of the PostgreSQL database"
-  value       = aws_instance.database.private_ip
-}
-
-output "ssh_commands" {
-  description = "SSH commands to connect to each server"
-  value = {
-    app_server_1 = "ssh ubuntu@${aws_instance.app_server[0].public_ip}"
-    app_server_2 = "ssh ubuntu@${aws_instance.app_server[1].public_ip}"
   }
 }
