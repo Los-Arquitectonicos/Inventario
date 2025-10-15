@@ -1887,8 +1887,8 @@ def api_estadisticas_completas(request):
         
         productos_stats = [
             {
-                'nombre': p.nombre,
-                'articulos': p.num_articulos
+            'nombre': p.nombre,
+            'articulos': p.num_articulos  # type: ignore
             } for p in productos_top
         ]
         
