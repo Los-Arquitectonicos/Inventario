@@ -31,9 +31,3 @@ variable "db_password" {
   default     = "inventario2024"
   sensitive   = true
 }
-
-variable "allowed_ssh_cidr" {
-  description = "CIDR blocks allowed to SSH into instances (default: anywhere)"
-  type        = list(string)
-  default     = ["0.0.0.0/0"]
-}

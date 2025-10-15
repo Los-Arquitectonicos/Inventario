@@ -6,4 +6,3 @@
 # instance_type = "t2.small"
 # db_instance_type = "t2.micro"
 # db_password = "tu_password_seguro_aqui"
-# allowed_ssh_cidr = ["tu.ip.publica.aqui/32"]
