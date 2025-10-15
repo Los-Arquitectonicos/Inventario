@@ -29,8 +29,8 @@ except ImportError:
 
 # IDs obtenidos dinámicamente del servidor al inicio de cada prueba
 PRODUCTO_IDS = list(range(1, 51))
-UBICACION_ID = int(os.environ.get('UBICACION_ID', '1'))
-BODEGA_ID = int(os.environ.get('BODEGA_ID', '1'))
+UBICACION_IDS = [1]  # Lista de ubicaciones disponibles
+BODEGA_IDS = [1]     # Lista de bodegas disponibles
 IDS_INITIALIZED = False
 
 # Limpieza opcional de artículos antiguos
@@ -71,7 +71,7 @@ class GeneradorArticulos:
         return {
             'producto_id': random.choice(PRODUCTO_IDS),
             'codigo_barras': self.generar_codigo_barras_ean13(),
-            'ubicacion_id': UBICACION_ID
+            'ubicacion_id': random.choice(UBICACION_IDS)  # Distribuye entre ubicaciones
         }
 
 
@@ -170,7 +170,7 @@ stats = EstadisticasPrueba()
 @events.test_start.add_listener
 def on_test_start(environment, **kwargs):
     """Inicialización: obtiene IDs del servidor y configura estadísticas."""
-    global PRODUCTO_IDS, UBICACION_ID, IDS_INITIALIZED
+    global PRODUCTO_IDS, UBICACION_IDS, BODEGA_IDS, IDS_INITIALIZED
     
     stats.reset()
     stats.inicio = time.time()
@@ -196,13 +196,25 @@ def on_test_start(environment, **kwargs):
                     PRODUCTO_IDS = [p['id'] for p in productos_data['productos']]
                     print(f"[OK] {len(PRODUCTO_IDS)} productos disponibles")
             
-            ubicaciones_url = f"{BASE_URL.rstrip('/')}/api/ubicaciones/?limit=1"
+            ubicaciones_url = f"{BASE_URL.rstrip('/')}/api/ubicaciones/?limit=2000"
             resp = requests.get(ubicaciones_url, timeout=30)
             if resp.status_code == 200:
                 ubicaciones_data = resp.json()
                 if ubicaciones_data.get('ubicaciones'):
-                    UBICACION_ID = ubicaciones_data['ubicaciones'][0]['id']
-                    print(f"[OK] Ubicacion ID: {UBICACION_ID}")
+                    UBICACION_IDS = [u['id'] for u in ubicaciones_data['ubicaciones']]
+                    print(f"[OK] {len(UBICACION_IDS)} ubicaciones disponibles")
+                    
+                    # Agrupar por bodegas
+                    bodegas_set = set()
+                    for u in ubicaciones_data['ubicaciones']:
+                        if 'bodega_id' in u:
+                            bodegas_set.add(u['bodega_id'])
+                        elif 'bodega' in u and isinstance(u['bodega'], dict):
+                            bodegas_set.add(u['bodega']['id'])
+                    
+                    if bodegas_set:
+                        BODEGA_IDS = list(bodegas_set)
+                        print(f"[OK] {len(BODEGA_IDS)} bodegas disponibles")
             
             if LIMPIAR_ARTICULOS_VIEJOS:
                 print(f"\n[INFO] Detectando articulos antiguos (>{DIAS_ANTIGUEDAD_LIMPIAR} dias)...")
@@ -271,12 +283,18 @@ def on_test_stop(environment, **kwargs):
         for error, count in list(resultados['errores_detalle'].items())[:5]:
             print(f"  {error}: {count}")
     
+    # Guardar reporte JSON en carpeta reportes
+    os.makedirs('tests/reportes', exist_ok=True)
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-    filename = f'tests/reporte_locust_{timestamp}.json'
+    
+    # Determinar nombre del perfil desde variable de entorno o runner
+    profile_name = os.environ.get('LOCUST_PROFILE', 'unknown')
+    filename = f'tests/reportes/reporte_{profile_name}_{timestamp}.json'
+    
     with open(filename, 'w', encoding='utf-8') as f:
         json.dump(resultados, f, indent=2, ensure_ascii=False)
     
-    print(f"\nReporte: {filename}")
+    print(f"\nReporte JSON: {filename}")
     print("=" * 80 + "\n")
 
 # Usuarios Simulados

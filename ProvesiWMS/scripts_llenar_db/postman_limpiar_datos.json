@@ -1,0 +1,107 @@
+{
+  "info": {
+    "name": "ProvesiWMS - Limpiar Datos",
+    "description": "Elimina todos los datos de pruebas en orden correcto:\n\n1. Articulos\n2. Ubicaciones\n3. Bodegas\n4. Productos\n\nNOTA: Requiere endpoints de eliminacion masiva en el backend.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Eliminar todos los articulos",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "http://provesi-alb-1423351037.us-east-1.elb.amazonaws.com/inventario/api/articulos/eliminar_todos/",
+          "protocol": "http",
+          "host": [
+            "provesi-alb-1423351037.us-east-1.elb.amazonaws.com",
+            "inventario"
+          ],
+          "path": [
+            "inventario",
+            "api",
+            "articulos",
+            "eliminar_todos",
+            ""
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "2. Eliminar todas las ubicaciones",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "http://provesi-alb-1423351037.us-east-1.elb.amazonaws.com/inventario/api/ubicaciones/eliminar_todas/",
+          "protocol": "http",
+          "host": [
+            "provesi-alb-1423351037.us-east-1.elb.amazonaws.com",
+            "inventario"
+          ],
+          "path": [
+            "inventario",
+            "api",
+            "ubicaciones",
+            "eliminar_todas",
+            ""
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "3. Eliminar todas las bodegas",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "http://provesi-alb-1423351037.us-east-1.elb.amazonaws.com/inventario/api/bodegas/eliminar_todas/",
+          "protocol": "http",
+          "host": [
+            "provesi-alb-1423351037.us-east-1.elb.amazonaws.com",
+            "inventario"
+          ],
+          "path": [
+            "inventario",
+            "api",
+            "bodegas",
+            "eliminar_todas",
+            ""
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "4. Eliminar todos los productos",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "http://provesi-alb-1423351037.us-east-1.elb.amazonaws.com/inventario/api/productos/eliminar_todos/",
+          "protocol": "http",
+          "host": [
+            "provesi-alb-1423351037.us-east-1.elb.amazonaws.com",
+            "inventario"
+          ],
+          "path": [
+            "inventario",
+            "api",
+            "productos",
+            "eliminar_todos",
+            ""
+          ]
+        }
+      },
+      "response": []
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://provesi-alb-1423351037.us-east-1.elb.amazonaws.com/inventario"
+    }
+  ]
+}

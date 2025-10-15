@@ -1,9 +1,5 @@
 # Reportes generados automáticamente
-reportes/
-reporte_locust_*.json
-reporte_locust_*.html
-reporte_locust_*.csv
-reporte_test*.json
+reportes/*.json
 
 # Python cache
 __pycache__/

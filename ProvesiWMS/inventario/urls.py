@@ -72,4 +72,10 @@ urlpatterns = [
     path("api/pedidos/", views.api_listar_pedidos, name="api_listar_pedidos"),
     path("api/cotizaciones/", views.api_listar_cotizaciones, name="api_listar_cotizaciones"),
     path("api/facturas/", views.api_listar_facturas, name="api_listar_facturas"),
+    
+    # APIs de eliminación masiva
+    path("api/articulos/eliminar_todos/", views.eliminar_todos_articulos, name="eliminar_todos_articulos"),
+    path("api/ubicaciones/eliminar_todas/", views.eliminar_todas_ubicaciones, name="eliminar_todas_ubicaciones"),
+    path("api/bodegas/eliminar_todas/", views.eliminar_todas_bodegas, name="eliminar_todas_bodegas"),
+    path("api/productos/eliminar_todos/", views.eliminar_todos_productos, name="eliminar_todos_productos"),
 ]

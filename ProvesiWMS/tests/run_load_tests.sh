@@ -109,20 +109,19 @@ run_test() {
     
     print_info "Ejecutando prueba..."
     
-    locust -f "$LOCUSTFILE" \
+    # Pasar nombre del perfil como variable de entorno
+    LOCUST_PROFILE="$test_name" locust -f "$LOCUSTFILE" \
         --host="$BASE_URL" \
         --users="$users" \
         --spawn-rate="$spawn_rate" \
         --run-time="$run_time" \
-        --headless \
-        --html="$REPORTES_DIR/reporte_${test_name}.html" \
-        --csv="$REPORTES_DIR/reporte_${test_name}"
+        --headless
     
     local exit_code=$?
     
     if [ $exit_code -eq 0 ]; then
         print_success "Prueba completada"
-    else:
+    else
         print_error "Prueba fallo con codigo $exit_code"
     fi
     
@@ -223,16 +222,10 @@ main() {
     if [ "$mode" != "web" ]; then
         print_header "RESUMEN"
         print_success "Pruebas completadas"
-        print_info "Reportes en: $REPORTES_DIR/"
+        print_info "Reportes JSON en: $REPORTES_DIR/"
         
         echo ""
-        echo "Reportes HTML:"
-        ls -1 "$REPORTES_DIR"/*.html 2>/dev/null | tail -5 || echo "  (ninguno)"
-        
-        echo ""
-        echo "Reportes JSON:"
-        ls -1 "$SCRIPT_DIR"/reporte_locust_*.json 2>/dev/null | tail -5 || echo "  (ninguno)"
-        
+        ls -1t "$REPORTES_DIR"/*.json 2>/dev/null | head -5 || echo "  (ninguno)"
         echo ""
     fi
     

@@ -25,21 +25,26 @@ tests/
 pip install locust
 ```
 
-### 2. Preparar Datos Base en AWS
+### 2. Preparar Datos en AWS
 
-Usa Postman para crear los datos iniciales en el servidor AWS:
+Genera la coleccion Postman con todos los datos necesarios:
 
 ```bash
 cd scripts_llenar_db
-python generar_postman_aws.py
+python generar_postman_datos_completos.py
 ```
 
-Importa el archivo `postman_aws_datos_base.json` en Postman y ejecuta la coleccion completa.
+Importa `postman_datos_completos.json` en Postman y ejecuta la coleccion.
+
+**Configuracion recomendada:**
+- Delay entre requests: 100ms
+- Tiempo estimado: 2 minutos
 
 **Datos creados:**
-- 1 bodega
-- 1 ubicacion (capacidad: 20,000 articulos)
 - 50 productos
+- 10 bodegas (diferentes ciudades)
+- 1,000 ubicaciones (100 por bodega, capacidad 1M cada una)
+- Capacidad total: 1,000,000,000 articulos
 
 ### 3. Configurar URL del Servidor
 
@@ -104,32 +109,34 @@ Abre http://localhost:8089 y configura manualmente.
 
 ### Reportes Generados
 
-Cada prueba genera automaticamente:
+Cada prueba genera automaticamente un reporte JSON en la carpeta `reportes/`:
 
-1. **HTML** (`reportes/reporte_[nombre].html`)
-   - Visualizacion grafica de metricas
-   - Tablas de percentiles y errores
+**Formato:** `reportes/reporte_[perfil]_[timestamp].json`
 
-2. **CSV** (`reportes/reporte_[nombre]_stats.csv`)
-   - Datos crudos para analisis
+**Ejemplos:**
+- `reportes/reporte_baseline_20251015_143022.json`
+- `reportes/reporte_objective_20251015_143500.json`
 
-3. **JSON** (`reporte_locust_[timestamp].json`)
-   - Metricas completas con evaluacion automatica
+El reporte JSON incluye metricas completas con evaluacion automatica de objetivos.
 
 ### Metricas Principales
 
+El reporte JSON contiene:
+
 **Request Statistics:**
-- **# reqs**: Total de peticiones enviadas
-- **# fails**: Peticiones fallidas
-- **Avg/Min/Max**: Tiempos de respuesta en milisegundos
-- **req/s**: Throughput (peticiones por segundo)
+- `total_requests`: Total de peticiones enviadas
+- `exitosos`: Peticiones exitosas
+- `fallidos`: Peticiones fallidas
+- `tasa_exito_pct`: Porcentaje de exito
+- `req_por_minuto`: Throughput (peticiones por minuto)
 
-**Response Time Percentiles:**
-- **P50**: 50% de requests terminaron en este tiempo o menos
-- **P95**: 95% de requests terminaron en este tiempo o menos
-- **P99**: 99% de requests terminaron en este tiempo o menos
+**Response Time:**
+- `response_time_avg_ms`: Tiempo de respuesta promedio
+- `response_time_p50_ms`: Percentil 50 (mediana)
+- `response_time_p95_ms`: Percentil 95
+- `response_time_p99_ms`: Percentil 99
 
-**Objetivos Evaluados (JSON):**
+**Objetivos Evaluados:**
 ```json
 {
   "objetivos": {
@@ -153,34 +160,59 @@ Cada prueba genera automaticamente:
 | P99 tiempo respuesta | < 1000ms | No |
 
 
-## Generacion de Codigos Unicos
+## Distribucion y Unicidad
 
-Las pruebas generan codigos de barras EAN-13 unicos automaticamente:
+### Distribucion entre Ubicaciones
+
+Las pruebas distribuyen automaticamente los articulos entre todas las ubicaciones disponibles:
 
 ```python
-timestamp = int(time.time() * 1000000) % 1000000  # Microsegundos
+# Al inicio, las pruebas consultan todas las ubicaciones
+ubicaciones_url = f"{BASE_URL}/api/ubicaciones/?limit=2000"
+
+# Cada articulo se asigna aleatoriamente
+ubicacion_id = random.choice(UBICACION_IDS)
+```
+
+Con 1,000 ubicaciones, cada una recibe aproximadamente 10 articulos en la prueba objective (10,000 articulos).
+
+### Codigos de Barras Unicos
+
+Los codigos EAN-13 se generan con timestamp en microsegundos:
+
+```python
+timestamp = int(time.time() * 1000000) % 1000000
 codigo = timestamp * 1000 + contador
 ```
 
-**Ventajas:**
-- Ejecutar pruebas multiples veces sin conflictos
-- Sin necesidad de limpiar base de datos entre ejecuciones
-- Garantiza unicidad incluso con alta concurrencia
+Esto permite ejecutar las pruebas multiples veces sin conflictos de codigos duplicados.
 
 ## Limpieza de Datos (Opcional)
 
-Para eliminar articulos de pruebas anteriores:
+### Opcion 1: Comando Django (Solo Articulos)
+
+Elimina articulos creados durante las pruebas:
 
 ```bash
-# Eliminar todos los articulos
 python manage.py limpiar_articulos --all --yes
-
-# Eliminar articulos con mas de X dias
-python manage.py limpiar_articulos --dias 1 --yes
-
-# Ver que se eliminaria sin borrar
-python manage.py limpiar_articulos --all --dry-run
 ```
+
+### Opcion 2: Coleccion Postman (Limpieza Completa)
+
+Para eliminar todos los datos (productos, bodegas, ubicaciones, articulos):
+
+```bash
+cd scripts_llenar_db
+python generar_postman_limpiar_datos.py
+```
+
+Importa `postman_limpiar_datos.json` en Postman y ejecuta la coleccion.
+
+**NOTA:** Requiere implementar endpoints de eliminacion masiva en el backend:
+- `DELETE /api/articulos/eliminar_todos/`
+- `DELETE /api/ubicaciones/eliminar_todas/`
+- `DELETE /api/bodegas/eliminar_todas/`
+- `DELETE /api/productos/eliminar_todos/`
 
 ## Arquitectura AWS
 
@@ -204,7 +236,6 @@ Application Load Balancer (puerto 80)
 ### Variables de Entorno
 
 ```bash
-# Sobrescribir URL del servidor
 export BASE_URL="http://otro-servidor.com/inventario/"
 export TIMEOUT="60"
 
@@ -214,12 +245,11 @@ export TIMEOUT="60"
 ### Deteccion de Articulos Antiguos
 
 ```bash
-# Activar deteccion al inicio de pruebas
 export LIMPIAR_ARTICULOS_VIEJOS=true
 export DIAS_ANTIGUEDAD_LIMPIAR=1
 
 ./tests/run_load_tests.sh baseline
 ```
 
-Esto mostrara cuantos articulos antiguos existen sin eliminarlos.
+Muestra cuantos articulos con mas de N dias existen, sin eliminarlos.
 

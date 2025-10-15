@@ -1928,3 +1928,183 @@ def api_estadisticas_completas(request):
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
 
+# =========================
+# ENDPOINTS DE ELIMINACION MASIVA
+# =========================
+
+def eliminar_todos_articulos(request):
+    """
+    Endpoint para eliminar todos los artículos del sistema.
+    Útil para limpiar datos de prueba.
+    """
+    if request.method == 'DELETE':
+        try:
+            # Contar artículos antes de eliminar
+            total_articulos = Articulo.objects.count()
+            
+            if total_articulos == 0:
+                return JsonResponse({
+                    'success': True,
+                    'message': 'No hay artículos para eliminar',
+                    'eliminados': 0
+                })
+            
+            # Liberar capacidad en ubicaciones antes de eliminar
+            ubicaciones_afectadas = {}
+            for articulo in Articulo.objects.all():
+                ubicacion_id = articulo.ubicacion.pk
+                if ubicacion_id not in ubicaciones_afectadas:
+                    ubicaciones_afectadas[ubicacion_id] = 0
+                ubicaciones_afectadas[ubicacion_id] += 1
+            
+            # Actualizar capacidad disponible en ubicaciones
+            for ubicacion_id, cantidad in ubicaciones_afectadas.items():
+                ubicacion = UbicacionBodega.objects.get(id=ubicacion_id)
+                ubicacion.capacidad_disponible += cantidad
+                ubicacion.save()
+            
+            # Eliminar todos los artículos
+            Articulo.objects.all().delete()
+            
+            return JsonResponse({
+                'success': True,
+                'message': f'Eliminados {total_articulos} artículos exitosamente',
+                'eliminados': total_articulos,
+                'ubicaciones_liberadas': len(ubicaciones_afectadas)
+            })
+            
+        except Exception as e:
+            return JsonResponse({
+                'error': f'Error eliminando artículos: {str(e)}'
+            }, status=500)
+    else:
+        return JsonResponse({
+            'error': 'Método no permitido. Use DELETE'
+        }, status=405)
+
+def eliminar_todas_ubicaciones(request):
+    """
+    Endpoint para eliminar todas las ubicaciones de bodega.
+    PRECONDICION: No deben existir artículos.
+    """
+    if request.method == 'DELETE':
+        try:
+            # Verificar que no haya artículos
+            total_articulos = Articulo.objects.count()
+            if total_articulos > 0:
+                return JsonResponse({
+                    'error': f'No se pueden eliminar ubicaciones. Existen {total_articulos} artículos. Elimínelos primero.'
+                }, status=400)
+            
+            # Contar ubicaciones antes de eliminar
+            total_ubicaciones = UbicacionBodega.objects.count()
+            
+            if total_ubicaciones == 0:
+                return JsonResponse({
+                    'success': True,
+                    'message': 'No hay ubicaciones para eliminar',
+                    'eliminados': 0
+                })
+            
+            # Eliminar todas las ubicaciones
+            UbicacionBodega.objects.all().delete()
+            
+            return JsonResponse({
+                'success': True,
+                'message': f'Eliminadas {total_ubicaciones} ubicaciones exitosamente',
+                'eliminados': total_ubicaciones
+            })
+            
+        except Exception as e:
+            return JsonResponse({
+                'error': f'Error eliminando ubicaciones: {str(e)}'
+            }, status=500)
+    else:
+        return JsonResponse({
+            'error': 'Método no permitido. Use DELETE'
+        }, status=405)
+
+def eliminar_todas_bodegas(request):
+    """
+    Endpoint para eliminar todas las bodegas.
+    PRECONDICION: No deben existir ubicaciones.
+    """
+    if request.method == 'DELETE':
+        try:
+            # Verificar que no haya ubicaciones
+            total_ubicaciones = UbicacionBodega.objects.count()
+            if total_ubicaciones > 0:
+                return JsonResponse({
+                    'error': f'No se pueden eliminar bodegas. Existen {total_ubicaciones} ubicaciones. Elimínelas primero.'
+                }, status=400)
+            
+            # Contar bodegas antes de eliminar
+            total_bodegas = Bodega.objects.count()
+            
+            if total_bodegas == 0:
+                return JsonResponse({
+                    'success': True,
+                    'message': 'No hay bodegas para eliminar',
+                    'eliminados': 0
+                })
+            
+            # Eliminar todas las bodegas
+            Bodega.objects.all().delete()
+            
+            return JsonResponse({
+                'success': True,
+                'message': f'Eliminadas {total_bodegas} bodegas exitosamente',
+                'eliminados': total_bodegas
+            })
+            
+        except Exception as e:
+            return JsonResponse({
+                'error': f'Error eliminando bodegas: {str(e)}'
+            }, status=500)
+    else:
+        return JsonResponse({
+            'error': 'Método no permitido. Use DELETE'
+        }, status=405)
+
+def eliminar_todos_productos(request):
+    """
+    Endpoint para eliminar todos los productos.
+    PRECONDICION: No deben existir artículos asociados.
+    """
+    if request.method == 'DELETE':
+        try:
+            # Verificar que no haya artículos
+            total_articulos = Articulo.objects.count()
+            if total_articulos > 0:
+                return JsonResponse({
+                    'error': f'No se pueden eliminar productos. Existen {total_articulos} artículos asociados. Elimínelos primero.'
+                }, status=400)
+            
+            # Contar productos antes de eliminar
+            total_productos = Producto.objects.count()
+            
+            if total_productos == 0:
+                return JsonResponse({
+                    'success': True,
+                    'message': 'No hay productos para eliminar',
+                    'eliminados': 0
+                })
+            
+            # Eliminar todos los productos
+            Producto.objects.all().delete()
+            
+            return JsonResponse({
+                'success': True,
+                'message': f'Eliminados {total_productos} productos exitosamente',
+                'eliminados': total_productos
+            })
+            
+        except Exception as e:
+            return JsonResponse({
+                'error': f'Error eliminando productos: {str(e)}'
+            }, status=500)
+    else:
+        return JsonResponse({
+            'error': 'Método no permitido. Use DELETE'
+        }, status=405)
+
