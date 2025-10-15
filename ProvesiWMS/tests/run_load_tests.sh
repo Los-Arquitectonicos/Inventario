@@ -1,126 +1,114 @@
 #!/bin/bash
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# Script de Ejecución de Pruebas de Carga
-# ═══════════════════════════════════════════════════════════════════════════════
-#
-# Este script ejecuta todas las pruebas de carga del sistema de inventario
-# validando el requerimiento de escalabilidad (100 → 2,000 req/min)
+# Script de Ejecucion de Pruebas de Carga
+# Valida escalabilidad: 100 → 2,000 req/min, 10,000 registros en <5 min
 #
 # Uso:
 #   ./tests/run_load_tests.sh [modo]
 #
 # Modos:
 #   all       - Ejecuta todas las pruebas (por defecto)
-#   baseline  - Solo prueba baseline (100 req/min)
-#   medium    - Solo prueba media carga (500 req/min)
-#   high      - Solo prueba alta carga (1,000 req/min)
-#   max       - Solo prueba máxima carga (2,000 req/min)
-#   objective - Solo prueba objetivo (10,000 artículos)
-#   web       - Abre interfaz web de Locust
-#
-# Ejemplos:
-#   ./tests/run_load_tests.sh
-#   ./tests/run_load_tests.sh baseline
-#   ./tests/run_load_tests.sh web
-#
-# ═══════════════════════════════════════════════════════════════════════════════
+#   baseline  - Prueba baseline (100 req/min, 1 min)
+#   medium    - Carga media (500 req/min, 2 min)
+#   high      - Carga alta (1,000 req/min, 3 min)
+#   max       - Carga maxima (2,000 req/min, 5 min)
+#   objective - Prueba objetivo (10,000 articulos, 5 min)
+#   web       - Interfaz web de Locust
 
-set -e  # Exit on error
+set -e
 
-# Colores para output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-CYAN='\033[0;36m'
-NC='\033[0m' # No Color
+# Configuracion
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-# ═══════════════════════════════════════════════════════════════════════════════
-# CONFIGURACIÓN
-# ═══════════════════════════════════════════════════════════════════════════════
+if [ -z "$BASE_URL" ]; then
+    BASE_URL=$(python -c "import sys; sys.path.insert(0, '$SCRIPT_DIR'); from config_entornos import BASE_URL; print(BASE_URL)" 2>/dev/null || echo "http://127.0.0.1:8000")
+fi
 
-# Leer configuración de tests/config_entornos.py
-BASE_URL=${BASE_URL:-"http://127.0.0.1:8000"}
-LOCUSTFILE="tests/locustfile.py"
-REPORTES_DIR="tests/reportes"
+LOCUSTFILE="$SCRIPT_DIR/locustfile.py"
+REPORTES_DIR="$SCRIPT_DIR/reportes"
 
-# Crear directorio de reportes si no existe
 mkdir -p "$REPORTES_DIR"
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# FUNCIONES AUXILIARES
-# ═══════════════════════════════════════════════════════════════════════════════
+# Funciones auxiliares
 
 print_header() {
-    echo -e "\n${CYAN}═══════════════════════════════════════════════════════════════════════════════${NC}"
-    echo -e "${CYAN}$1${NC}"
-    echo -e "${CYAN}═══════════════════════════════════════════════════════════════════════════════${NC}\n"
+    echo ""
+    echo "================================================================================"
+    echo "$1"
+    echo "================================================================================"
+    echo ""
 }
 
 print_info() {
-    echo -e "${BLUE}ℹ️  $1${NC}"
+    echo "[INFO] $1"
 }
 
 print_success() {
-    echo -e "${GREEN}✅ $1${NC}"
+    echo "[OK] $1"
 }
 
 print_warning() {
-    echo -e "${YELLOW}⚠️  $1${NC}"
+    echo "[WARNING] $1"
 }
 
 print_error() {
-    echo -e "${RED}❌ $1${NC}"
+    echo "[ERROR] $1"
 }
 
 check_dependencies() {
     print_info "Verificando dependencias..."
     
-    # Verificar Python
     if ! command -v python &> /dev/null; then
-        print_error "Python no está instalado"
+        print_error "Python no esta instalado"
         exit 1
     fi
     
-    # Verificar Locust
     if ! python -c "import locust" 2>/dev/null; then
-        print_warning "Locust no está instalado"
+        print_warning "Locust no esta instalado"
         print_info "Instalando Locust..."
         pip install locust
-        print_success "Locust instalado correctamente"
+        print_success "Locust instalado"
     fi
     
-    # Verificar que el servidor esté corriendo
-    print_info "Verificando servidor en $BASE_URL..."
-    if curl -s -f "$BASE_URL/inventario/" > /dev/null 2>&1; then
-        print_success "Servidor está corriendo"
-    else
-        print_error "Servidor no está corriendo en $BASE_URL"
-        print_info "Por favor, inicia el servidor con: python manage.py runserver"
+    if [ ! -f "$LOCUSTFILE" ]; then
+        print_error "No se encuentra locustfile.py en: $LOCUSTFILE"
         exit 1
     fi
+    
+    print_info "Verificando servidor en $BASE_URL..."
+    
+    if [[ "$BASE_URL" == *"/inventario/"* ]]; then
+        CHECK_URL="$BASE_URL"
+    else
+        CHECK_URL="${BASE_URL}/inventario/"
+    fi
+    
+    if curl -s -f -m 10 "$CHECK_URL" > /dev/null 2>&1; then
+        print_success "Servidor respondiendo"
+    else
+        print_warning "No se pudo verificar servidor en $CHECK_URL"
+        print_info "Continuando (servidor puede estar remoto)"
+    fi
 }
-
 run_test() {
     local test_name=$1
     local users=$2
     local spawn_rate=$3
     local run_time=$4
     local description=$5
+    local expected_req_min=$6
     
     print_header "$test_name: $description"
     
-    print_info "Configuración:"
-    echo "   • Usuarios: $users"
-    echo "   • Spawn rate: $spawn_rate usuarios/seg"
-    echo "   • Duración: $run_time"
-    echo "   • Host: $BASE_URL"
+    print_info "Configuracion:"
+    echo "  Usuarios simultaneos: $users"
+    echo "  Velocidad de inicio: $spawn_rate usuarios/seg"
+    echo "  Duracion: $run_time"
+    echo "  Throughput esperado: ~$expected_req_min req/min"
+    echo "  Host: $BASE_URL"
     echo ""
     
-    print_info "Iniciando prueba..."
+    print_info "Ejecutando prueba..."
     
-    # Ejecutar Locust
     locust -f "$LOCUSTFILE" \
         --host="$BASE_URL" \
         --users="$users" \
@@ -134,36 +122,33 @@ run_test() {
     
     if [ $exit_code -eq 0 ]; then
         print_success "Prueba completada"
-    else
-        print_error "Prueba falló con código $exit_code"
+    else:
+        print_error "Prueba fallo con codigo $exit_code"
     fi
     
     echo ""
-    sleep 2  # Pausa entre tests
+    sleep 2
 }
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# DEFINICIÓN DE PRUEBAS
-# ═══════════════════════════════════════════════════════════════════════════════
+# Definicion de pruebas
 
 test_baseline() {
-    run_test "baseline" 2 1 "1m" "100 req/min - Línea base"
+    run_test "baseline" 2 1 "1m" "Linea base" "100"
 }
 
 test_medium() {
-    run_test "medium" 10 2 "2m" "500 req/min - Carga media"
+    run_test "medium" 10 2 "2m" "Carga media" "500"
 }
 
 test_high() {
-    run_test "high" 20 5 "3m" "1,000 req/min - Carga alta"
+    run_test "high" 20 5 "3m" "Carga alta" "1000"
 }
 
 test_max() {
-    run_test "max" 40 10 "5m" "2,000 req/min - Carga máxima"
+    run_test "max" 40 10 "5m" "Carga maxima" "2000"
 }
 
 test_objective() {
-    run_test "objective" 35 7 "5m" "10,000 artículos - Prueba objetivo"
+    run_test "objective" 35 7 "5m" "Objetivo 10k articulos" "~2000"
 }
 
 test_web() {
@@ -175,30 +160,24 @@ test_web() {
     
     locust -f "$LOCUSTFILE" --host="$BASE_URL"
 }
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# FUNCIÓN PRINCIPAL
-# ═══════════════════════════════════════════════════════════════════════════════
+# Funcion principal
 
 main() {
     local mode=${1:-all}
     
-    print_header "🚀 PRUEBAS DE CARGA - INVENTARIO WMS"
+    print_header "PRUEBAS DE CARGA - INVENTARIO WMS"
     
-    echo -e "${CYAN}Requerimiento:${NC}"
-    echo "  Escalar de 100 req/min a 2,000 req/min"
+    echo "Requerimiento:"
+    echo "  Escalar de 100 a 2,000 req/min"
     echo "  Procesar 10,000 registros en < 5 minutos"
     echo ""
     
-    # Verificar dependencias
     check_dependencies
     
-    # Timestamp para reportes
     TIMESTAMP=$(date +%Y%m%d_%H%M%S)
     echo ""
-    print_info "Timestamp de ejecución: $TIMESTAMP"
+    print_info "Timestamp: $TIMESTAMP"
     
-    # Ejecutar pruebas según el modo
     case $mode in
         all)
             print_info "Ejecutando TODAS las pruebas..."
@@ -229,43 +208,35 @@ main() {
         *)
             print_error "Modo desconocido: $mode"
             echo ""
-            echo "Modos válidos:"
-            echo "  all       - Todas las pruebas (por defecto)"
-            echo "  baseline  - Prueba baseline (100 req/min)"
-            echo "  medium    - Carga media (500 req/min)"
-            echo "  high      - Carga alta (1,000 req/min)"
-            echo "  max       - Carga máxima (2,000 req/min)"
-            echo "  objective - Prueba objetivo (10,000 artículos)"
+            echo "Modos validos:"
+            echo "  all       - Todas las pruebas"
+            echo "  baseline  - Linea base (100 req/min, 1 min)"
+            echo "  medium    - Carga media (500 req/min, 2 min)"
+            echo "  high      - Carga alta (1,000 req/min, 3 min)"
+            echo "  max       - Carga maxima (2,000 req/min, 5 min)"
+            echo "  objective - Objetivo (10,000 articulos, 5 min)"
             echo "  web       - Interfaz web"
             exit 1
             ;;
     esac
     
-    # Resumen final
     if [ "$mode" != "web" ]; then
-        print_header "📊 RESUMEN FINAL"
+        print_header "RESUMEN"
         print_success "Pruebas completadas"
-        print_info "Reportes guardados en: $REPORTES_DIR/"
+        print_info "Reportes en: $REPORTES_DIR/"
         
-        # Listar reportes generados
         echo ""
         echo "Reportes HTML:"
         ls -1 "$REPORTES_DIR"/*.html 2>/dev/null | tail -5 || echo "  (ninguno)"
         
         echo ""
         echo "Reportes JSON:"
-        ls -1 tests/reporte_locust_*.json 2>/dev/null | tail -5 || echo "  (ninguno)"
+        ls -1 "$SCRIPT_DIR"/reporte_locust_*.json 2>/dev/null | tail -5 || echo "  (ninguno)"
         
         echo ""
-        print_info "Para ver reportes HTML, abre en tu navegador:"
-        echo "  file://$(pwd)/$REPORTES_DIR/reporte_<nombre>.html"
     fi
     
     echo ""
 }
-
-# ═══════════════════════════════════════════════════════════════════════════════
-# EJECUTAR
-# ═══════════════════════════════════════════════════════════════════════════════
 
 main "$@"

@@ -1,18 +1,23 @@
-# Pruebas de Carga con Locust
+# Pruebas de Carga - Sistema de Inventario WMS
 
 ## Resumen
 
-Este directorio contiene las pruebas de carga para validar que el sistema puede escalar de 100 a 2,000 peticiones por minuto, procesando 10,000 registros en menos de 5 minutos mientras mantiene la integridad de datos.
+Pruebas automatizadas con Locust para validar el requerimiento de escalabilidad del sistema:
+- Throughput: 100 a 2,000 peticiones/minuto
+- Capacidad: 10,000 registros en menos de 5 minutos
+- Tasa de exito: >= 95%
 
 ## Estructura de Archivos
 
-- `locustfile.py` - Definiciones de usuarios y tareas de prueba
-- `config_entornos.py` - Configuración centralizada (URL, timeouts, umbrales)
-- `run_load_tests.sh` - Script de ejecución automatizada
-- `.gitignore` - Archivos ignorados por git
-- `reportes/` - Directorio para reportes HTML/CSV generados
+```
+tests/
+├── locustfile.py          # Definicion de pruebas de carga
+├── config_entornos.py     # Configuracion (URL, timeouts)
+├── run_load_tests.sh      # Script de ejecucion automatizada
+└── reportes/              # Reportes HTML/CSV generados
+```
 
-## Configuración Inicial
+## Configuracion Inicial
 
 ### 1. Instalar Locust
 
@@ -20,245 +25,201 @@ Este directorio contiene las pruebas de carga para validar que el sistema puede 
 pip install locust
 ```
 
-### 2. Preparar Datos Base
+### 2. Preparar Datos Base en AWS
 
-Antes de ejecutar las pruebas por primera vez, necesitas crear datos iniciales. Ejecuta esto una sola vez:
+Usa Postman para crear los datos iniciales en el servidor AWS:
 
 ```bash
-python manage.py shell
+cd scripts_llenar_db
+python generar_postman_aws.py
 ```
 
-Luego copia y pega este código:
+Importa el archivo `postman_aws_datos_base.json` en Postman y ejecuta la coleccion completa.
+
+**Datos creados:**
+- 1 bodega
+- 1 ubicacion (capacidad: 20,000 articulos)
+- 50 productos
+
+### 3. Configurar URL del Servidor
+
+Edita `tests/config_entornos.py`:
 
 ```python
-from inventario.models import Bodega, UbicacionBodega, Producto
-
-bodega = Bodega.objects.create(
-    nombre="Bodega Test",
-    ciudad="Bogota",
-    direccion="Calle 1"
-)
-
-ubicacion = UbicacionBodega.objects.create(
-    bodega=bodega,
-    pasillo="A",
-    estante="1",
-    nivel="1",
-    capacidad_total=20000,
-    capacidad_disponible=20000
-)
-
-for i in range(1, 51):
-    Producto.objects.create(
-        codigo=f"P{i:03d}",
-        nombre=f"Producto {i}",
-        precio_unitario=10 * i
-    )
+BASE_URL = "http://provesi-alb-xxxx.us-east-1.elb.amazonaws.com/inventario/"
+TIMEOUT = 30
 ```
 
-### 3. Iniciar Servidor Django
-
-```bash
-python manage.py runserver
-```
 
 ## Ejecutar Pruebas
 
-### Opción 1: Interfaz Web (Recomendado para Exploración)
+### Pruebas Automatizadas
 
-Esta opción te permite ver métricas en tiempo real y ajustar parámetros sobre la marcha:
+```bash
+# Baseline: 100 req/min
+./tests/run_load_tests.sh baseline
+
+# Media: 500 req/min
+./tests/run_load_tests.sh medium
+
+# Alta: 1,000 req/min
+./tests/run_load_tests.sh high
+
+# Maxima: 2,000 req/min
+./tests/run_load_tests.sh max
+
+# Objetivo: 10,000 articulos
+./tests/run_load_tests.sh objective
+
+# Todas las pruebas
+./tests/run_load_tests.sh all
+```
+
+### Interfaz Web (Opcional)
 
 ```bash
 ./tests/run_load_tests.sh web
 ```
 
-Abre http://localhost:8089 en tu navegador y configura:
-- Number of users: 35
-- Spawn rate: 7
-- Host: http://127.0.0.1:8000
+Abre http://localhost:8089 y configura manualmente.
 
-### Opción 2: Pruebas Automatizadas
+## Perfiles de Prueba
 
-El script incluye 5 perfiles predefinidos que puedes ejecutar directamente:
+| Perfil | Usuarios | Spawn Rate | Duracion | Throughput Esperado | Articulos Creados |
+|--------|----------|------------|----------|---------------------|-------------------|
+| baseline | 2 | 1/seg | 1 min | ~100 req/min | ~100 |
+| medium | 10 | 2/seg | 2 min | ~500 req/min | ~1,000 |
+| high | 20 | 5/seg | 3 min | ~1,000 req/min | ~3,000 |
+| max | 40 | 10/seg | 5 min | ~2,000 req/min | ~10,000 |
+| objective | 35 | 7/seg | 5 min | ~2,000 req/min | ~10,000 |
 
-```bash
-# Baseline: 100 req/min durante 1 minuto
-./tests/run_load_tests.sh baseline
+**Parametros explicados:**
+- **Usuarios**: Cantidad de usuarios virtuales simultaneos
+- **Spawn Rate**: Velocidad de inicio de usuarios (usuarios/segundo)
+- **Duracion**: Tiempo total de ejecucion de la prueba
+- **Throughput**: Peticiones por minuto esperadas
 
-# Carga media: 500 req/min durante 2 minutos
-./tests/run_load_tests.sh medium
-
-# Carga alta: 1,000 req/min durante 3 minutos
-./tests/run_load_tests.sh high
-
-# Carga máxima: 2,000 req/min durante 3 minutos
-./tests/run_load_tests.sh max
-
-# Test objetivo: 10,000 artículos en aproximadamente 5 minutos
-./tests/run_load_tests.sh objective
-
-# Ejecutar todos los tests
-./tests/run_load_tests.sh all
-```
 
 ## Interpretar Resultados
 
-### Métricas Principales
+### Reportes Generados
 
-Después de cada prueba, verás métricas como estas:
-
-- **Request/s**: Solicitudes procesadas por segundo
-- **Response Time (avg)**: Tiempo promedio de respuesta en milisegundos
-- **P95/P99**: El 95% y 99% de las peticiones se completan en este tiempo o menos
-- **Success Rate**: Porcentaje de peticiones exitosas (buscamos >95%)
-
-### Tipos de Reportes
-
-Cada prueba genera tres tipos de reportes automáticamente:
+Cada prueba genera automaticamente:
 
 1. **HTML** (`reportes/reporte_[nombre].html`)
-   - Reportes interactivos con gráficas
-   - Perfecto para presentaciones o análisis visual
+   - Visualizacion grafica de metricas
+   - Tablas de percentiles y errores
 
 2. **CSV** (`reportes/reporte_[nombre]_stats.csv`)
-   - Datos crudos para análisis detallado
-   - Útil para importar a Excel o herramientas de análisis
+   - Datos crudos para analisis
 
 3. **JSON** (`reporte_locust_[timestamp].json`)
-   - Métricas completas con evaluación automática
-   - Incluye validación de objetivos cumplidos
+   - Metricas completas con evaluacion automatica
 
-### Evaluación Automática
+### Metricas Principales
 
-El sistema evalúa automáticamente si se cumplen los objetivos. Busca esta sección en el JSON:
+**Request Statistics:**
+- **# reqs**: Total de peticiones enviadas
+- **# fails**: Peticiones fallidas
+- **Avg/Min/Max**: Tiempos de respuesta en milisegundos
+- **req/s**: Throughput (peticiones por segundo)
 
+**Response Time Percentiles:**
+- **P50**: 50% de requests terminaron en este tiempo o menos
+- **P95**: 95% de requests terminaron en este tiempo o menos
+- **P99**: 99% de requests terminaron en este tiempo o menos
+
+**Objetivos Evaluados (JSON):**
 ```json
 {
-  "objetivos_cumplidos": {
-    "tiempo_ejecucion": true,
-    "tasa_exito": true,
-    "throughput_promedio": true
+  "objetivos": {
+    "throughput_min_100": true,      // >= 100 req/min
+    "throughput_max_2000": true,     // <= 2,000 req/min
+    "tiempo_10k_menos_5min": true,   // 10k articulos en <5 min
+    "tasa_exito_95pct": true         // >= 95% exitosos
   }
 }
 ```
 
-## Configuración
+### Criterios de Exito
 
-### Cambiar Puerto o Servidor
+| Metrica | Objetivo | Critico |
+|---------|----------|---------|
+| Throughput minimo | >= 100 req/min | Si |
+| Throughput maximo | <= 2,000 req/min | Si |
+| Tasa de exito | >= 95% | Si |
+| Tiempo 10k articulos | < 5 min | Si |
+| P95 tiempo respuesta | < 500ms | No |
+| P99 tiempo respuesta | < 1000ms | No |
 
-Si necesitas apuntar a un servidor diferente o puerto, edita `config_entornos.py`:
 
-```python
-# Desarrollo local (puerto por defecto)
-BASE_URL = "http://127.0.0.1:8000"
+## Generacion de Codigos Unicos
 
-# Desarrollo local (puerto personalizado)
-BASE_URL = "http://127.0.0.1:8080"
-
-# Servidor remoto
-BASE_URL = "http://your-server.com:80"
-
-# AWS Load Balancer
-BASE_URL = "http://your-alb.amazonaws.com:80"
-```
-
-### Ajustar Umbrales de Éxito
-
-También en `config_entornos.py`:
+Las pruebas generan codigos de barras EAN-13 unicos automaticamente:
 
 ```python
-UMBRAL_EXITO_PCT = 95  # Porcentaje mínimo de éxito
-TIMEOUT = 30           # Timeout en segundos para cada request
+timestamp = int(time.time() * 1000000) % 1000000  # Microsegundos
+codigo = timestamp * 1000 + contador
 ```
 
-## Cómo Funciona
+**Ventajas:**
+- Ejecutar pruebas multiples veces sin conflictos
+- Sin necesidad de limpiar base de datos entre ejecuciones
+- Garantiza unicidad incluso con alta concurrencia
 
-### Tipos de Usuarios Simulados
+## Limpieza de Datos (Opcional)
 
-Locust simula dos tipos de usuarios para hacer las pruebas más realistas:
+Para eliminar articulos de pruebas anteriores:
 
-**UsuarioArticulos (80% del tráfico)**
-- Comportamiento realista de un usuario normal
-- 50% del tiempo: crea nuevos artículos
-- 30% del tiempo: lista artículos existentes
-- 20% del tiempo: consulta detalles de artículos
-
-**UsuarioIntensivo (20% del tráfico)**
-- Generación pura de carga
-- 100% del tiempo: crea artículos continuamente
-- Simula procesos batch o integraciones
-
-## Notas Importantes
-
-### Base de Datos
-
-- **Desarrollo**: Actualmente usa SQLite, que tiene limitaciones de concurrencia
-- **Producción**: Requiere PostgreSQL o MySQL para soportar alta concurrencia
-- Para cambiar a PostgreSQL, solo actualiza `settings.py` - las pruebas no necesitan cambios
-
-### Thread-Safety
-
-El método `ocupar_espacio()` en el código utiliza:
-- `select_for_update()`: Bloquea filas durante la transacción
-- `F()` expressions: Actualizaciones atómicas en la base de datos
-- `transaction.atomic()`: Garantiza transacciones ACID
-
-Esto asegura que no haya condiciones de carrera incluso con miles de peticiones concurrentes.
-
-## Solución de Problemas
-
-### Error: "Connection refused"
-
-**Problema**: No puede conectarse al servidor Django.
-
-**Solución**:
-1. Verifica que Django esté corriendo: `python manage.py runserver`
-2. Confirma que el puerto en `config_entornos.py` coincida con el servidor
-3. Verifica que no haya firewall bloqueando el puerto
-
-### Error: "ImportError: No module named locust"
-
-**Problema**: Locust no está instalado.
-
-**Solución**:
 ```bash
-pip install locust
+# Eliminar todos los articulos
+python manage.py limpiar_articulos --all --yes
+
+# Eliminar articulos con mas de X dias
+python manage.py limpiar_articulos --dias 1 --yes
+
+# Ver que se eliminaria sin borrar
+python manage.py limpiar_articulos --all --dry-run
 ```
 
-### Tasa de Éxito Baja (<95%)
+## Arquitectura AWS
 
-**Problema**: Muchas peticiones fallan o dan error.
+```
+Application Load Balancer (puerto 80)
+    |
+    ├── EC2 App Server 1 (Django + Gunicorn)
+    ├── EC2 App Server 2 (Django + Gunicorn)
+    |
+    └── EC2 Database Server (PostgreSQL 16)
+```
 
-**Posibles causas y soluciones**:
-1. **Sobrecarga del servidor**
-   - Reduce el número de usuarios o spawn rate
-   - Aumenta la capacidad del servidor
+**Configuracion:**
+- Base de datos: PostgreSQL 16
+- Servidor web: Gunicorn
+- Balanceador: AWS Application Load Balancer
+- Capacidad: 2 servidores de aplicacion
 
-2. **Base de datos saturada**
-   - Considera usar PostgreSQL en lugar de SQLite
-   - Revisa índices en las tablas
+## Configuracion Avanzada
 
-3. **Errores en la aplicación**
-   - Revisa los logs de Django para ver errores específicos
-   - Verifica que haya suficiente capacidad en las ubicaciones
+### Variables de Entorno
 
-### Timeouts Frecuentes
+```bash
+# Sobrescribir URL del servidor
+export BASE_URL="http://otro-servidor.com/inventario/"
+export TIMEOUT="60"
 
-**Problema**: Muchas peticiones exceden el tiempo límite.
+./tests/run_load_tests.sh objective
+```
 
-**Soluciones**:
-1. Aumenta `TIMEOUT` en `config_entornos.py`
-2. Reduce la carga concurrente
-3. Optimiza las consultas de base de datos (usa `select_related`, `prefetch_related`)
-4. Considera agregar cache
+### Deteccion de Articulos Antiguos
 
-## Próximos Pasos
+```bash
+# Activar deteccion al inicio de pruebas
+export LIMPIAR_ARTICULOS_VIEJOS=true
+export DIAS_ANTIGUEDAD_LIMPIAR=1
 
-Una vez que las pruebas locales funcionen correctamente:
+./tests/run_load_tests.sh baseline
+```
 
-1. Migra a PostgreSQL para producción
-2. Configura el load balancer y actualiza `BASE_URL`
-3. Ejecuta las pruebas contra el ambiente de staging
-4. Valida que todos los objetivos se cumplan
-5. Documenta los resultados para el equipo
+Esto mostrara cuantos articulos antiguos existen sin eliminarlos.
 

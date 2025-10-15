@@ -1,0 +1,2252 @@
+{
+  "info": {
+    "name": "ProvesiWMS AWS - Crear Datos Base",
+    "description": "Colección para crear datos base en PostgreSQL AWS. Generada el 15/10/2025 12:39",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1️⃣ POST Bodega",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200 or 201', function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+              "});",
+              "",
+              "console.log('✅ Bodega creada');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"Bodega Principal\",\n  \"ciudad\": \"Bogota\",\n  \"direccion\": \"Calle 100 #15-20, Bogotá\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/inventario/bodegas/crear/",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "inventario",
+            "bodegas",
+            "crear",
+            ""
+          ]
+        }
+      }
+    },
+    {
+      "name": "2️⃣ POST Ubicación (⚠️ Ajustar bodega_id)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200 or 201', function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+              "});",
+              "",
+              "console.log('✅ Ubicación creada');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"pasillo\": \"A\",\n  \"estante\": \"1\",\n  \"nivel\": \"1\",\n  \"capacidad_total\": 20000,\n  \"capacidad_disponible\": 20000,\n  \"bodega_id\": 1\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/inventario/ubicaciones/crear/",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "inventario",
+            "ubicaciones",
+            "crear",
+            ""
+          ]
+        }
+      }
+    },
+    {
+      "name": "3️⃣ POST Producto 01 - Producto 1",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200 or 201', function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+              "});",
+              "",
+              "console.log('✅ Producto 1/50 creado: Producto 1');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"Producto 1\",\n  \"descripcion\": \"Descripción detallada del producto 1. Ideal para pruebas de carga y demostración del sistema.\",\n  \"marca\": \"Test Brand\",\n  \"precio_costo\": 5.0,\n  \"precio_venta\": 10.0,\n  \"cantidad_stock\": 1000,\n  \"peso\": 0.5,\n  \"dimensiones\": \"10x10x10 cm\",\n  \"color\": \"Azul\",\n  \"talla\": \"M\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/inventario/productos/crear/",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "inventario",
+            "productos",
+            "crear",
+            ""
+          ]
+        }
+      }
+    },
+    {
+      "name": "3️⃣ POST Producto 02 - Producto 2",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200 or 201', function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+              "});",
+              "",
+              "console.log('✅ Producto 2/50 creado: Producto 2');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"Producto 2\",\n  \"descripcion\": \"Descripción detallada del producto 2. Ideal para pruebas de carga y demostración del sistema.\",\n  \"marca\": \"Test Brand\",\n  \"precio_costo\": 10.0,\n  \"precio_venta\": 20.0,\n  \"cantidad_stock\": 1000,\n  \"peso\": 0.5,\n  \"dimensiones\": \"10x10x10 cm\",\n  \"color\": \"Azul\",\n  \"talla\": \"M\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/inventario/productos/crear/",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "inventario",
+            "productos",
+            "crear",
+            ""
+          ]
+        }
+      }
+    },
+    {
+      "name": "3️⃣ POST Producto 03 - Producto 3",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200 or 201', function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+              "});",
+              "",
+              "console.log('✅ Producto 3/50 creado: Producto 3');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"Producto 3\",\n  \"descripcion\": \"Descripción detallada del producto 3. Ideal para pruebas de carga y demostración del sistema.\",\n  \"marca\": \"Test Brand\",\n  \"precio_costo\": 15.0,\n  \"precio_venta\": 30.0,\n  \"cantidad_stock\": 1000,\n  \"peso\": 0.5,\n  \"dimensiones\": \"10x10x10 cm\",\n  \"color\": \"Azul\",\n  \"talla\": \"M\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/inventario/productos/crear/",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "inventario",
+            "productos",
+            "crear",
+            ""
+          ]
+        }
+      }
+    },
+    {
+      "name": "3️⃣ POST Producto 04 - Producto 4",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200 or 201', function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+              "});",
+              "",
+              "console.log('✅ Producto 4/50 creado: Producto 4');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"Producto 4\",\n  \"descripcion\": \"Descripción detallada del producto 4. Ideal para pruebas de carga y demostración del sistema.\",\n  \"marca\": \"Test Brand\",\n  \"precio_costo\": 20.0,\n  \"precio_venta\": 40.0,\n  \"cantidad_stock\": 1000,\n  \"peso\": 0.5,\n  \"dimensiones\": \"10x10x10 cm\",\n  \"color\": \"Azul\",\n  \"talla\": \"M\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/inventario/productos/crear/",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "inventario",
+            "productos",
+            "crear",
+            ""
+          ]
+        }
+      }
+    },
+    {
+      "name": "3️⃣ POST Producto 05 - Producto 5",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200 or 201', function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+              "});",
+              "",
+              "console.log('✅ Producto 5/50 creado: Producto 5');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"Producto 5\",\n  \"descripcion\": \"Descripción detallada del producto 5. Ideal para pruebas de carga y demostración del sistema.\",\n  \"marca\": \"Test Brand\",\n  \"precio_costo\": 25.0,\n  \"precio_venta\": 50.0,\n  \"cantidad_stock\": 1000,\n  \"peso\": 0.5,\n  \"dimensiones\": \"10x10x10 cm\",\n  \"color\": \"Azul\",\n  \"talla\": \"M\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/inventario/productos/crear/",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "inventario",
+            "productos",
+            "crear",
+            ""
+          ]
+        }
+      }
+    },
+    {
+      "name": "3️⃣ POST Producto 06 - Producto 6",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200 or 201', function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+              "});",
+              "",
+              "console.log('✅ Producto 6/50 creado: Producto 6');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"Producto 6\",\n  \"descripcion\": \"Descripción detallada del producto 6. Ideal para pruebas de carga y demostración del sistema.\",\n  \"marca\": \"Test Brand\",\n  \"precio_costo\": 30.0,\n  \"precio_venta\": 60.0,\n  \"cantidad_stock\": 1000,\n  \"peso\": 0.5,\n  \"dimensiones\": \"10x10x10 cm\",\n  \"color\": \"Azul\",\n  \"talla\": \"M\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/inventario/productos/crear/",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "inventario",
+            "productos",
+            "crear",
+            ""
+          ]
+        }
+      }
+    },
+    {
+      "name": "3️⃣ POST Producto 07 - Producto 7",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200 or 201', function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+              "});",
+              "",
+              "console.log('✅ Producto 7/50 creado: Producto 7');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"Producto 7\",\n  \"descripcion\": \"Descripción detallada del producto 7. Ideal para pruebas de carga y demostración del sistema.\",\n  \"marca\": \"Test Brand\",\n  \"precio_costo\": 35.0,\n  \"precio_venta\": 70.0,\n  \"cantidad_stock\": 1000,\n  \"peso\": 0.5,\n  \"dimensiones\": \"10x10x10 cm\",\n  \"color\": \"Azul\",\n  \"talla\": \"M\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/inventario/productos/crear/",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "inventario",
+            "productos",
+            "crear",
+            ""
+          ]
+        }
+      }
+    },
+    {
+      "name": "3️⃣ POST Producto 08 - Producto 8",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200 or 201', function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+              "});",
+              "",
+              "console.log('✅ Producto 8/50 creado: Producto 8');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"Producto 8\",\n  \"descripcion\": \"Descripción detallada del producto 8. Ideal para pruebas de carga y demostración del sistema.\",\n  \"marca\": \"Test Brand\",\n  \"precio_costo\": 40.0,\n  \"precio_venta\": 80.0,\n  \"cantidad_stock\": 1000,\n  \"peso\": 0.5,\n  \"dimensiones\": \"10x10x10 cm\",\n  \"color\": \"Azul\",\n  \"talla\": \"M\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/inventario/productos/crear/",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "inventario",
+            "productos",
+            "crear",
+            ""
+          ]
+        }
+      }
+    },
+    {
+      "name": "3️⃣ POST Producto 09 - Producto 9",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200 or 201', function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+              "});",
+              "",
+              "console.log('✅ Producto 9/50 creado: Producto 9');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"Producto 9\",\n  \"descripcion\": \"Descripción detallada del producto 9. Ideal para pruebas de carga y demostración del sistema.\",\n  \"marca\": \"Test Brand\",\n  \"precio_costo\": 45.0,\n  \"precio_venta\": 90.0,\n  \"cantidad_stock\": 1000,\n  \"peso\": 0.5,\n  \"dimensiones\": \"10x10x10 cm\",\n  \"color\": \"Azul\",\n  \"talla\": \"M\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/inventario/productos/crear/",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "inventario",
+            "productos",
+            "crear",
+            ""
+          ]
+        }
+      }
+    },
+    {
+      "name": "3️⃣ POST Producto 10 - Producto 10",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200 or 201', function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+              "});",
+              "",
+              "console.log('✅ Producto 10/50 creado: Producto 10');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"Producto 10\",\n  \"descripcion\": \"Descripción detallada del producto 10. Ideal para pruebas de carga y demostración del sistema.\",\n  \"marca\": \"Test Brand\",\n  \"precio_costo\": 50.0,\n  \"precio_venta\": 100.0,\n  \"cantidad_stock\": 1000,\n  \"peso\": 0.5,\n  \"dimensiones\": \"10x10x10 cm\",\n  \"color\": \"Azul\",\n  \"talla\": \"M\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/inventario/productos/crear/",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "inventario",
+            "productos",
+            "crear",
+            ""
+          ]
+        }
+      }
+    },
+    {
+      "name": "3️⃣ POST Producto 11 - Producto 11",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200 or 201', function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+              "});",
+              "",
+              "console.log('✅ Producto 11/50 creado: Producto 11');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"Producto 11\",\n  \"descripcion\": \"Descripción detallada del producto 11. Ideal para pruebas de carga y demostración del sistema.\",\n  \"marca\": \"Test Brand\",\n  \"precio_costo\": 55.0,\n  \"precio_venta\": 110.0,\n  \"cantidad_stock\": 1000,\n  \"peso\": 0.5,\n  \"dimensiones\": \"10x10x10 cm\",\n  \"color\": \"Azul\",\n  \"talla\": \"M\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/inventario/productos/crear/",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "inventario",
+            "productos",
+            "crear",
+            ""
+          ]
+        }
+      }
+    },
+    {
+      "name": "3️⃣ POST Producto 12 - Producto 12",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200 or 201', function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+              "});",
+              "",
+              "console.log('✅ Producto 12/50 creado: Producto 12');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"Producto 12\",\n  \"descripcion\": \"Descripción detallada del producto 12. Ideal para pruebas de carga y demostración del sistema.\",\n  \"marca\": \"Test Brand\",\n  \"precio_costo\": 60.0,\n  \"precio_venta\": 120.0,\n  \"cantidad_stock\": 1000,\n  \"peso\": 0.5,\n  \"dimensiones\": \"10x10x10 cm\",\n  \"color\": \"Azul\",\n  \"talla\": \"M\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/inventario/productos/crear/",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "inventario",
+            "productos",
+            "crear",
+            ""
+          ]
+        }
+      }
+    },
+    {
+      "name": "3️⃣ POST Producto 13 - Producto 13",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200 or 201', function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+              "});",
+              "",
+              "console.log('✅ Producto 13/50 creado: Producto 13');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"Producto 13\",\n  \"descripcion\": \"Descripción detallada del producto 13. Ideal para pruebas de carga y demostración del sistema.\",\n  \"marca\": \"Test Brand\",\n  \"precio_costo\": 65.0,\n  \"precio_venta\": 130.0,\n  \"cantidad_stock\": 1000,\n  \"peso\": 0.5,\n  \"dimensiones\": \"10x10x10 cm\",\n  \"color\": \"Azul\",\n  \"talla\": \"M\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/inventario/productos/crear/",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "inventario",
+            "productos",
+            "crear",
+            ""
+          ]
+        }
+      }
+    },
+    {
+      "name": "3️⃣ POST Producto 14 - Producto 14",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200 or 201', function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+              "});",
+              "",
+              "console.log('✅ Producto 14/50 creado: Producto 14');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"Producto 14\",\n  \"descripcion\": \"Descripción detallada del producto 14. Ideal para pruebas de carga y demostración del sistema.\",\n  \"marca\": \"Test Brand\",\n  \"precio_costo\": 70.0,\n  \"precio_venta\": 140.0,\n  \"cantidad_stock\": 1000,\n  \"peso\": 0.5,\n  \"dimensiones\": \"10x10x10 cm\",\n  \"color\": \"Azul\",\n  \"talla\": \"M\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/inventario/productos/crear/",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "inventario",
+            "productos",
+            "crear",
+            ""
+          ]
+        }
+      }
+    },
+    {
+      "name": "3️⃣ POST Producto 15 - Producto 15",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200 or 201', function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+              "});",
+              "",
+              "console.log('✅ Producto 15/50 creado: Producto 15');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"Producto 15\",\n  \"descripcion\": \"Descripción detallada del producto 15. Ideal para pruebas de carga y demostración del sistema.\",\n  \"marca\": \"Test Brand\",\n  \"precio_costo\": 75.0,\n  \"precio_venta\": 150.0,\n  \"cantidad_stock\": 1000,\n  \"peso\": 0.5,\n  \"dimensiones\": \"10x10x10 cm\",\n  \"color\": \"Azul\",\n  \"talla\": \"M\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/inventario/productos/crear/",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "inventario",
+            "productos",
+            "crear",
+            ""
+          ]
+        }
+      }
+    },
+    {
+      "name": "3️⃣ POST Producto 16 - Producto 16",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200 or 201', function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+              "});",
+              "",
+              "console.log('✅ Producto 16/50 creado: Producto 16');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"Producto 16\",\n  \"descripcion\": \"Descripción detallada del producto 16. Ideal para pruebas de carga y demostración del sistema.\",\n  \"marca\": \"Test Brand\",\n  \"precio_costo\": 80.0,\n  \"precio_venta\": 160.0,\n  \"cantidad_stock\": 1000,\n  \"peso\": 0.5,\n  \"dimensiones\": \"10x10x10 cm\",\n  \"color\": \"Azul\",\n  \"talla\": \"M\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/inventario/productos/crear/",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "inventario",
+            "productos",
+            "crear",
+            ""
+          ]
+        }
+      }
+    },
+    {
+      "name": "3️⃣ POST Producto 17 - Producto 17",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200 or 201', function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+              "});",
+              "",
+              "console.log('✅ Producto 17/50 creado: Producto 17');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"Producto 17\",\n  \"descripcion\": \"Descripción detallada del producto 17. Ideal para pruebas de carga y demostración del sistema.\",\n  \"marca\": \"Test Brand\",\n  \"precio_costo\": 85.0,\n  \"precio_venta\": 170.0,\n  \"cantidad_stock\": 1000,\n  \"peso\": 0.5,\n  \"dimensiones\": \"10x10x10 cm\",\n  \"color\": \"Azul\",\n  \"talla\": \"M\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/inventario/productos/crear/",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "inventario",
+            "productos",
+            "crear",
+            ""
+          ]
+        }
+      }
+    },
+    {
+      "name": "3️⃣ POST Producto 18 - Producto 18",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200 or 201', function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+              "});",
+              "",
+              "console.log('✅ Producto 18/50 creado: Producto 18');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"Producto 18\",\n  \"descripcion\": \"Descripción detallada del producto 18. Ideal para pruebas de carga y demostración del sistema.\",\n  \"marca\": \"Test Brand\",\n  \"precio_costo\": 90.0,\n  \"precio_venta\": 180.0,\n  \"cantidad_stock\": 1000,\n  \"peso\": 0.5,\n  \"dimensiones\": \"10x10x10 cm\",\n  \"color\": \"Azul\",\n  \"talla\": \"M\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/inventario/productos/crear/",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "inventario",
+            "productos",
+            "crear",
+            ""
+          ]
+        }
+      }
+    },
+    {
+      "name": "3️⃣ POST Producto 19 - Producto 19",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200 or 201', function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+              "});",
+              "",
+              "console.log('✅ Producto 19/50 creado: Producto 19');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"Producto 19\",\n  \"descripcion\": \"Descripción detallada del producto 19. Ideal para pruebas de carga y demostración del sistema.\",\n  \"marca\": \"Test Brand\",\n  \"precio_costo\": 95.0,\n  \"precio_venta\": 190.0,\n  \"cantidad_stock\": 1000,\n  \"peso\": 0.5,\n  \"dimensiones\": \"10x10x10 cm\",\n  \"color\": \"Azul\",\n  \"talla\": \"M\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/inventario/productos/crear/",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "inventario",
+            "productos",
+            "crear",
+            ""
+          ]
+        }
+      }
+    },
+    {
+      "name": "3️⃣ POST Producto 20 - Producto 20",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200 or 201', function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+              "});",
+              "",
+              "console.log('✅ Producto 20/50 creado: Producto 20');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"Producto 20\",\n  \"descripcion\": \"Descripción detallada del producto 20. Ideal para pruebas de carga y demostración del sistema.\",\n  \"marca\": \"Test Brand\",\n  \"precio_costo\": 100.0,\n  \"precio_venta\": 200.0,\n  \"cantidad_stock\": 1000,\n  \"peso\": 0.5,\n  \"dimensiones\": \"10x10x10 cm\",\n  \"color\": \"Azul\",\n  \"talla\": \"M\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/inventario/productos/crear/",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "inventario",
+            "productos",
+            "crear",
+            ""
+          ]
+        }
+      }
+    },
+    {
+      "name": "3️⃣ POST Producto 21 - Producto 21",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200 or 201', function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+              "});",
+              "",
+              "console.log('✅ Producto 21/50 creado: Producto 21');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"Producto 21\",\n  \"descripcion\": \"Descripción detallada del producto 21. Ideal para pruebas de carga y demostración del sistema.\",\n  \"marca\": \"Test Brand\",\n  \"precio_costo\": 105.0,\n  \"precio_venta\": 210.0,\n  \"cantidad_stock\": 1000,\n  \"peso\": 0.5,\n  \"dimensiones\": \"10x10x10 cm\",\n  \"color\": \"Azul\",\n  \"talla\": \"M\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/inventario/productos/crear/",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "inventario",
+            "productos",
+            "crear",
+            ""
+          ]
+        }
+      }
+    },
+    {
+      "name": "3️⃣ POST Producto 22 - Producto 22",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200 or 201', function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+              "});",
+              "",
+              "console.log('✅ Producto 22/50 creado: Producto 22');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"Producto 22\",\n  \"descripcion\": \"Descripción detallada del producto 22. Ideal para pruebas de carga y demostración del sistema.\",\n  \"marca\": \"Test Brand\",\n  \"precio_costo\": 110.0,\n  \"precio_venta\": 220.0,\n  \"cantidad_stock\": 1000,\n  \"peso\": 0.5,\n  \"dimensiones\": \"10x10x10 cm\",\n  \"color\": \"Azul\",\n  \"talla\": \"M\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/inventario/productos/crear/",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "inventario",
+            "productos",
+            "crear",
+            ""
+          ]
+        }
+      }
+    },
+    {
+      "name": "3️⃣ POST Producto 23 - Producto 23",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200 or 201', function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+              "});",
+              "",
+              "console.log('✅ Producto 23/50 creado: Producto 23');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"Producto 23\",\n  \"descripcion\": \"Descripción detallada del producto 23. Ideal para pruebas de carga y demostración del sistema.\",\n  \"marca\": \"Test Brand\",\n  \"precio_costo\": 115.0,\n  \"precio_venta\": 230.0,\n  \"cantidad_stock\": 1000,\n  \"peso\": 0.5,\n  \"dimensiones\": \"10x10x10 cm\",\n  \"color\": \"Azul\",\n  \"talla\": \"M\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/inventario/productos/crear/",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "inventario",
+            "productos",
+            "crear",
+            ""
+          ]
+        }
+      }
+    },
+    {
+      "name": "3️⃣ POST Producto 24 - Producto 24",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200 or 201', function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+              "});",
+              "",
+              "console.log('✅ Producto 24/50 creado: Producto 24');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"Producto 24\",\n  \"descripcion\": \"Descripción detallada del producto 24. Ideal para pruebas de carga y demostración del sistema.\",\n  \"marca\": \"Test Brand\",\n  \"precio_costo\": 120.0,\n  \"precio_venta\": 240.0,\n  \"cantidad_stock\": 1000,\n  \"peso\": 0.5,\n  \"dimensiones\": \"10x10x10 cm\",\n  \"color\": \"Azul\",\n  \"talla\": \"M\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/inventario/productos/crear/",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "inventario",
+            "productos",
+            "crear",
+            ""
+          ]
+        }
+      }
+    },
+    {
+      "name": "3️⃣ POST Producto 25 - Producto 25",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200 or 201', function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+              "});",
+              "",
+              "console.log('✅ Producto 25/50 creado: Producto 25');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"Producto 25\",\n  \"descripcion\": \"Descripción detallada del producto 25. Ideal para pruebas de carga y demostración del sistema.\",\n  \"marca\": \"Test Brand\",\n  \"precio_costo\": 125.0,\n  \"precio_venta\": 250.0,\n  \"cantidad_stock\": 1000,\n  \"peso\": 0.5,\n  \"dimensiones\": \"10x10x10 cm\",\n  \"color\": \"Azul\",\n  \"talla\": \"M\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/inventario/productos/crear/",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "inventario",
+            "productos",
+            "crear",
+            ""
+          ]
+        }
+      }
+    },
+    {
+      "name": "3️⃣ POST Producto 26 - Producto 26",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200 or 201', function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+              "});",
+              "",
+              "console.log('✅ Producto 26/50 creado: Producto 26');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"Producto 26\",\n  \"descripcion\": \"Descripción detallada del producto 26. Ideal para pruebas de carga y demostración del sistema.\",\n  \"marca\": \"Test Brand\",\n  \"precio_costo\": 130.0,\n  \"precio_venta\": 260.0,\n  \"cantidad_stock\": 1000,\n  \"peso\": 0.5,\n  \"dimensiones\": \"10x10x10 cm\",\n  \"color\": \"Azul\",\n  \"talla\": \"M\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/inventario/productos/crear/",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "inventario",
+            "productos",
+            "crear",
+            ""
+          ]
+        }
+      }
+    },
+    {
+      "name": "3️⃣ POST Producto 27 - Producto 27",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200 or 201', function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+              "});",
+              "",
+              "console.log('✅ Producto 27/50 creado: Producto 27');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"Producto 27\",\n  \"descripcion\": \"Descripción detallada del producto 27. Ideal para pruebas de carga y demostración del sistema.\",\n  \"marca\": \"Test Brand\",\n  \"precio_costo\": 135.0,\n  \"precio_venta\": 270.0,\n  \"cantidad_stock\": 1000,\n  \"peso\": 0.5,\n  \"dimensiones\": \"10x10x10 cm\",\n  \"color\": \"Azul\",\n  \"talla\": \"M\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/inventario/productos/crear/",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "inventario",
+            "productos",
+            "crear",
+            ""
+          ]
+        }
+      }
+    },
+    {
+      "name": "3️⃣ POST Producto 28 - Producto 28",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200 or 201', function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+              "});",
+              "",
+              "console.log('✅ Producto 28/50 creado: Producto 28');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"Producto 28\",\n  \"descripcion\": \"Descripción detallada del producto 28. Ideal para pruebas de carga y demostración del sistema.\",\n  \"marca\": \"Test Brand\",\n  \"precio_costo\": 140.0,\n  \"precio_venta\": 280.0,\n  \"cantidad_stock\": 1000,\n  \"peso\": 0.5,\n  \"dimensiones\": \"10x10x10 cm\",\n  \"color\": \"Azul\",\n  \"talla\": \"M\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/inventario/productos/crear/",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "inventario",
+            "productos",
+            "crear",
+            ""
+          ]
+        }
+      }
+    },
+    {
+      "name": "3️⃣ POST Producto 29 - Producto 29",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200 or 201', function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+              "});",
+              "",
+              "console.log('✅ Producto 29/50 creado: Producto 29');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"Producto 29\",\n  \"descripcion\": \"Descripción detallada del producto 29. Ideal para pruebas de carga y demostración del sistema.\",\n  \"marca\": \"Test Brand\",\n  \"precio_costo\": 145.0,\n  \"precio_venta\": 290.0,\n  \"cantidad_stock\": 1000,\n  \"peso\": 0.5,\n  \"dimensiones\": \"10x10x10 cm\",\n  \"color\": \"Azul\",\n  \"talla\": \"M\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/inventario/productos/crear/",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "inventario",
+            "productos",
+            "crear",
+            ""
+          ]
+        }
+      }
+    },
+    {
+      "name": "3️⃣ POST Producto 30 - Producto 30",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200 or 201', function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+              "});",
+              "",
+              "console.log('✅ Producto 30/50 creado: Producto 30');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"Producto 30\",\n  \"descripcion\": \"Descripción detallada del producto 30. Ideal para pruebas de carga y demostración del sistema.\",\n  \"marca\": \"Test Brand\",\n  \"precio_costo\": 150.0,\n  \"precio_venta\": 300.0,\n  \"cantidad_stock\": 1000,\n  \"peso\": 0.5,\n  \"dimensiones\": \"10x10x10 cm\",\n  \"color\": \"Azul\",\n  \"talla\": \"M\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/inventario/productos/crear/",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "inventario",
+            "productos",
+            "crear",
+            ""
+          ]
+        }
+      }
+    },
+    {
+      "name": "3️⃣ POST Producto 31 - Producto 31",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200 or 201', function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+              "});",
+              "",
+              "console.log('✅ Producto 31/50 creado: Producto 31');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"Producto 31\",\n  \"descripcion\": \"Descripción detallada del producto 31. Ideal para pruebas de carga y demostración del sistema.\",\n  \"marca\": \"Test Brand\",\n  \"precio_costo\": 155.0,\n  \"precio_venta\": 310.0,\n  \"cantidad_stock\": 1000,\n  \"peso\": 0.5,\n  \"dimensiones\": \"10x10x10 cm\",\n  \"color\": \"Azul\",\n  \"talla\": \"M\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/inventario/productos/crear/",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "inventario",
+            "productos",
+            "crear",
+            ""
+          ]
+        }
+      }
+    },
+    {
+      "name": "3️⃣ POST Producto 32 - Producto 32",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200 or 201', function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+              "});",
+              "",
+              "console.log('✅ Producto 32/50 creado: Producto 32');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"Producto 32\",\n  \"descripcion\": \"Descripción detallada del producto 32. Ideal para pruebas de carga y demostración del sistema.\",\n  \"marca\": \"Test Brand\",\n  \"precio_costo\": 160.0,\n  \"precio_venta\": 320.0,\n  \"cantidad_stock\": 1000,\n  \"peso\": 0.5,\n  \"dimensiones\": \"10x10x10 cm\",\n  \"color\": \"Azul\",\n  \"talla\": \"M\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/inventario/productos/crear/",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "inventario",
+            "productos",
+            "crear",
+            ""
+          ]
+        }
+      }
+    },
+    {
+      "name": "3️⃣ POST Producto 33 - Producto 33",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200 or 201', function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+              "});",
+              "",
+              "console.log('✅ Producto 33/50 creado: Producto 33');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"Producto 33\",\n  \"descripcion\": \"Descripción detallada del producto 33. Ideal para pruebas de carga y demostración del sistema.\",\n  \"marca\": \"Test Brand\",\n  \"precio_costo\": 165.0,\n  \"precio_venta\": 330.0,\n  \"cantidad_stock\": 1000,\n  \"peso\": 0.5,\n  \"dimensiones\": \"10x10x10 cm\",\n  \"color\": \"Azul\",\n  \"talla\": \"M\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/inventario/productos/crear/",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "inventario",
+            "productos",
+            "crear",
+            ""
+          ]
+        }
+      }
+    },
+    {
+      "name": "3️⃣ POST Producto 34 - Producto 34",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200 or 201', function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+              "});",
+              "",
+              "console.log('✅ Producto 34/50 creado: Producto 34');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"Producto 34\",\n  \"descripcion\": \"Descripción detallada del producto 34. Ideal para pruebas de carga y demostración del sistema.\",\n  \"marca\": \"Test Brand\",\n  \"precio_costo\": 170.0,\n  \"precio_venta\": 340.0,\n  \"cantidad_stock\": 1000,\n  \"peso\": 0.5,\n  \"dimensiones\": \"10x10x10 cm\",\n  \"color\": \"Azul\",\n  \"talla\": \"M\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/inventario/productos/crear/",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "inventario",
+            "productos",
+            "crear",
+            ""
+          ]
+        }
+      }
+    },
+    {
+      "name": "3️⃣ POST Producto 35 - Producto 35",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200 or 201', function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+              "});",
+              "",
+              "console.log('✅ Producto 35/50 creado: Producto 35');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"Producto 35\",\n  \"descripcion\": \"Descripción detallada del producto 35. Ideal para pruebas de carga y demostración del sistema.\",\n  \"marca\": \"Test Brand\",\n  \"precio_costo\": 175.0,\n  \"precio_venta\": 350.0,\n  \"cantidad_stock\": 1000,\n  \"peso\": 0.5,\n  \"dimensiones\": \"10x10x10 cm\",\n  \"color\": \"Azul\",\n  \"talla\": \"M\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/inventario/productos/crear/",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "inventario",
+            "productos",
+            "crear",
+            ""
+          ]
+        }
+      }
+    },
+    {
+      "name": "3️⃣ POST Producto 36 - Producto 36",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200 or 201', function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+              "});",
+              "",
+              "console.log('✅ Producto 36/50 creado: Producto 36');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"Producto 36\",\n  \"descripcion\": \"Descripción detallada del producto 36. Ideal para pruebas de carga y demostración del sistema.\",\n  \"marca\": \"Test Brand\",\n  \"precio_costo\": 180.0,\n  \"precio_venta\": 360.0,\n  \"cantidad_stock\": 1000,\n  \"peso\": 0.5,\n  \"dimensiones\": \"10x10x10 cm\",\n  \"color\": \"Azul\",\n  \"talla\": \"M\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/inventario/productos/crear/",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "inventario",
+            "productos",
+            "crear",
+            ""
+          ]
+        }
+      }
+    },
+    {
+      "name": "3️⃣ POST Producto 37 - Producto 37",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200 or 201', function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+              "});",
+              "",
+              "console.log('✅ Producto 37/50 creado: Producto 37');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"Producto 37\",\n  \"descripcion\": \"Descripción detallada del producto 37. Ideal para pruebas de carga y demostración del sistema.\",\n  \"marca\": \"Test Brand\",\n  \"precio_costo\": 185.0,\n  \"precio_venta\": 370.0,\n  \"cantidad_stock\": 1000,\n  \"peso\": 0.5,\n  \"dimensiones\": \"10x10x10 cm\",\n  \"color\": \"Azul\",\n  \"talla\": \"M\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/inventario/productos/crear/",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "inventario",
+            "productos",
+            "crear",
+            ""
+          ]
+        }
+      }
+    },
+    {
+      "name": "3️⃣ POST Producto 38 - Producto 38",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200 or 201', function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+              "});",
+              "",
+              "console.log('✅ Producto 38/50 creado: Producto 38');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"Producto 38\",\n  \"descripcion\": \"Descripción detallada del producto 38. Ideal para pruebas de carga y demostración del sistema.\",\n  \"marca\": \"Test Brand\",\n  \"precio_costo\": 190.0,\n  \"precio_venta\": 380.0,\n  \"cantidad_stock\": 1000,\n  \"peso\": 0.5,\n  \"dimensiones\": \"10x10x10 cm\",\n  \"color\": \"Azul\",\n  \"talla\": \"M\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/inventario/productos/crear/",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "inventario",
+            "productos",
+            "crear",
+            ""
+          ]
+        }
+      }
+    },
+    {
+      "name": "3️⃣ POST Producto 39 - Producto 39",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200 or 201', function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+              "});",
+              "",
+              "console.log('✅ Producto 39/50 creado: Producto 39');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"Producto 39\",\n  \"descripcion\": \"Descripción detallada del producto 39. Ideal para pruebas de carga y demostración del sistema.\",\n  \"marca\": \"Test Brand\",\n  \"precio_costo\": 195.0,\n  \"precio_venta\": 390.0,\n  \"cantidad_stock\": 1000,\n  \"peso\": 0.5,\n  \"dimensiones\": \"10x10x10 cm\",\n  \"color\": \"Azul\",\n  \"talla\": \"M\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/inventario/productos/crear/",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "inventario",
+            "productos",
+            "crear",
+            ""
+          ]
+        }
+      }
+    },
+    {
+      "name": "3️⃣ POST Producto 40 - Producto 40",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200 or 201', function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+              "});",
+              "",
+              "console.log('✅ Producto 40/50 creado: Producto 40');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"Producto 40\",\n  \"descripcion\": \"Descripción detallada del producto 40. Ideal para pruebas de carga y demostración del sistema.\",\n  \"marca\": \"Test Brand\",\n  \"precio_costo\": 200.0,\n  \"precio_venta\": 400.0,\n  \"cantidad_stock\": 1000,\n  \"peso\": 0.5,\n  \"dimensiones\": \"10x10x10 cm\",\n  \"color\": \"Azul\",\n  \"talla\": \"M\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/inventario/productos/crear/",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "inventario",
+            "productos",
+            "crear",
+            ""
+          ]
+        }
+      }
+    },
+    {
+      "name": "3️⃣ POST Producto 41 - Producto 41",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200 or 201', function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+              "});",
+              "",
+              "console.log('✅ Producto 41/50 creado: Producto 41');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"Producto 41\",\n  \"descripcion\": \"Descripción detallada del producto 41. Ideal para pruebas de carga y demostración del sistema.\",\n  \"marca\": \"Test Brand\",\n  \"precio_costo\": 205.0,\n  \"precio_venta\": 410.0,\n  \"cantidad_stock\": 1000,\n  \"peso\": 0.5,\n  \"dimensiones\": \"10x10x10 cm\",\n  \"color\": \"Azul\",\n  \"talla\": \"M\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/inventario/productos/crear/",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "inventario",
+            "productos",
+            "crear",
+            ""
+          ]
+        }
+      }
+    },
+    {
+      "name": "3️⃣ POST Producto 42 - Producto 42",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200 or 201', function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+              "});",
+              "",
+              "console.log('✅ Producto 42/50 creado: Producto 42');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"Producto 42\",\n  \"descripcion\": \"Descripción detallada del producto 42. Ideal para pruebas de carga y demostración del sistema.\",\n  \"marca\": \"Test Brand\",\n  \"precio_costo\": 210.0,\n  \"precio_venta\": 420.0,\n  \"cantidad_stock\": 1000,\n  \"peso\": 0.5,\n  \"dimensiones\": \"10x10x10 cm\",\n  \"color\": \"Azul\",\n  \"talla\": \"M\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/inventario/productos/crear/",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "inventario",
+            "productos",
+            "crear",
+            ""
+          ]
+        }
+      }
+    },
+    {
+      "name": "3️⃣ POST Producto 43 - Producto 43",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200 or 201', function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+              "});",
+              "",
+              "console.log('✅ Producto 43/50 creado: Producto 43');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"Producto 43\",\n  \"descripcion\": \"Descripción detallada del producto 43. Ideal para pruebas de carga y demostración del sistema.\",\n  \"marca\": \"Test Brand\",\n  \"precio_costo\": 215.0,\n  \"precio_venta\": 430.0,\n  \"cantidad_stock\": 1000,\n  \"peso\": 0.5,\n  \"dimensiones\": \"10x10x10 cm\",\n  \"color\": \"Azul\",\n  \"talla\": \"M\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/inventario/productos/crear/",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "inventario",
+            "productos",
+            "crear",
+            ""
+          ]
+        }
+      }
+    },
+    {
+      "name": "3️⃣ POST Producto 44 - Producto 44",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200 or 201', function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+              "});",
+              "",
+              "console.log('✅ Producto 44/50 creado: Producto 44');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"Producto 44\",\n  \"descripcion\": \"Descripción detallada del producto 44. Ideal para pruebas de carga y demostración del sistema.\",\n  \"marca\": \"Test Brand\",\n  \"precio_costo\": 220.0,\n  \"precio_venta\": 440.0,\n  \"cantidad_stock\": 1000,\n  \"peso\": 0.5,\n  \"dimensiones\": \"10x10x10 cm\",\n  \"color\": \"Azul\",\n  \"talla\": \"M\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/inventario/productos/crear/",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "inventario",
+            "productos",
+            "crear",
+            ""
+          ]
+        }
+      }
+    },
+    {
+      "name": "3️⃣ POST Producto 45 - Producto 45",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200 or 201', function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+              "});",
+              "",
+              "console.log('✅ Producto 45/50 creado: Producto 45');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"Producto 45\",\n  \"descripcion\": \"Descripción detallada del producto 45. Ideal para pruebas de carga y demostración del sistema.\",\n  \"marca\": \"Test Brand\",\n  \"precio_costo\": 225.0,\n  \"precio_venta\": 450.0,\n  \"cantidad_stock\": 1000,\n  \"peso\": 0.5,\n  \"dimensiones\": \"10x10x10 cm\",\n  \"color\": \"Azul\",\n  \"talla\": \"M\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/inventario/productos/crear/",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "inventario",
+            "productos",
+            "crear",
+            ""
+          ]
+        }
+      }
+    },
+    {
+      "name": "3️⃣ POST Producto 46 - Producto 46",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200 or 201', function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+              "});",
+              "",
+              "console.log('✅ Producto 46/50 creado: Producto 46');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"Producto 46\",\n  \"descripcion\": \"Descripción detallada del producto 46. Ideal para pruebas de carga y demostración del sistema.\",\n  \"marca\": \"Test Brand\",\n  \"precio_costo\": 230.0,\n  \"precio_venta\": 460.0,\n  \"cantidad_stock\": 1000,\n  \"peso\": 0.5,\n  \"dimensiones\": \"10x10x10 cm\",\n  \"color\": \"Azul\",\n  \"talla\": \"M\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/inventario/productos/crear/",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "inventario",
+            "productos",
+            "crear",
+            ""
+          ]
+        }
+      }
+    },
+    {
+      "name": "3️⃣ POST Producto 47 - Producto 47",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200 or 201', function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+              "});",
+              "",
+              "console.log('✅ Producto 47/50 creado: Producto 47');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"Producto 47\",\n  \"descripcion\": \"Descripción detallada del producto 47. Ideal para pruebas de carga y demostración del sistema.\",\n  \"marca\": \"Test Brand\",\n  \"precio_costo\": 235.0,\n  \"precio_venta\": 470.0,\n  \"cantidad_stock\": 1000,\n  \"peso\": 0.5,\n  \"dimensiones\": \"10x10x10 cm\",\n  \"color\": \"Azul\",\n  \"talla\": \"M\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/inventario/productos/crear/",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "inventario",
+            "productos",
+            "crear",
+            ""
+          ]
+        }
+      }
+    },
+    {
+      "name": "3️⃣ POST Producto 48 - Producto 48",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200 or 201', function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+              "});",
+              "",
+              "console.log('✅ Producto 48/50 creado: Producto 48');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"Producto 48\",\n  \"descripcion\": \"Descripción detallada del producto 48. Ideal para pruebas de carga y demostración del sistema.\",\n  \"marca\": \"Test Brand\",\n  \"precio_costo\": 240.0,\n  \"precio_venta\": 480.0,\n  \"cantidad_stock\": 1000,\n  \"peso\": 0.5,\n  \"dimensiones\": \"10x10x10 cm\",\n  \"color\": \"Azul\",\n  \"talla\": \"M\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/inventario/productos/crear/",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "inventario",
+            "productos",
+            "crear",
+            ""
+          ]
+        }
+      }
+    },
+    {
+      "name": "3️⃣ POST Producto 49 - Producto 49",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200 or 201', function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+              "});",
+              "",
+              "console.log('✅ Producto 49/50 creado: Producto 49');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"Producto 49\",\n  \"descripcion\": \"Descripción detallada del producto 49. Ideal para pruebas de carga y demostración del sistema.\",\n  \"marca\": \"Test Brand\",\n  \"precio_costo\": 245.0,\n  \"precio_venta\": 490.0,\n  \"cantidad_stock\": 1000,\n  \"peso\": 0.5,\n  \"dimensiones\": \"10x10x10 cm\",\n  \"color\": \"Azul\",\n  \"talla\": \"M\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/inventario/productos/crear/",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "inventario",
+            "productos",
+            "crear",
+            ""
+          ]
+        }
+      }
+    },
+    {
+      "name": "3️⃣ POST Producto 50 - Producto 50",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status code is 200 or 201', function () {",
+              "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+              "});",
+              "",
+              "console.log('✅ Producto 50/50 creado: Producto 50');"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"Producto 50\",\n  \"descripcion\": \"Descripción detallada del producto 50. Ideal para pruebas de carga y demostración del sistema.\",\n  \"marca\": \"Test Brand\",\n  \"precio_costo\": 250.0,\n  \"precio_venta\": 500.0,\n  \"cantidad_stock\": 1000,\n  \"peso\": 0.5,\n  \"dimensiones\": \"10x10x10 cm\",\n  \"color\": \"Azul\",\n  \"talla\": \"M\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/inventario/productos/crear/",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "inventario",
+            "productos",
+            "crear",
+            ""
+          ]
+        }
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://provesi-alb-1423351037.us-east-1.elb.amazonaws.com",
+      "type": "string"
+    }
+  ]
+}

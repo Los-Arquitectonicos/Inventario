@@ -30,7 +30,7 @@ import os
 # DESARROLLO LOCAL
 # =============================================================================
 # Puerto configurable: cambiar 8000 por el que necesites
-BASE_URL = os.environ.get('BASE_URL', "http://127.0.0.1:8000")
+BASE_URL = os.environ.get('BASE_URL', "http://provesi-alb-1423351037.us-east-1.elb.amazonaws.com/inventario/")
 TIMEOUT = int(os.environ.get('TIMEOUT', '30'))  # segundos
 
 
@@ -107,13 +107,13 @@ HEADERS = {
 # DOCUMENTACIÓN
 # =============================================================================
 """
-GUIAS COMPLETAS:
+📖 GUÍAS COMPLETAS:
 
 Para deployment en AWS:
-    Ver: tests/README_AWS_DEPLOYMENT.md (si existe)
+    → Ver: tests/README_AWS_DEPLOYMENT.md
     
 Para ejecutar pruebas:
-    Ver: tests/README.md
+    → Ver: tests/README_LOAD_TESTING.md
 
 Para cambiar puerto:
     Edita BASE_URL:
