@@ -49,7 +49,6 @@ import os
 from datetime import datetime
 from locust import HttpUser, task, between, events
 from locust.runners import MasterRunner, LocalRunner
-
 # ═══════════════════════════════════════════════════════════════════════════════
 # CONFIGURACIÓN
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -122,12 +121,16 @@ generador = GeneradorArticulos()
 # ESTADÍSTICAS Y MÉTRICAS
 # ═══════════════════════════════════════════════════════════════════════════════
 
+from typing import Optional
+
 class EstadisticasPrueba:
     """
     Recolector de estadísticas para análisis post-prueba.
     """
     
     def __init__(self):
+        self.inicio: Optional[float] = None
+        self.fin: Optional[float] = None
         self.reset()
     
     def reset(self):
@@ -360,12 +363,12 @@ class UsuarioArticulos(HttpUser):
             if response.status_code in [200, 201, 302]:
                 stats.registrar_exito(tiempo_respuesta_ms)
                 self.articulos_creados_usuario += 1
-                response.success()
+                response.success() # type: ignore
             else:
                 error_msg = response.text[:100] if hasattr(response, 'text') else "Unknown error"
                 stats.registrar_fallo(response.status_code, error_msg)
                 self.errores_usuario += 1
-                response.failure(f"HTTP {response.status_code}: {error_msg}")
+                response.failure(f"HTTP {response.status_code}: {error_msg}") # type: ignore
     
     @task(1)  # Peso 1: tarea ocasional
     def listar_articulos(self):
@@ -380,9 +383,9 @@ class UsuarioArticulos(HttpUser):
         ) as response:
             
             if response.status_code == 200:
-                response.success()
+                response.success() # type: ignore
             else:
-                response.failure(f"HTTP {response.status_code}")
+                response.failure(f"HTTP {response.status_code}") # type: ignore
     
     @task(1)  # Peso 1: tarea ocasional
     def ver_productos(self):
@@ -397,9 +400,9 @@ class UsuarioArticulos(HttpUser):
         ) as response:
             
             if response.status_code == 200:
-                response.success()
+                response.success() # type: ignore
             else:
-                response.failure(f"HTTP {response.status_code}")
+                response.failure(f"HTTP {response.status_code}") # type: ignore
 
 
 class UsuarioIntensivo(HttpUser):
@@ -431,11 +434,11 @@ class UsuarioIntensivo(HttpUser):
             
             if response.status_code in [200, 201, 302]:
                 stats.registrar_exito(tiempo_respuesta_ms)
-                response.success()
+                response.success() # type: ignore
             else:
                 error_msg = response.text[:100] if hasattr(response, 'text') else "Unknown error"
                 stats.registrar_fallo(response.status_code, error_msg)
-                response.failure(f"HTTP {response.status_code}")
+                response.failure(f"HTTP {response.status_code}") # type: ignore
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
