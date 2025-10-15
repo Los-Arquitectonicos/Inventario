@@ -1,0 +1,36 @@
+# Reportes generados automáticamente
+reportes/
+reporte_locust_*.json
+reporte_locust_*.html
+reporte_locust_*.csv
+reporte_test*.json
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Temporal files
+*.tmp
+*.temp

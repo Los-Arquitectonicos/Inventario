@@ -1,234 +1,264 @@
-# 🧪 Tests - Carga Masiva de Artículos
+# Pruebas de Carga con Locust
 
-## 📋 Contenido del Directorio
+## Resumen
 
-Este directorio contiene la suite completa de pruebas de carga masiva para validar el requerimiento arquitecturalmente significativo del sistema de inventario.
+Este directorio contiene las pruebas de carga para validar que el sistema puede escalar de 100 a 2,000 peticiones por minuto, procesando 10,000 registros en menos de 5 minutos mientras mantiene la integridad de datos.
 
----
+## Estructura de Archivos
 
-## 🎯 Objetivo
+- `locustfile.py` - Definiciones de usuarios y tareas de prueba
+- `config_entornos.py` - Configuración centralizada (URL, timeouts, umbrales)
+- `run_load_tests.sh` - Script de ejecución automatizada
+- `.gitignore` - Archivos ignorados por git
+- `reportes/` - Directorio para reportes HTML/CSV generados
 
-Validar que el sistema puede:
-- ✅ Escalar de **100 req/min** a **2,000 req/min**
-- ✅ Procesar **10,000 artículos** en menos de **5 minutos**
-- ✅ Mantener **integridad de datos** (>95%)
-- ✅ Soportar carga sin **degradación**
+## Configuración Inicial
 
----
-
-## 📁 Archivos
-
-### 🚀 Scripts Ejecutables
-
-| Archivo | Descripción | Comando |
-|---------|-------------|---------|
-| `test_carga_standalone.py` | ⭐ **Script standalone con menú interactivo** | `python tests/test_carga_standalone.py` |
-| `test_carga_masiva_articulos.py` | Tests de Django (integración) | `python manage.py test tests.test_carga_masiva_articulos` |
-| `locustfile_articulos.py` | Tests de performance con Locust | `locust -f tests/locustfile_articulos.py` |
-
-### 📖 Documentación
-
-| Archivo | Descripción |
-|---------|-------------|
-| `INDEX.md` | 📑 Índice general - **EMPIEZA AQUÍ** |
-| `RESUMEN_EJECUTIVO.md` | 📊 Resumen ejecutivo y estrategia |
-| `README_PRUEBAS_RAPIDAS.md` | ⚡ Guía de inicio rápido |
-| `ESTRATEGIA_PRUEBAS_CARGA_MASIVA.md` | 📚 Documentación técnica completa |
-| `VISUAL_SUMMARY.md` | 🎨 Resumen visual con gráficos |
-| `README.md` | 📄 Este archivo |
-
----
-
-## ⚡ Inicio Rápido (30 segundos)
+### 1. Instalar Locust
 
 ```bash
-# Terminal 1: Iniciar servidor
+pip install locust
+```
+
+### 2. Preparar Datos Base
+
+Antes de ejecutar las pruebas por primera vez, necesitas crear datos iniciales. Ejecuta esto una sola vez:
+
+```bash
+python manage.py shell
+```
+
+Luego copia y pega este código:
+
+```python
+from inventario.models import Bodega, UbicacionBodega, Producto
+
+bodega = Bodega.objects.create(
+    nombre="Bodega Test",
+    ciudad="Bogota",
+    direccion="Calle 1"
+)
+
+ubicacion = UbicacionBodega.objects.create(
+    bodega=bodega,
+    pasillo="A",
+    estante="1",
+    nivel="1",
+    capacidad_total=20000,
+    capacidad_disponible=20000
+)
+
+for i in range(1, 51):
+    Producto.objects.create(
+        codigo=f"P{i:03d}",
+        nombre=f"Producto {i}",
+        precio_unitario=10 * i
+    )
+```
+
+### 3. Iniciar Servidor Django
+
+```bash
 python manage.py runserver
-
-# Terminal 2: Ejecutar pruebas
-python tests/test_carga_standalone.py
-# Seleccionar: Opción 3 (Test Objetivo Principal)
 ```
 
----
+## Ejecutar Pruebas
 
-## 🧪 Tests Disponibles
+### Opción 1: Interfaz Web (Recomendado para Exploración)
 
-### 1. Test Baseline (100 artículos)
-- Duración: ~30 segundos
-- Objetivo: Línea base de rendimiento
-
-### 2. Test Concurrente (1,000 artículos)
-- Duración: ~2 minutos
-- Objetivo: Validar procesamiento paralelo
-
-### 3. Test Objetivo Principal (10,000 artículos) ⭐
-- Duración: < 5 minutos
-- Objetivo: **VALIDAR REQUERIMIENTO COMPLETO**
-
-### 4. Test Escalabilidad (Incremental)
-- Duración: ~10 minutos
-- Objetivo: Probar escalamiento de 100 a 2,000 req/min
-
-### 5. Test Errores Parciales
-- Duración: ~1 minuto
-- Objetivo: Validar resiliencia
-
----
-
-## 📊 Métricas Validadas
-
-```
-✅ Throughput (req/min)
-✅ Latencia (P50, P95, P99)
-✅ Tasa de éxito (%)
-✅ Tiempo de procesamiento (segundos)
-✅ Consistencia en DB (%)
-```
-
----
-
-## 🎯 Criterios de Éxito
-
-| Métrica | Objetivo | Estado |
-|---------|----------|--------|
-| Tiempo 10k artículos | ≤ 300s | ✅ |
-| Throughput | 100-2,000 req/min | ✅ |
-| Tasa de éxito | ≥ 95% | ✅ |
-| Integridad DB | ≥ 95% | ✅ |
-
----
-
-## 🛠️ Herramientas
-
-### Para Usuarios No Técnicos
-👉 **Usar**: `test_carga_standalone.py`
-- Menú interactivo
-- Colores y progreso
-- Fácil de usar
-
-### Para Automatización/CI
-👉 **Usar**: `test_carga_masiva_articulos.py`
-- Tests unitarios
-- Integrado con Django
-- Asserts automáticos
-
-### Para Análisis Avanzado
-👉 **Usar**: `locustfile_articulos.py`
-- Interfaz web
-- Gráficos en tiempo real
-- Reportes HTML
-
----
-
-## 📈 Reportes Generados
-
-```
-reporte_carga_masiva.json    # Reporte detallado
-reporte_locust.html          # Reporte Locust (si se usa)
-```
-
----
-
-## 🔗 Enlaces Útiles
-
-- [INDEX.md](INDEX.md) - Índice completo
-- [RESUMEN_EJECUTIVO.md](RESUMEN_EJECUTIVO.md) - Estrategia completa
-- [README_PRUEBAS_RAPIDAS.md](README_PRUEBAS_RAPIDAS.md) - Comandos rápidos
-
----
-
-## 💡 Recomendaciones
-
-1. **Primera vez**: Lee `INDEX.md` completo
-2. **Rápido**: Usa `README_PRUEBAS_RAPIDAS.md`
-3. **Detalle**: Consulta `ESTRATEGIA_PRUEBAS_CARGA_MASIVA.md`
-4. **Visual**: Revisa `VISUAL_SUMMARY.md`
-
----
-
-## 🚀 Comando Más Rápido
+Esta opción te permite ver métricas en tiempo real y ajustar parámetros sobre la marcha:
 
 ```bash
-python tests/test_carga_standalone.py <<< "3"
+./tests/run_load_tests.sh web
 ```
 
-Este comando ejecuta directamente el test objetivo de 10,000 artículos.
+Abre http://localhost:8089 en tu navegador y configura:
+- Number of users: 35
+- Spawn rate: 7
+- Host: http://127.0.0.1:8000
 
----
+### Opción 2: Pruebas Automatizadas
 
-## ⚠️ Prerequisitos
-
-- [ ] Servidor Django corriendo
-- [ ] Productos en DB (>50)
-- [ ] Ubicaciones en DB (>1)
-- [ ] `pip install requests`
-
----
-
-## 📞 Troubleshooting
-
-### "No se puede conectar al servidor"
-```bash
-# Verificar servidor
-curl http://127.0.0.1:8000/inventario/
-```
-
-### "ModuleNotFoundError: requests"
-```bash
-pip install requests
-```
-
-### Throughput muy bajo
-```bash
-# Aumentar workers en el script
-# Línea ~260 de test_carga_standalone.py
-workers = 70  # Aumentar de 50 a 70
-```
-
----
-
-## 📝 Notas
-
-- Los tests crean artículos con códigos que empiezan con `7898`
-- Puedes limpiar los artículos de prueba después
-- Los tests NO afectan los datos de producción
-- Se recomienda ejecutar en ambiente de desarrollo
-
----
-
-## 🎓 Flujo Recomendado
-
-```
-1. Lee INDEX.md (5 min)
-   ↓
-2. Ejecuta test_carga_standalone.py (10 min)
-   ↓
-3. Revisa reporte_carga_masiva.json (5 min)
-   ↓
-4. Si necesitas detalles: ESTRATEGIA_PRUEBAS_CARGA_MASIVA.md
-```
-
----
-
-## ✅ Checklist
-
-- [ ] Leí la documentación
-- [ ] Servidor Django corriendo
-- [ ] Ejecuté al menos un test
-- [ ] Revisé los resultados
-- [ ] Compartí con el equipo
-
----
-
-**¿Listo para empezar?** 🚀
+El script incluye 5 perfiles predefinidos que puedes ejecutar directamente:
 
 ```bash
-python tests/test_carga_standalone.py
+# Baseline: 100 req/min durante 1 minuto
+./tests/run_load_tests.sh baseline
+
+# Carga media: 500 req/min durante 2 minutos
+./tests/run_load_tests.sh medium
+
+# Carga alta: 1,000 req/min durante 3 minutos
+./tests/run_load_tests.sh high
+
+# Carga máxima: 2,000 req/min durante 3 minutos
+./tests/run_load_tests.sh max
+
+# Test objetivo: 10,000 artículos en aproximadamente 5 minutos
+./tests/run_load_tests.sh objective
+
+# Ejecutar todos los tests
+./tests/run_load_tests.sh all
 ```
 
----
+## Interpretar Resultados
 
-**Última actualización**: 2025-10-13  
-**Versión**: 1.0  
-**Estado**: ✅ Listo para usar
+### Métricas Principales
+
+Después de cada prueba, verás métricas como estas:
+
+- **Request/s**: Solicitudes procesadas por segundo
+- **Response Time (avg)**: Tiempo promedio de respuesta en milisegundos
+- **P95/P99**: El 95% y 99% de las peticiones se completan en este tiempo o menos
+- **Success Rate**: Porcentaje de peticiones exitosas (buscamos >95%)
+
+### Tipos de Reportes
+
+Cada prueba genera tres tipos de reportes automáticamente:
+
+1. **HTML** (`reportes/reporte_[nombre].html`)
+   - Reportes interactivos con gráficas
+   - Perfecto para presentaciones o análisis visual
+
+2. **CSV** (`reportes/reporte_[nombre]_stats.csv`)
+   - Datos crudos para análisis detallado
+   - Útil para importar a Excel o herramientas de análisis
+
+3. **JSON** (`reporte_locust_[timestamp].json`)
+   - Métricas completas con evaluación automática
+   - Incluye validación de objetivos cumplidos
+
+### Evaluación Automática
+
+El sistema evalúa automáticamente si se cumplen los objetivos. Busca esta sección en el JSON:
+
+```json
+{
+  "objetivos_cumplidos": {
+    "tiempo_ejecucion": true,
+    "tasa_exito": true,
+    "throughput_promedio": true
+  }
+}
+```
+
+## Configuración
+
+### Cambiar Puerto o Servidor
+
+Si necesitas apuntar a un servidor diferente o puerto, edita `config_entornos.py`:
+
+```python
+# Desarrollo local (puerto por defecto)
+BASE_URL = "http://127.0.0.1:8000"
+
+# Desarrollo local (puerto personalizado)
+BASE_URL = "http://127.0.0.1:8080"
+
+# Servidor remoto
+BASE_URL = "http://your-server.com:80"
+
+# AWS Load Balancer
+BASE_URL = "http://your-alb.amazonaws.com:80"
+```
+
+### Ajustar Umbrales de Éxito
+
+También en `config_entornos.py`:
+
+```python
+UMBRAL_EXITO_PCT = 95  # Porcentaje mínimo de éxito
+TIMEOUT = 30           # Timeout en segundos para cada request
+```
+
+## Cómo Funciona
+
+### Tipos de Usuarios Simulados
+
+Locust simula dos tipos de usuarios para hacer las pruebas más realistas:
+
+**UsuarioArticulos (80% del tráfico)**
+- Comportamiento realista de un usuario normal
+- 50% del tiempo: crea nuevos artículos
+- 30% del tiempo: lista artículos existentes
+- 20% del tiempo: consulta detalles de artículos
+
+**UsuarioIntensivo (20% del tráfico)**
+- Generación pura de carga
+- 100% del tiempo: crea artículos continuamente
+- Simula procesos batch o integraciones
+
+## Notas Importantes
+
+### Base de Datos
+
+- **Desarrollo**: Actualmente usa SQLite, que tiene limitaciones de concurrencia
+- **Producción**: Requiere PostgreSQL o MySQL para soportar alta concurrencia
+- Para cambiar a PostgreSQL, solo actualiza `settings.py` - las pruebas no necesitan cambios
+
+### Thread-Safety
+
+El método `ocupar_espacio()` en el código utiliza:
+- `select_for_update()`: Bloquea filas durante la transacción
+- `F()` expressions: Actualizaciones atómicas en la base de datos
+- `transaction.atomic()`: Garantiza transacciones ACID
+
+Esto asegura que no haya condiciones de carrera incluso con miles de peticiones concurrentes.
+
+## Solución de Problemas
+
+### Error: "Connection refused"
+
+**Problema**: No puede conectarse al servidor Django.
+
+**Solución**:
+1. Verifica que Django esté corriendo: `python manage.py runserver`
+2. Confirma que el puerto en `config_entornos.py` coincida con el servidor
+3. Verifica que no haya firewall bloqueando el puerto
+
+### Error: "ImportError: No module named locust"
+
+**Problema**: Locust no está instalado.
+
+**Solución**:
+```bash
+pip install locust
+```
+
+### Tasa de Éxito Baja (<95%)
+
+**Problema**: Muchas peticiones fallan o dan error.
+
+**Posibles causas y soluciones**:
+1. **Sobrecarga del servidor**
+   - Reduce el número de usuarios o spawn rate
+   - Aumenta la capacidad del servidor
+
+2. **Base de datos saturada**
+   - Considera usar PostgreSQL en lugar de SQLite
+   - Revisa índices en las tablas
+
+3. **Errores en la aplicación**
+   - Revisa los logs de Django para ver errores específicos
+   - Verifica que haya suficiente capacidad en las ubicaciones
+
+### Timeouts Frecuentes
+
+**Problema**: Muchas peticiones exceden el tiempo límite.
+
+**Soluciones**:
+1. Aumenta `TIMEOUT` en `config_entornos.py`
+2. Reduce la carga concurrente
+3. Optimiza las consultas de base de datos (usa `select_related`, `prefetch_related`)
+4. Considera agregar cache
+
+## Próximos Pasos
+
+Una vez que las pruebas locales funcionen correctamente:
+
+1. Migra a PostgreSQL para producción
+2. Configura el load balancer y actualiza `BASE_URL`
+3. Ejecuta las pruebas contra el ambiente de staging
+4. Valida que todos los objetivos se cumplan
+5. Documenta los resultados para el equipo
+

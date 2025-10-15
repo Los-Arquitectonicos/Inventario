@@ -1,59 +1,77 @@
 """
-Configuración de URLs para pruebas de carga en diferentes entornos
-===================================================================
+═══════════════════════════════════════════════════════════════════════════════
+CONFIGURACIÓN DE ENTORNOS - PRUEBAS DE CARGA
+═══════════════════════════════════════════════════════════════════════════════
 
-Este archivo centraliza las URLs para facilitar el cambio entre entornos.
-Simplemente descomenta la configuración que necesites.
+Este archivo centraliza la configuración para todas las pruebas de carga.
+Para cambiar de entorno (local → AWS → producción), solo edita las variables.
+
+Variables configurables:
+    BASE_URL    - URL base del servidor (con puerto si aplica)
+    TIMEOUT     - Timeout para requests HTTP (segundos)
+    HEADERS     - Headers HTTP adicionales (autenticación, etc.)
+    
+Puerto configurable:
+    Cambia el puerto en BASE_URL directamente:
+    - Local desarrollo: http://127.0.0.1:8000
+    - Load balancer: http://your-lb.amazonaws.com:80
+    - Custom port: http://your-lb.amazonaws.com:8080
+
+Base de datos:
+    - Desarrollo: SQLite (solo para tests no concurrentes)
+    - Producción: PostgreSQL (requerido para concurrencia y thread-safety)
+    
+═══════════════════════════════════════════════════════════════════════════════
 """
+
+import os
 
 # =============================================================================
 # DESARROLLO LOCAL
 # =============================================================================
-BASE_URL = "http://127.0.0.1:8000"
-TIMEOUT = 30  # segundos
+# Puerto configurable: cambiar 8000 por el que necesites
+BASE_URL = os.environ.get('BASE_URL', "http://127.0.0.1:8000")
+TIMEOUT = int(os.environ.get('TIMEOUT', '30'))  # segundos
 
 
 # =============================================================================
-# AWS APPLICATION LOAD BALANCER (ALB) - HTTP
+# AWS - EJEMPLOS (Descomentar y actualizar según necesites)
 # =============================================================================
+
+# AWS Application Load Balancer - HTTP (puerto 80)
 # BASE_URL = "http://your-alb-name-123456789.us-east-1.elb.amazonaws.com"
-# TIMEOUT = 60  # Mayor timeout para redes remotas
+# TIMEOUT = 60
 
-
-# =============================================================================
-# AWS APPLICATION LOAD BALANCER (ALB) - HTTPS con certificado
-# =============================================================================
+# AWS Application Load Balancer - HTTPS (puerto 443)
 # BASE_URL = "https://your-alb-name-123456789.us-east-1.elb.amazonaws.com"
 # TIMEOUT = 60
 
+# AWS con puerto personalizado
+# BASE_URL = "http://your-alb-name-123456789.us-east-1.elb.amazonaws.com:8080"
+# TIMEOUT = 60
 
-# =============================================================================
-# DOMINIO PERSONALIZADO (Route 53 + ALB + ACM)
-# =============================================================================
+# Dominio personalizado (Route 53 + ALB + ACM)
 # BASE_URL = "https://api.tudominio.com"
 # TIMEOUT = 60
 
-
-# =============================================================================
-# AWS ELASTIC BEANSTALK
-# =============================================================================
+# Elastic Beanstalk
 # BASE_URL = "http://your-env-name.us-east-1.elasticbeanstalk.com"
 # TIMEOUT = 60
 
 
 # =============================================================================
-# CONFIGURACIÓN DE PRUEBAS DE CARGA
+# PARÁMETROS DE PRUEBAS
 # =============================================================================
 
-# Workers para pruebas concurrentes
+# Workers para pruebas concurrentes (Django tests)
 WORKERS_TEST_1000 = 10      # Test de 1,000 artículos
 WORKERS_TEST_10000 = 50     # Test de 10,000 artículos
 
-# Límites de tiempo (segundos)
+# Límites de tiempo
 TIEMPO_MAX_10000 = 300      # 5 minutos para 10,000 artículos
 
 # Requisitos de throughput
-REQUISITO_REQ_MIN = 2000    # 2,000 req/min
+REQUISITO_REQ_MIN = 2000    # 2,000 req/min (objetivo máximo)
 
 # Umbrales de éxito
 UMBRAL_EXITO_PCT = 95       # 95% de artículos creados exitosamente
@@ -62,112 +80,55 @@ UMBRAL_ERROR_5XX = 1        # Máximo 1% de errores 5xx
 
 
 # =============================================================================
-# CONFIGURACIÓN DE AUTENTICACIÓN (si aplica)
+# AUTENTICACIÓN (Opcional)
 # =============================================================================
 
-# API Key (si usas API Gateway con API Key)
-# API_KEY = "your-api-key-here"
+# Sin autenticación (por defecto)
+HEADERS = {
+    "Content-Type": "application/json"
+}
+
+# Con API Key (descomentar si aplica):
+# API_KEY = os.environ.get('API_KEY', 'your-api-key-here')
 # HEADERS = {
 #     "Content-Type": "application/json",
 #     "x-api-key": API_KEY
 # }
 
-# Bearer Token (si usas OAuth/JWT)
-# AUTH_TOKEN = "your-jwt-token-here"
+# Con Bearer Token JWT (descomentar si aplica):
+# AUTH_TOKEN = os.environ.get('AUTH_TOKEN', 'your-jwt-token-here')
 # HEADERS = {
 #     "Content-Type": "application/json",
 #     "Authorization": f"Bearer {AUTH_TOKEN}"
 # }
 
-# Headers por defecto (sin autenticación)
-HEADERS = {
-    "Content-Type": "application/json"
-}
-
 
 # =============================================================================
-# NOTAS DE CONFIGURACIÓN AWS
+# DOCUMENTACIÓN
 # =============================================================================
 """
-Para usar con AWS Application Load Balancer:
+GUIAS COMPLETAS:
 
-1. **Crear ALB**:
-   - Tipo: Application Load Balancer
-   - Scheme: Internet-facing
-   - IP address type: IPv4
-   - Listeners: HTTP (80) y/o HTTPS (443)
-   - Target Group: Instancias EC2 con Django
+Para deployment en AWS:
+    Ver: tests/README_AWS_DEPLOYMENT.md (si existe)
+    
+Para ejecutar pruebas:
+    Ver: tests/README.md
 
-2. **Configurar Target Group**:
-   - Protocol: HTTP
-   - Port: 8000 (o el puerto de tu aplicación)
-   - Health checks: /inventario/api/productos/ o similar
-   - Health check interval: 30 segundos
-   - Healthy threshold: 2
-   - Unhealthy threshold: 2
-
-3. **Auto Scaling Group** (recomendado):
-   - Min instances: 2
-   - Desired instances: 4
-   - Max instances: 10
-   - Scaling policy: Target tracking
-   - Metric: Request count per target
-   - Target value: 500 requests/target
-
-4. **RDS PostgreSQL** (para producción):
-   - Instance class: db.t3.medium o superior
-   - Multi-AZ: Sí (alta disponibilidad)
-   - Storage: 100 GB SSD (gp3)
-   - Backup retention: 7 días
-   - Enable Performance Insights: Sí
-
-5. **Configuración Django** (settings.py):
-   ```python
-   ALLOWED_HOSTS = [
-       'your-alb-name-123456789.us-east-1.elb.amazonaws.com',
-       'api.tudominio.com'
-   ]
-   
-   DATABASES = {
-       'default': {
-           'ENGINE': 'django.db.backends.postgresql',
-           'NAME': os.environ.get('DB_NAME'),
-           'USER': os.environ.get('DB_USER'),
-           'PASSWORD': os.environ.get('DB_PASSWORD'),
-           'HOST': os.environ.get('DB_HOST'),  # RDS endpoint
-           'PORT': '5432',
-           'OPTIONS': {
-               'connect_timeout': 10,
-           }
-       }
-   }
-   ```
-
-6. **Variables de entorno EC2**:
-   - Crear archivo .env o usar Parameter Store
-   - DB_NAME, DB_USER, DB_PASSWORD, DB_HOST
-   - SECRET_KEY, DEBUG=False
-
-7. **Ejecutar tests desde local contra AWS**:
-   ```bash
-   # Cambiar BASE_URL en este archivo
-   # Asegurarse que el Security Group del ALB permite tu IP
-   python manage.py test tests.test_carga_masiva_articulos
-   ```
-
-8. **Monitoreo** (CloudWatch):
-   - ALB: TargetResponseTime, RequestCount, HTTPCode_Target_4XX_Count
-   - EC2: CPUUtilization, NetworkIn, NetworkOut
-   - RDS: DatabaseConnections, ReadLatency, WriteLatency
-
-9. **Costos aproximados** (us-east-1, on-demand):
-   - ALB: ~$22/mes (básico)
-   - EC2 t3.medium x4: ~$120/mes
-   - RDS db.t3.medium: ~$75/mes
-   - **Total estimado: ~$220/mes**
-   
-   Para reducir costos:
-   - Usar Reserved Instances (40% descuento)
-   - Usar Savings Plans (hasta 72% descuento)
-   - Escalar a 0 instancias en horarios no laborales
+Para cambiar puerto:
+    Edita BASE_URL:
+    - Local: http://127.0.0.1:8000 (puerto 8000)
+    - Load Balancer: http://your-lb.amazonaws.com:80 (puerto 80)
+    - Custom: http://your-lb.amazonaws.com:8080 (puerto 8080)
+    
+Para cambiar a PostgreSQL (producción):
+    1. Actualizar settings.py con credenciales PostgreSQL
+    2. No es necesario cambiar este archivo
+    3. Los tests funcionarán automáticamente
+    
+Variables de entorno (opcional):
+    export BASE_URL="http://production-server.com"
+    export TIMEOUT="60"
+    export API_KEY="your-key"
 """
+
