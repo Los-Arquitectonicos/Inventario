@@ -11,11 +11,10 @@
         "method": "DELETE",
         "header": [],
         "url": {
-          "raw": "http://provesi-alb-1423351037.us-east-1.elb.amazonaws.com/inventario/api/articulos/eliminar_todos/",
+          "raw": "http://provesi-alb-135468775.us-east-1.elb.amazonaws.com/inventario/api/articulos/eliminar_todos/",
           "protocol": "http",
           "host": [
-            "provesi-alb-1423351037.us-east-1.elb.amazonaws.com",
-            "inventario"
+            "provesi-alb-135468775.us-east-1.elb.amazonaws.com"
           ],
           "path": [
             "inventario",
@@ -34,11 +33,10 @@
         "method": "DELETE",
         "header": [],
         "url": {
-          "raw": "http://provesi-alb-1423351037.us-east-1.elb.amazonaws.com/inventario/api/ubicaciones/eliminar_todas/",
+          "raw": "http://provesi-alb-135468775.us-east-1.elb.amazonaws.com/inventario/api/ubicaciones/eliminar_todas/",
           "protocol": "http",
           "host": [
-            "provesi-alb-1423351037.us-east-1.elb.amazonaws.com",
-            "inventario"
+            "provesi-alb-135468775.us-east-1.elb.amazonaws.com"
           ],
           "path": [
             "inventario",
@@ -57,11 +55,10 @@
         "method": "DELETE",
         "header": [],
         "url": {
-          "raw": "http://provesi-alb-1423351037.us-east-1.elb.amazonaws.com/inventario/api/bodegas/eliminar_todas/",
+          "raw": "http://provesi-alb-135468775.us-east-1.elb.amazonaws.com/inventario/api/bodegas/eliminar_todas/",
           "protocol": "http",
           "host": [
-            "provesi-alb-1423351037.us-east-1.elb.amazonaws.com",
-            "inventario"
+            "provesi-alb-135468775.us-east-1.elb.amazonaws.com"
           ],
           "path": [
             "inventario",
@@ -80,11 +77,10 @@
         "method": "DELETE",
         "header": [],
         "url": {
-          "raw": "http://provesi-alb-1423351037.us-east-1.elb.amazonaws.com/inventario/api/productos/eliminar_todos/",
+          "raw": "http://provesi-alb-135468775.us-east-1.elb.amazonaws.com/inventario/api/productos/eliminar_todos/",
           "protocol": "http",
           "host": [
-            "provesi-alb-1423351037.us-east-1.elb.amazonaws.com",
-            "inventario"
+            "provesi-alb-135468775.us-east-1.elb.amazonaws.com"
           ],
           "path": [
             "inventario",
@@ -101,7 +97,7 @@
   "variable": [
     {
       "key": "base_url",
-      "value": "http://provesi-alb-1423351037.us-east-1.elb.amazonaws.com/inventario"
+      "value": "http://provesi-alb-135468775.us-east-1.elb.amazonaws.com/inventario"
     }
   ]
 }

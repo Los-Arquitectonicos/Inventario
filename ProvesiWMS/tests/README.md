@@ -1,5 +1,9 @@
 # Pruebas de Carga - Sistema de Inventario WMS
 
+## ASR escalabilidad
+
+Yo, como personal administrativo de Provesi, dado que el ambiente está sobrecargado con la apertura de nuevas bodegas, cuando realizo operaciones de carga masiva de inventario, quiero que el sistema incremente su capacidad de procesamiento desde 100 peticiones por minuto hasta 2.000 peticiones por minuto, asegurando que cada carga de 10.000 registros se complete en menos de 5 minutos conforme crece la demanda.
+
 ## Resumen
 
 Pruebas automatizadas con Locust para validar el requerimiento de escalabilidad del sistema:

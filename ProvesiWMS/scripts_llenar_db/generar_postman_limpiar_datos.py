@@ -18,7 +18,7 @@ import os
 def generar_coleccion_limpieza():
     """Genera coleccion Postman para eliminar todos los datos."""
     
-    alb_url = "http://provesi-alb-1423351037.us-east-1.elb.amazonaws.com"
+    alb_url = "http://provesi-alb-135468775.us-east-1.elb.amazonaws.com"
     base_url = f"{alb_url}/inventario"
     
     requests = []
@@ -34,7 +34,7 @@ def generar_coleccion_limpieza():
             "url": {
                 "raw": f"{base_url}/api/articulos/eliminar_todos/",
                 "protocol": "http",
-                "host": base_url.replace("http://", "").split("/"),
+                "host": [alb_url.replace("http://", "")],
                 "path": ["inventario", "api", "articulos", "eliminar_todos", ""]
             }
         },
@@ -49,7 +49,7 @@ def generar_coleccion_limpieza():
             "url": {
                 "raw": f"{base_url}/api/ubicaciones/eliminar_todas/",
                 "protocol": "http",
-                "host": base_url.replace("http://", "").split("/"),
+                "host": [alb_url.replace("http://", "")],
                 "path": ["inventario", "api", "ubicaciones", "eliminar_todas", ""]
             }
         },
@@ -64,7 +64,7 @@ def generar_coleccion_limpieza():
             "url": {
                 "raw": f"{base_url}/api/bodegas/eliminar_todas/",
                 "protocol": "http",
-                "host": base_url.replace("http://", "").split("/"),
+                "host": [alb_url.replace("http://", "")],
                 "path": ["inventario", "api", "bodegas", "eliminar_todas", ""]
             }
         },
@@ -79,7 +79,7 @@ def generar_coleccion_limpieza():
             "url": {
                 "raw": f"{base_url}/api/productos/eliminar_todos/",
                 "protocol": "http",
-                "host": base_url.replace("http://", "").split("/"),
+                "host": [alb_url.replace("http://", "")],
                 "path": ["inventario", "api", "productos", "eliminar_todos", ""]
             }
         },

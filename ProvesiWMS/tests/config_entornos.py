@@ -30,7 +30,7 @@ import os
 # DESARROLLO LOCAL
 # =============================================================================
 # Puerto configurable: cambiar 8000 por el que necesites
-BASE_URL = os.environ.get('BASE_URL', "http://provesi-alb-1423351037.us-east-1.elb.amazonaws.com/inventario/")
+BASE_URL = os.environ.get('BASE_URL', "http://provesi-alb-135468775.us-east-1.elb.amazonaws.com/inventario/")
 TIMEOUT = int(os.environ.get('TIMEOUT', '30'))  # segundos
 
 

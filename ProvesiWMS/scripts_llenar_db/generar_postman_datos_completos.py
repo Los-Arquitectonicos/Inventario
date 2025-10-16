@@ -17,21 +17,73 @@ from decimal import Decimal
 
 def generar_coleccion_completa():
     """Genera coleccion Postman con productos, bodegas y ubicaciones."""
-    
-    alb_url = "http://provesi-alb-1423351037.us-east-1.elb.amazonaws.com"
+
+    alb_url = "http://provesi-alb-135468775.us-east-1.elb.amazonaws.com"
     base_url = f"{alb_url}/inventario"
     
     requests = []
     
-    # 1. Productos (50 total)
+    # 1. Bodegas (10 total) - PRIMERO porque las ubicaciones las necesitan
+    ciudades = [
+        ("Bogota", "Zona Industrial Norte"),
+        ("Medellin", "Zona Industrial Sur"),
+        ("Cali", "Parque Industrial"),
+        ("Barranquilla", "Zona Franca"),
+        ("Cartagena", "Puerto Industrial"),
+        ("Bucaramanga", "Centro Logistico"),
+        ("Pereira", "Zona Industrial"),
+        ("Santa Marta", "Complejo Portuario"),
+        ("Ibague", "Parque Empresarial"),
+        ("Cucuta", "Zona Industrial Frontera")
+    ]
+    
+    for i, (ciudad, direccion) in enumerate(ciudades, 1):
+        requests.append({
+            "name": f"Bodega {i}: {ciudad}",
+            "request": {
+                "method": "POST",
+                "header": [{"key": "Content-Type", "value": "application/json"}],
+                "body": {
+                    "mode": "raw",
+                    "raw": json.dumps({
+                        "nombre": f"Bodega {i}",
+                        "ciudad": ciudad,
+                        "direccion": direccion
+                    }, indent=2)
+                },
+                "url": {
+                    "raw": f"{base_url}/bodegas/crear/",
+                    "protocol": "http",
+                    "host": [alb_url.replace("http://", "")],
+                    "path": ["inventario", "bodegas", "crear", ""]
+                }
+            },
+            "response": [],
+            "event": [
+                {
+                    "listen": "test",
+                    "script": {
+                        "exec": [
+                            "var jsonData = pm.response.json();",
+                            f"pm.collectionVariables.set('bodega_{i}_id', jsonData.bodega.id);"
+                        ],
+                        "type": "text/javascript"
+                    }
+                }
+            ]
+        })
+    
+    # 2. Productos (50 productos)
     productos = [
         ("Laptop Dell XPS 13", "Laptop ultradelgada 13 pulgadas", "500000", "750000", "1.2", "30x21x2 cm", "Plateado", "13\"", "Dell"),
         ("Mouse Logitech MX Master", "Mouse inalambrico ergonomico", "50000", "75000", "0.14", "12x8x4 cm", "Negro", "Universal", "Logitech"),
-        ("Teclado Mecanico Corsair", "Teclado mecanico RGB", "80000", "120000", "1.1", "44x13x4 cm", "Negro", "Full Size", "Corsair"),
-        ("Monitor LG 27 4K", "Monitor 27 pulgadas 4K UHD", "300000", "450000", "5.5", "61x46x22 cm", "Negro", "27\"", "LG"),
-        ("Audifonos Sony WH-1000XM4", "Audifonos con cancelacion de ruido", "200000", "300000", "0.25", "20x18x8 cm", "Negro", "Universal", "Sony"),
-        ("Webcam Logitech C920", "Webcam Full HD 1080p", "60000", "90000", "0.16", "9x4x7 cm", "Negro", "Universal", "Logitech"),
-        ("Disco SSD Samsung 1TB", "SSD NVMe 1TB alta velocidad", "80000", "120000", "0.008", "8x2x0.2 cm", "Negro", "M.2", "Samsung"),
+        ("Teclado Corsair K95", "Teclado mecanico RGB", "120000", "180000", "1.1", "45x16x4 cm", "Negro", "Universal", "Corsair"),
+        ("Monitor Samsung 27\"", "Monitor curvo QLED 27 pulgadas", "280000", "420000", "4.5", "61x45x8 cm", "Negro", "27\"", "Samsung"),
+        ("Webcam Logitech C920", "Camara web Full HD", "80000", "120000", "0.16", "9x4x3 cm", "Negro", "Universal", "Logitech"),
+        ("Auriculares Sony WH-1000XM4", "Auriculares con cancelacion de ruido", "200000", "300000", "0.25", "20x18x8 cm", "Negro", "Universal", "Sony"),
+        ("Disco SSD Samsung 1TB", "Disco solido 1TB NVMe", "150000", "225000", "0.07", "8x2x0.2 cm", "Negro", "M.2", "Samsung"),
+        ("Tarjeta Grafica RTX 3080", "GPU NVIDIA RTX 3080 10GB", "800000", "1200000", "1.4", "28x11x4 cm", "Negro", "Universal", "NVIDIA"),
+        ("Procesador AMD Ryzen 9", "CPU Ryzen 9 5900X 12-core", "450000", "675000", "0.05", "4x4x0.5 cm", "Plateado", "AM4", "AMD"),
         ("Memoria RAM Corsair 16GB", "RAM DDR4 3200MHz 16GB", "50000", "75000", "0.05", "13x3x0.1 cm", "Negro", "DDR4", "Corsair"),
         ("Router ASUS RT-AX88U", "Router WiFi 6 Gaming", "250000", "375000", "1.0", "30x18x6 cm", "Negro", "Universal", "ASUS"),
         ("Impresora HP LaserJet", "Impresora laser monocromatica", "180000", "270000", "7.0", "36x36x18 cm", "Gris", "Universal", "HP"),
@@ -66,48 +118,10 @@ def generar_coleccion_completa():
                     }, indent=2)
                 },
                 "url": {
-                    "raw": f"{base_url}/api/productos/",
+                    "raw": f"{base_url}/productos/crear/",
                     "protocol": "http",
-                    "host": base_url.replace("http://", "").split("/"),
-                    "path": ["inventario", "api", "productos", ""]
-                }
-            },
-            "response": []
-        })
-    
-    # 2. Bodegas (10 total)
-    ciudades = [
-        ("Bogota", "Zona Industrial Norte"),
-        ("Medellin", "Zona Industrial Sur"),
-        ("Cali", "Parque Industrial"),
-        ("Barranquilla", "Zona Franca"),
-        ("Cartagena", "Puerto Industrial"),
-        ("Bucaramanga", "Centro Logistico"),
-        ("Pereira", "Zona Industrial"),
-        ("Santa Marta", "Complejo Portuario"),
-        ("Ibague", "Parque Empresarial"),
-        ("Cucuta", "Zona Industrial Frontera")
-    ]
-    
-    for i, (ciudad, direccion) in enumerate(ciudades, 1):
-        requests.append({
-            "name": f"Bodega {i}: {ciudad}",
-            "request": {
-                "method": "POST",
-                "header": [{"key": "Content-Type", "value": "application/json"}],
-                "body": {
-                    "mode": "raw",
-                    "raw": json.dumps({
-                        "nombre": f"Bodega {i}",
-                        "ciudad": ciudad,
-                        "direccion": direccion
-                    }, indent=2)
-                },
-                "url": {
-                    "raw": f"{base_url}/api/bodegas/",
-                    "protocol": "http",
-                    "host": base_url.replace("http://", "").split("/"),
-                    "path": ["inventario", "api", "bodegas", ""]
+                    "host": [alb_url.replace("http://", "")],
+                    "path": ["inventario", "productos", "crear", ""]
                 }
             },
             "response": []
@@ -122,6 +136,18 @@ def generar_coleccion_completa():
             estante = str((j // len(pasillos)) + 1)
             nivel = str((j % 5) + 1)
             
+            # Construir JSON manualmente para que bodega_id sea número (no string)
+            raw_body = (
+                "{\n"
+                f"  \"bodega_id\": {{{{bodega_{bodega_num}_id}}}},\n"
+                f"  \"pasillo\": \"{pasillo}\",\n"
+                f"  \"estante\": \"{estante}\",\n"
+                f"  \"nivel\": \"{nivel}\",\n"
+                f"  \"capacidad_total\": 1000000,\n"
+                f"  \"capacidad_disponible\": 1000000\n"
+                "}"
+            )
+            
             requests.append({
                 "name": f"B{bodega_num} Ubicacion {j+1}: {pasillo}-{estante}-{nivel}",
                 "request": {
@@ -129,20 +155,13 @@ def generar_coleccion_completa():
                     "header": [{"key": "Content-Type", "value": "application/json"}],
                     "body": {
                         "mode": "raw",
-                        "raw": json.dumps({
-                            "bodega_id": bodega_num,
-                            "pasillo": pasillo,
-                            "estante": estante,
-                            "nivel": nivel,
-                            "capacidad_total": 1000000,
-                            "capacidad_disponible": 1000000
-                        }, indent=2)
+                        "raw": raw_body
                     },
                     "url": {
-                        "raw": f"{base_url}/api/ubicaciones/",
+                        "raw": f"{base_url}/ubicaciones/crear/",
                         "protocol": "http",
-                        "host": base_url.replace("http://", "").split("/"),
-                        "path": ["inventario", "api", "ubicaciones", ""]
+                        "host": [alb_url.replace("http://", "")],
+                        "path": ["inventario", "ubicaciones", "crear", ""]
                     }
                 },
                 "response": []
