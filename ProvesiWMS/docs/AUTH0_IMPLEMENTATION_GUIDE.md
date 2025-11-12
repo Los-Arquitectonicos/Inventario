@@ -109,7 +109,7 @@ source ~/.bashrc
 #### 3.2 Verificar Configuración
 ```bash
 # En el servidor Django
-python manage.py shell
+python3 manage.py shell
 
 from django.conf import settings
 print(f"Domain: {settings.AUTH0_DOMAIN}")
