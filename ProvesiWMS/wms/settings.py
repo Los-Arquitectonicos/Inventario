@@ -102,10 +102,6 @@ else:
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
-# Ensure logs directory exists
-LOGS_DIR = os.path.join(BASE_DIR, 'logs')
-os.makedirs(LOGS_DIR, exist_ok=True)
-
 # Security settings for production
 if not DEBUG:
     SECURE_SSL_REDIRECT = False  # Set to True if using HTTPS
@@ -115,35 +111,25 @@ if not DEBUG:
     SECURE_CONTENT_TYPE_NOSNIFF = True
     X_FRAME_OPTIONS = 'DENY'
 
-# Logging configuration
-LOG_HANDLERS = ['console']
-if DEBUG or os.environ.get('ENABLE_FILE_LOGGING') == 'True':
-    LOG_HANDLERS.append('file')
-
+# Simple logging configuration (console only)
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
     'formatters': {
-        'verbose': {
+        'simple': {
             'format': '{levelname} {asctime} {module} {message}',
             'style': '{',
         },
     },
     'handlers': {
-        'file': {
-            'level': 'INFO',
-            'class': 'logging.FileHandler',
-            'filename': os.path.join(BASE_DIR, 'logs', 'django.log'),
-            'formatter': 'verbose',
-        },
         'console': {
             'level': 'INFO',
             'class': 'logging.StreamHandler',
-            'formatter': 'verbose',
+            'formatter': 'simple',
         },
     },
     'root': {
-        'handlers': LOG_HANDLERS,
+        'handlers': ['console'],
         'level': 'INFO',
     },
 }

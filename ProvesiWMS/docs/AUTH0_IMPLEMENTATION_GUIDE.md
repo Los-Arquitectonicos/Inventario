@@ -114,6 +114,7 @@ python3 manage.py shell
 from django.conf import settings
 print(f"Domain: {settings.AUTH0_DOMAIN}")
 print(f"Audience: {settings.AUTH0_AUDIENCE}")
+print(f"Client ID: {settings.AUTH0_CLIENT_ID}")
 ```
 
 ### Paso 4: Instalar Dependencias
