@@ -1,11 +1,21 @@
 from django.urls import path
 from . import views
+from . import auth_views
 
 app_name = 'inventario'
 
 urlpatterns = [
     # Vista principal
     path("", views.index, name="index"),
+    
+    # ============================================================================
+    # AUTENTICACIÓN CON AUTH0
+    # ============================================================================
+    path("auth/login/", auth_views.auth_login, name="auth_login"),
+    path("auth/logout/", auth_views.auth_logout, name="auth_logout"),
+    path("auth/user/", auth_views.auth_user_info, name="auth_user_info"),
+    path("auth/status/", auth_views.auth_status, name="auth_status"),
+    path("auth/config/", auth_views.auth_config, name="auth_config"),
     
     # URLs de Productos
     path("productos/", views.ProductoListView.as_view(), name="productos_lista"),

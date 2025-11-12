@@ -39,9 +39,12 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -161,3 +164,49 @@ USE_TZ = True
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# ============================================================================
+# AUTH0 CONFIGURATION
+# ============================================================================
+
+# Auth0 Settings (actualizar con valores reales de Auth0)
+AUTH0_DOMAIN = os.environ.get('AUTH0_DOMAIN', 'provesi-wms.auth0.com')
+AUTH0_AUDIENCE = os.environ.get('AUTH0_AUDIENCE', 'https://api.provesi-wms.com/inventario')
+AUTH0_CLIENT_ID = os.environ.get('AUTH0_CLIENT_ID', '')
+AUTH0_CLIENT_SECRET = os.environ.get('AUTH0_CLIENT_SECRET', '')
+
+# Django REST Framework Configuration
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'inventario.authentication.Auth0JWTAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+    'DEFAULT_RENDERER_CLASSES': [
+        'rest_framework.renderers.JSONRenderer',
+    ],
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 20
+}
+
+# CORS Configuration (para permitir requests desde frontend)
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",  # React development
+    "http://127.0.0.1:3000",
+    "https://provesi-wms.com",  # Production frontend
+]
+
+CORS_ALLOW_CREDENTIALS = True
+
+# Security Headers
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = 'DENY'
+
+# En producción, habilitar HTTPS
+if not DEBUG:
+    SECURE_SSL_REDIRECT = True
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True

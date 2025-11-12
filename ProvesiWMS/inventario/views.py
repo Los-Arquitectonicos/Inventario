@@ -11,6 +11,9 @@ from .models import (
     Bodega, UbicacionBodega, Producto, Articulo, Cliente, Usuario,
     Cotizacion, Pedido, PedidoProducto, PedidoArticulo, Factura
 )
+from .permissions import (
+    require_auth0_permission, require_any_auth0_permission, admin_required
+)
 
 # =========================
 # VISTAS PRINCIPALES
@@ -473,11 +476,28 @@ class PedidoListView(ListView):
     """
     Vista para listar pedidos con filtros por estado.
     Permite ver pedidos por diferentes estados y fechas.
+    
+    REQUIERE: Permiso 'read:pedidos' o 'admin:all'
     """
     model = Pedido
     template_name = 'inventario/pedidos/lista.html'
     context_object_name = 'pedidos'
     paginate_by = 15
+
+    def dispatch(self, request, *args, **kwargs):
+        """Verificar permisos antes de procesar la vista."""
+        # Para vistas de clase, verificamos manualmente
+        if not request.user.is_authenticated:
+            return JsonResponse({'error': 'Autenticación requerida'}, status=401)
+        
+        auth = getattr(request, 'auth', None)
+        if not auth or not (auth.has_permission('read:pedidos') or auth.is_admin()):
+            return JsonResponse({
+                'error': 'Permisos insuficientes',
+                'required_permission': 'read:pedidos'
+            }, status=403)
+            
+        return super().dispatch(request, *args, **kwargs)
 
     def get_queryset(self):
         queryset = Pedido.objects.select_related('cliente').all()
@@ -496,10 +516,26 @@ class PedidoDetailView(DetailView):
     """
     Vista detallada de un pedido específico.
     Muestra productos, total y estado actual.
+    
+    REQUIERE: Permiso 'read:pedidos' o 'admin:all'
     """
     model = Pedido
     template_name = 'inventario/pedidos/detalle.html'
     context_object_name = 'pedido'
+
+    def dispatch(self, request, *args, **kwargs):
+        """Verificar permisos antes de procesar la vista."""
+        if not request.user.is_authenticated:
+            return JsonResponse({'error': 'Autenticación requerida'}, status=401)
+        
+        auth = getattr(request, 'auth', None)
+        if not auth or not (auth.has_permission('read:pedidos') or auth.is_admin()):
+            return JsonResponse({
+                'error': 'Permisos insuficientes',
+                'required_permission': 'read:pedidos'
+            }, status=403)
+            
+        return super().dispatch(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -507,10 +543,13 @@ class PedidoDetailView(DetailView):
         context['total'] = self.object.calcular_total() # type: ignore
         return context
 
+@require_auth0_permission('write:pedidos')
 def crear_pedido(request):
     """
     Vista para crear un nuevo pedido.
     Maneja la creación de pedidos con múltiples productos.
+    
+    REQUIERE: Permiso 'write:pedidos' o 'admin:all'
     """
     if request.method == 'POST':
         try:
