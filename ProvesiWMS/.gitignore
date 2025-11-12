@@ -1,0 +1,59 @@
+# Django
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+*.so
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Database
+*.sqlite3
+*.db
+
+# Static files
+/staticfiles/
+/static/
+
+# Media files
+/media/
+
+# Logs
+/logs/
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Security
+*.pem
+*.key
+.env.local
+.env.production
+
+# Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+
+# Tests
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Temporary files
+*.tmp
+*.temp
