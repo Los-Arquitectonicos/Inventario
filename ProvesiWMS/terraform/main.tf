@@ -286,6 +286,12 @@ resource "aws_instance" "app_server" {
               # Navegar al proyecto Django
               cd ProvesiWMS
               
+              # Mover manage.py si está en docs/ (corregir estructura del proyecto)
+              if [ -f docs/manage.py ]; then
+                mv docs/manage.py .
+                echo "✅ manage.py movido desde docs/ a raíz"
+              fi
+              
               # Crear directorio de logs
               sudo mkdir -p /var/log/provesi-wms
               sudo chown ubuntu:ubuntu /var/log/provesi-wms
@@ -297,25 +303,46 @@ resource "aws_instance" "app_server" {
               # Aplicar migraciones solo en la primera instancia
               if [ ${count.index} -eq 0 ]; then
                 sleep 30  # Esperar a que la DB esté lista
-                python manage.py makemigrations
-                python manage.py migrate
+                python manage.py makemigrations || echo "Warning: makemigrations failed"
+                python manage.py migrate || echo "Warning: migrate failed"
               else
                 sleep 60  # Esperar a que la primera instancia haga las migraciones
               fi
               
-              # Crear script de inicio
-              cat > /opt/apps/start_server.sh << 'EOF'
+              # Verificar que todo esté funcionando
+              echo "🔍 Verificando instalación..."
+              python --version
+              python -c "import django; print(f'✅ Django {django.get_version()}')"
+              python manage.py check || echo "⚠️ Django check failed"
+              
+              # Crear script de inicio mejorado
+              sudo tee /opt/apps/start_server.sh << 'EOF'
               #!/bin/bash
+              set -e
+              
+              # Cargar variables de entorno
               source /etc/environment
+              
+              # Navegar al directorio del proyecto
               cd /opt/apps/Inventario/ProvesiWMS
-              source ../venv/bin/activate
-              gunicorn --bind 0.0.0.0:8000 --workers 4 --timeout 120 wms.wsgi:application
+              
+              # Activar entorno virtual
+              source /opt/apps/Inventario/venv/bin/activate
+              
+              # Verificar que Django esté disponible
+              python -c "import django; print(f'Django {django.get_version()} loaded successfully')"
+              
+              # Verificar que manage.py funcione
+              python manage.py check --deploy || echo "Warning: Deploy check failed, continuing..."
+              
+              # Ejecutar Gunicorn
+              exec gunicorn --bind 0.0.0.0:8000 --workers 4 --timeout 120 --access-logfile /var/log/provesi-wms/access.log --error-logfile /var/log/provesi-wms/error.log wms.wsgi:application
               EOF
               
               chmod +x /opt/apps/start_server.sh
               
-              # Crear servicio systemd
-              cat > /etc/systemd/system/provesi-wms.service << 'EOF'
+              # Crear servicio systemd corregido
+              sudo tee /etc/systemd/system/provesi-wms.service << 'EOF'
               [Unit]
               Description=Provesi WMS Django Application
               After=network.target
@@ -324,11 +351,13 @@ resource "aws_instance" "app_server" {
               Type=simple
               User=ubuntu
               WorkingDirectory=/opt/apps/Inventario/ProvesiWMS
-              Environment="PATH=/opt/apps/Inventario/venv/bin"
+              Environment="PATH=/opt/apps/Inventario/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
               EnvironmentFile=/etc/environment
               ExecStart=/opt/apps/start_server.sh
               Restart=always
               RestartSec=10
+              StandardOutput=journal
+              StandardError=journal
               
               [Install]
               WantedBy=multi-user.target
