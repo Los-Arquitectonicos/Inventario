@@ -214,12 +214,22 @@ resource "aws_instance" "app_server" {
   user_data = <<-EOT
               #!/bin/bash
               
-              # Variables de entorno
+              # Variables de entorno para Base de Datos
               export DATABASE_HOST=${aws_instance.database.private_ip}
               export DATABASE_NAME=inventario_db
               export DATABASE_USER=inventario_user
               export DATABASE_PASSWORD=${var.db_password}
               export DATABASE_PORT=5432
+              
+              # Variables de entorno para Auth0
+              export AUTH0_DOMAIN=provesi-wms.auth0.com
+              export AUTH0_AUDIENCE=https://api.provesi-wms.com/inventario
+              export AUTH0_CLIENT_ID=MXWI0NtRejIY5uV6qoEcmYQZdsLxJEn7
+              export AUTH0_CLIENT_SECRET=y21bousnOtdjqv5MLOaTvyFDP_1M4kzEHfQNBXUpX3VC3Kj7y2yKSQFg-OEjuC4K
+              
+              # Variables de entorno para Django
+              export SECRET_KEY=django-production-key-$(openssl rand -hex 16)
+              export DEBUG=False
               
               # Persistir variables de entorno
               echo "DATABASE_HOST=${aws_instance.database.private_ip}" | sudo tee -a /etc/environment
@@ -227,6 +237,14 @@ resource "aws_instance" "app_server" {
               echo "DATABASE_USER=inventario_user" | sudo tee -a /etc/environment
               echo "DATABASE_PASSWORD=${var.db_password}" | sudo tee -a /etc/environment
               echo "DATABASE_PORT=5432" | sudo tee -a /etc/environment
+              
+              echo "AUTH0_DOMAIN=provesi-wms.auth0.com" | sudo tee -a /etc/environment
+              echo "AUTH0_AUDIENCE=https://api.provesi-wms.com/inventario" | sudo tee -a /etc/environment
+              echo "AUTH0_CLIENT_ID=MXWI0NtRejIY5uV6qoEcmYQZdsLxJEn7" | sudo tee -a /etc/environment
+              echo "AUTH0_CLIENT_SECRET=y21bousnOtdjqv5MLOaTvyFDP_1M4kzEHfQNBXUpX3VC3Kj7y2yKSQFg-OEjuC4K" | sudo tee -a /etc/environment
+              
+              echo "SECRET_KEY=django-production-key-$(openssl rand -hex 16)" | sudo tee -a /etc/environment
+              echo "DEBUG=False" | sudo tee -a /etc/environment
               
               # Actualizar sistema
               sudo apt-get update -y
@@ -251,12 +269,30 @@ resource "aws_instance" "app_server" {
               python3 -m venv venv
               source venv/bin/activate
               
-              # Instalar dependencias Python
+              # Instalar dependencias Python desde requirements.txt
               pip install --upgrade pip
-              pip install django psycopg2-binary gunicorn
+              
+              # Verificar que tenemos el archivo requirements.txt
+              if [ -f docs/requirements.txt ]; then
+                pip install -r docs/requirements.txt
+              else
+                # Instalar dependencias básicas
+                pip install django==4.2.24 djangorestframework==3.14.0 psycopg2-binary==2.9.7
+                pip install gunicorn==21.2.0 django-cors-headers==4.3.1
+                pip install PyJWT==2.8.0 cryptography==41.0.7 requests==2.31.0
+                pip install python-jose[cryptography]==3.3.0
+              fi
               
               # Navegar al proyecto Django
               cd ProvesiWMS
+              
+              # Crear directorio de logs
+              sudo mkdir -p /var/log/provesi-wms
+              sudo chown ubuntu:ubuntu /var/log/provesi-wms
+              
+              # Configurar permisos para archivos estáticos
+              mkdir -p staticfiles
+              python manage.py collectstatic --noinput || echo "Collectstatic falló, continuando..."
               
               # Aplicar migraciones solo en la primera instancia
               if [ ${count.index} -eq 0 ]; then
