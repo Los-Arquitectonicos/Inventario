@@ -1,9 +1,29 @@
 from django.urls import path
-from . import views
+from . import views, auth_views
+from rest_framework_simplejwt.views import TokenRefreshView
 
 app_name = 'inventario'
 
 urlpatterns = [
+    # ===========================
+    # ENDPOINTS DE AUTENTICACIÓN
+    # ===========================
+    
+    # Autenticación JWT
+    path("auth/login/", auth_views.login_api, name="login_api"),
+    path("auth/logout/", auth_views.logout_api, name="logout_api"), 
+    path("auth/profile/", auth_views.user_profile, name="user_profile"),
+    path("auth/verify/", auth_views.verify_token, name="verify_token"),
+    path("auth/change-password/", auth_views.change_password, name="change_password"),
+    
+    # Tokens JWT (usando vistas de rest_framework_simplejwt)
+    path("auth/token/", auth_views.CustomTokenObtainPairView.as_view(), name="token_obtain_pair"),
+    path("auth/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
+    
+    # ===========================
+    # VISTAS PRINCIPALES  
+    # ===========================
+    
     # Vista principal
     path("", views.index, name="index"),
     

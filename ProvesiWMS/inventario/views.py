@@ -2,6 +2,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponse, JsonResponse
 from django.views.generic import ListView, DetailView, CreateView, UpdateView
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required
 from django.db.models import Q, Sum, F
 from django.utils import timezone
 from decimal import Decimal
@@ -10,6 +11,10 @@ import json
 from .models import (
     Bodega, UbicacionBodega, Producto, Articulo, Cliente, Usuario,
     Cotizacion, Pedido, PedidoProducto, PedidoArticulo, Factura
+)
+from .auth_utils import (
+    require_permission, require_roles, jwt_required, 
+    api_require_permission, log_access_attempt
 )
 
 # =========================
@@ -80,6 +85,8 @@ def productos_sin_stock(request):
         'productos': productos
     })
 
+@require_permission('can_manage_inventory')
+@jwt_required
 def crear_producto(request):
     """
     Vista para crear un nuevo producto mediante POST request.
@@ -169,6 +176,8 @@ def crear_producto(request):
         # GET request - mostrar formulario
         return render(request, 'inventario/productos/crear.html')
 
+@require_permission('can_manage_inventory')  
+@jwt_required
 def actualizar_producto(request, producto_id):
     """
     Vista para actualizar un producto existente.
@@ -219,6 +228,8 @@ def actualizar_producto(request, producto_id):
     elif request.method == 'GET':
         return render(request, 'inventario/productos/editar.html', {'producto': producto})
 
+@require_permission('can_manage_inventory')
+@jwt_required  
 def eliminar_producto(request, producto_id):
     """
     Vista para eliminar un producto.
@@ -507,6 +518,8 @@ class PedidoDetailView(DetailView):
         context['total'] = self.object.calcular_total() # type: ignore
         return context
 
+@require_permission('can_manage_orders')
+@jwt_required
 def crear_pedido(request):
     """
     Vista para crear un nuevo pedido.
@@ -568,6 +581,8 @@ def crear_pedido(request):
         'productos': productos
     })
 
+@require_permission('can_manage_orders')
+@jwt_required
 def actualizar_estado_pedido(request, pedido_id):
     """
     Vista para actualizar el estado de un pedido.
@@ -637,6 +652,8 @@ class ClienteDetailView(DetailView):
         context['pedidos'] = Pedido.objects.filter(cliente=self.object).order_by('-fecha_creacion')[:10] # type: ignore
         return context
 
+@require_permission('can_manage_clients')
+@jwt_required
 def crear_cliente(request):
     """
     Vista para crear un nuevo cliente.
@@ -1454,6 +1471,8 @@ def api_listar_clientes(request):
     except Exception as e:
         return JsonResponse({'error': f'Error interno: {str(e)}'}, status=500)
 
+@require_roles('admin', 'gerente')
+@jwt_required
 def api_listar_usuarios(request):
     """
     API endpoint para listar todos los usuarios del sistema.
@@ -1500,6 +1519,8 @@ def api_listar_usuarios(request):
     except Exception as e:
         return JsonResponse({'error': f'Error interno: {str(e)}'}, status=500)
 
+@require_permission('can_view_all_data')
+@jwt_required
 def api_listar_pedidos(request):
     """
     API endpoint para listar todos los pedidos del sistema.
@@ -1932,6 +1953,8 @@ def api_estadisticas_completas(request):
 # ENDPOINTS DE ELIMINACION MASIVA
 # =========================
 
+@require_roles('admin')
+@jwt_required
 def eliminar_todos_articulos(request):
     """
     Endpoint para eliminar todos los artículos del sistema.
@@ -2066,6 +2089,8 @@ def eliminar_todas_bodegas(request):
             'error': 'Método no permitido. Use DELETE'
         }, status=405)
 
+@require_roles('admin')
+@jwt_required
 def eliminar_todos_productos(request):
     """
     Endpoint para eliminar todos los productos.
