@@ -200,6 +200,24 @@ variable "enable_auto_scaling" {
   default     = false
 }
 
+variable "min_servers" {
+  description = "Minimum number of servers in auto scaling group"
+  type        = number
+  default     = 2
+}
+
+variable "max_servers" {
+  description = "Maximum number of servers in auto scaling group"
+  type        = number
+  default     = 6
+}
+
+variable "desired_servers" {
+  description = "Desired number of servers in auto scaling group"
+  type        = number
+  default     = 2
+}
+
 variable "backup_retention_days" {
   description = "Database backup retention period in days"
   type        = number
