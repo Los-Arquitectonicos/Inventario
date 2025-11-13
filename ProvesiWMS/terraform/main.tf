@@ -17,6 +17,11 @@ provider "aws" {
   region = var.region
 }
 
+# Provider para crear certificados SSL autofirmados
+provider "tls" {
+  # No configuration needed for generating certificates
+}
+
 locals {
   project_name = "${var.project_prefix}-wms"
   repository   = "https://github.com/Los-Arquitectonicos/Inventario.git"
@@ -362,10 +367,12 @@ resource "aws_lb_target_group" "app" {
     enabled             = true
     healthy_threshold   = 2
     unhealthy_threshold = 3
-    timeout             = 5
+    timeout             = 10
     interval            = 30
     path                = "/inventario/"
     matcher             = "200,301,302"
+    port                = "traffic-port"
+    protocol            = "HTTP"
   }
 
   tags = merge(local.common_tags, {
@@ -382,27 +389,63 @@ resource "aws_lb_target_group_attachment" "app" {
   port             = 8000
 }
 
-# Listener para el ALB (puerto 80)
+# Crear certificado autofirmado para HTTPS en desarrollo
+resource "tls_private_key" "alb_private_key" {
+  algorithm = "RSA"
+  rsa_bits  = 2048
+}
+
+resource "tls_self_signed_cert" "alb_cert" {
+  private_key_pem = tls_private_key.alb_private_key.private_key_pem
+
+  subject {
+    common_name  = aws_lb.main.dns_name
+    organization = "ProvesiWMS Development"
+  }
+
+  validity_period_hours = 8760 # 1 year
+
+  allowed_uses = [
+    "key_encipherment",
+    "digital_signature",
+    "server_auth",
+  ]
+}
+
+resource "aws_iam_server_certificate" "alb_cert" {
+  name_prefix      = "${var.project_prefix}-alb-cert"
+  certificate_body = tls_self_signed_cert.alb_cert.cert_pem
+  private_key      = tls_private_key.alb_private_key.private_key_pem
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+# Listener para el ALB (puerto 80) - Redirige a HTTPS
 resource "aws_lb_listener" "http" {
   load_balancer_arn = aws_lb.main.arn
   port              = "80"
   protocol          = "HTTP"
 
   default_action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.app.arn
+    type = "redirect"
+
+    redirect {
+      port        = "443"
+      protocol    = "HTTPS"
+      status_code = "HTTP_301"
+    }
   }
 }
 
 # Listener para el ALB (puerto 443 - HTTPS)
 resource "aws_lb_listener" "https" {
-  count = var.domain_name != "" && var.ssl_certificate_arn != "" ? 1 : 0
-
   load_balancer_arn = aws_lb.main.arn
   port              = "443"
   protocol          = "HTTPS"
   ssl_policy        = "ELBSecurityPolicy-TLS-1-2-2017-01"
-  certificate_arn   = var.ssl_certificate_arn
+  certificate_arn   = aws_iam_server_certificate.alb_cert.arn
 
   default_action {
     type             = "forward"

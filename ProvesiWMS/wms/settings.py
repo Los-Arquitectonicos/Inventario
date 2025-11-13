@@ -165,7 +165,7 @@ SIMPLE_JWT = {
 # SECURITY SETTINGS FOR AWS PRODUCTION
 # =========================
 
-# HTTPS Security (habilitado siempre para AWS)
+# HTTPS Security (habilitado para cumplir requerimientos de seguridad)
 SECURE_SSL_REDIRECT = not DEBUG
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 

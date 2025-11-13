@@ -6,8 +6,8 @@ output "alb_dns_name" {
 }
 
 output "alb_url" {
-  description = "Complete URL to access the application"
-  value       = "http://${aws_lb.main.dns_name}/inventario/"
+  description = "Complete HTTPS URL to access the application"
+  value       = "https://${aws_lb.main.dns_name}/inventario/"
 }
 
 output "app_server_1_public_ip" {

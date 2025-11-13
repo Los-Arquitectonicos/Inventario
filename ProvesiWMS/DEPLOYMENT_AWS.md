@@ -83,8 +83,15 @@ cd ~/Inventario/ProvesiWMS
 # Verificar que Django está instalado
 python3 -c "import django; print('Django version:', django.get_version())"
 
-# Iniciar servidor Django (NO hacer migraciones en el segundo servidor)
-python3 manage.py runserver 0.0.0.0:8000
+# Iniciar servidor Django en BACKGROUND PERMANENTE (NO hacer migraciones en el segundo servidor)
+# IMPORTANTE: Django debe correr en background para que el Load Balancer funcione
+nohup python3 manage.py runserver 0.0.0.0:8000 > django.log 2>&1 &
+
+# Verificar que el proceso está corriendo
+ps aux | grep runserver
+
+# Obtener el PID para poder controlarlo después
+echo "Django PID: $(pgrep -f runserver)"
 ```
 
 ### 5.4 Verificar que Django Está Funcionando
@@ -94,6 +101,26 @@ python3 manage.py runserver 0.0.0.0:8000
 curl http://localhost:8000/inventario/
 
 # Debería mostrar la página principal de Django
+
+# Verificar logs si hay problemas
+tail -f django.log
+```
+
+### 5.5 Comandos para Controlar Django
+
+```bash
+# Ver si Django está corriendo
+ps aux | grep runserver
+
+# Detener Django si necesitas
+pkill -f runserver
+
+# Reiniciar Django
+cd ~/ProvesiWMS
+nohup python3 manage.py runserver 0.0.0.0:8000 > django.log 2>&1 &
+
+# Ver logs en tiempo real
+tail -f django.log
 ```
 
 ## Paso 6: Probar la Aplicación
@@ -103,7 +130,7 @@ curl http://localhost:8000/inventario/
 terraform output alb_url
 ```
 
-Abre esa URL en tu navegador. Deberías ver la aplicación funcionando.
+Abre esa URL HTTPS en tu navegador. Deberás **aceptar la advertencia de certificado autofirmado** (es normal en desarrollo) y luego verás la aplicación funcionando.
 
 ## Usuarios por Defecto
 
@@ -369,6 +396,60 @@ echo 'export SECRET_KEY="django-insecure-test-key-2024"' >> ~/.bashrc
 echo 'export DEBUG="True"' >> ~/.bashrc
 source ~/.bashrc
 ```
+
+### Error: Load Balancer no funciona (Django funciona pero ALB no)
+
+**Síntoma:** Django responde correctamente en `localhost:8000` en ambos servidores, pero el Load Balancer no funciona.
+
+**Causa más común:** Django no está corriendo en background permanente. Cuando te desconectas de SSH, el proceso se termina.
+
+**Solución:**
+
+```bash
+# En AMBOS servidores de aplicación:
+
+# 1. Conectarse al servidor
+ssh -i tu-key.pem ubuntu@IP-DEL-SERVIDOR
+
+# 2. Ir al directorio de Django
+cd ~/ProvesiWMS
+
+# 3. Verificar si Django está corriendo
+ps aux | grep runserver
+
+# 4. Si no está corriendo (o si usaste runserver normal), detener cualquier proceso
+pkill -f runserver
+
+# 5. Iniciar Django en BACKGROUND PERMANENTE
+nohup python3 manage.py runserver 0.0.0.0:8000 > django.log 2>&1 &
+
+# 6. Verificar que está corriendo
+ps aux | grep runserver
+curl http://localhost:8000/inventario/
+
+# 7. Verificar logs si hay problemas
+tail -f django.log
+```
+
+**Verificación del Load Balancer:**
+
+```bash
+# Desde CloudShell, obtener URL del ALB
+terraform output alb_url
+
+# Probar el Load Balancer (debe mostrar la misma página que localhost:8000)
+curl -L http://TU-ALB-URL/inventario/
+
+# Verificar estado de Target Group en AWS Console:
+# EC2 > Load Balancers > Tu ALB > Target Groups > Targets
+# Ambos servidores deben aparecer como "healthy"
+```
+
+**Si los targets aparecen "unhealthy":**
+
+1. Verifica que Django esté corriendo en background en AMBOS servidores
+2. Verifica que Django responda en `http://localhost:8000/inventario/` en ambos servidores
+3. Verifica que Django esté escuchando en `0.0.0.0:8000` no solo en `127.0.0.1:8000`
 
 ### Error: No se puede conectar desde EC2 Console
 1. **Verifica** que la instancia esté en estado "running"
