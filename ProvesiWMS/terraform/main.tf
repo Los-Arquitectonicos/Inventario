@@ -20,59 +20,28 @@ provider "aws" {
 locals {
   project_name = "${var.project_prefix}-wms"
   repository   = "https://github.com/Los-Arquitectonicos/Inventario.git"
-  branch       = "Sprint3V2"  # Updated branch name
-
-  # Variables de entorno para la aplicación Django
-  django_env_vars = {
-    # Database configuration
-    DATABASE_HOST     = aws_instance.database.private_ip
-    DATABASE_NAME     = var.database_name
-    DATABASE_USER     = var.database_user
-    DATABASE_PASSWORD = var.db_password
-    DATABASE_PORT     = tostring(var.database_port)
-    
-    # Django core settings
-    SECRET_KEY        = var.django_secret_key
-    DEBUG             = tostring(var.debug_mode)
-    ENVIRONMENT       = var.environment
-    
-    # HTTPS and security settings
-    SECURE_SSL_REDIRECT              = var.environment == "production" ? "True" : "False"
-    SECURE_PROXY_SSL_HEADER          = "HTTP_X_FORWARDED_PROTO,https"
-    SESSION_COOKIE_SECURE            = var.environment == "production" ? "True" : "False"
-    CSRF_COOKIE_SECURE               = var.environment == "production" ? "True" : "False"
-    SECURE_HSTS_SECONDS              = var.environment == "production" ? "31536000" : "0"
-    SECURE_HSTS_INCLUDE_SUBDOMAINS   = var.environment == "production" ? "True" : "False"
-    SECURE_HSTS_PRELOAD              = var.environment == "production" ? "True" : "False"
-    
-    # JWT configuration
-    JWT_ACCESS_TOKEN_LIFETIME_HOURS  = tostring(var.jwt_access_token_lifetime_hours)
-    JWT_REFRESH_TOKEN_LIFETIME_DAYS  = tostring(var.jwt_refresh_token_lifetime_days)
-    
-    # Django allowed hosts
-    DJANGO_ALLOWED_HOSTS = join(",", concat(var.allowed_hosts, [
-      aws_lb.main.dns_name,
-      var.domain_name != "" ? var.domain_name : ""
-    ]))
-    
-    # CORS settings
-    CORS_ALLOWED_ORIGINS = join(",", var.cors_allowed_origins)
-    
-    # Application settings
-    GUNICORN_WORKERS = tostring(var.gunicorn_workers)
-  }
-
-  # Script de variables de entorno para user_data
-  env_script = join("\n", [
-    for key, value in local.django_env_vars :
-    value != "" ? "echo '${key}=${value}' | sudo tee -a /etc/environment" : ""
-    if value != ""
-  ])
+  branch       = "Sprint3V2"
 
   common_tags = {
     Project     = local.project_name
     Environment = var.environment
     ManagedBy   = "Terraform"
+  }
+}
+
+# Data Source: Obtener AMI más reciente de Ubuntu 24.04
+data "aws_ami" "ubuntu" {
+  most_recent = true
+  owners      = ["099720109477"]
+
+  filter {
+    name   = "name"
+    values = ["ubuntu/images/hvm-ssd-gp3/ubuntu-noble-24.04-amd64-server-*"]
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
   }
 }
 
@@ -199,7 +168,7 @@ resource "aws_security_group" "db" {
 
 # Instancia EC2: Base de datos PostgreSQL
 resource "aws_instance" "database" {
-  ami                         = "ami-0e2c8caa4b6378d8c"  # Ubuntu 24.04 LTS us-east-1
+  ami                         = data.aws_ami.ubuntu.id
   instance_type               = var.db_instance_type
   vpc_security_group_ids      = [aws_security_group.db.id]
   associate_public_ip_address = true
@@ -215,12 +184,8 @@ resource "aws_instance" "database" {
               sudo apt-get update -y
               sudo apt-get upgrade -y
               
-              # Instalar PostgreSQL 16
-              sudo apt-get install -y wget ca-certificates
-              wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
-              echo "deb http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list
-              sudo apt-get update -y
-              sudo apt-get install -y postgresql-16 postgresql-contrib-16
+              # Instalar PostgreSQL
+              sudo apt-get install -y postgresql postgresql-contrib
               
               # Configurar PostgreSQL
               sudo -u postgres psql -c "CREATE USER ${var.database_user} WITH PASSWORD '${var.db_password}';"
@@ -232,41 +197,13 @@ resource "aws_instance" "database" {
               echo "host ${var.database_name} ${var.database_user} 0.0.0.0/0 md5" | sudo tee -a /etc/postgresql/16/main/pg_hba.conf
               echo "host all all 0.0.0.0/0 md5" | sudo tee -a /etc/postgresql/16/main/pg_hba.conf
               
-              # Optimizar configuración para producción
+              # Optimizar configuración
               sudo sed -i "s/max_connections = 100/max_connections = 200/g" /etc/postgresql/16/main/postgresql.conf
               sudo sed -i "s/#shared_buffers = 128MB/shared_buffers = 256MB/g" /etc/postgresql/16/main/postgresql.conf
-              sudo sed -i "s/#effective_cache_size = 4GB/effective_cache_size = 1GB/g" /etc/postgresql/16/main/postgresql.conf
               
               # Reiniciar PostgreSQL
               sudo systemctl restart postgresql
               sudo systemctl enable postgresql
-              
-              # Instalar CloudWatch Agent (si está habilitado)
-              %{if var.enable_cloudwatch_logs}
-              wget https://s3.amazonaws.com/amazoncloudwatch-agent/ubuntu/amd64/latest/amazon-cloudwatch-agent.deb
-              sudo dpkg -i -E ./amazon-cloudwatch-agent.deb
-              
-              # Configurar CloudWatch Agent
-              sudo tee /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json > /dev/null <<'EOF'
-              {
-                "logs": {
-                  "logs_collected": {
-                    "files": {
-                      "collect_list": [
-                        {
-                          "file_path": "/var/log/postgresql/postgresql-16-main.log",
-                          "log_group_name": "${local.project_name}-db-logs",
-                          "log_stream_name": "{instance_id}"
-                        }
-                      ]
-                    }
-                  }
-                }
-              }
-              EOF
-              
-              sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json -s
-              %{endif}
               
               echo "Configuración de PostgreSQL completada"
               EOT
@@ -277,11 +214,11 @@ resource "aws_instance" "database" {
   })
 }
 
-# Instancias EC2: Servidores de aplicación Django con autenticación JWT
+# Instancias EC2: Servidores de aplicación Django con JWT
 resource "aws_instance" "app_server" {
   count = var.app_server_count
 
-  ami                         = "ami-0e2c8caa4b6378d8c"  # Ubuntu 24.04 LTS us-east-1
+  ami                         = data.aws_ami.ubuntu.id
   instance_type               = var.instance_type
   vpc_security_group_ids      = [aws_security_group.app.id]
   associate_public_ip_address = true
@@ -296,80 +233,140 @@ resource "aws_instance" "app_server" {
               echo "$(date): Iniciando configuración..."
               echo "=========================================="
               
-              # Configurar variables de entorno
-              echo "$(date): Configurando variables de entorno..."
-              ${local.env_script}
-              source /etc/environment
+              # Variables de entorno para Django con configuraciones de seguridad
+              export DATABASE_HOST=${aws_instance.database.private_ip}
+              export DATABASE_NAME=${var.database_name}
+              export DATABASE_USER=${var.database_user}
+              export DATABASE_PASSWORD=${var.db_password}
+              export DATABASE_PORT=${var.database_port}
+              export SECRET_KEY=${var.django_secret_key}
+              export DEBUG=${var.debug_mode}
+              export ENVIRONMENT=${var.environment}
+              export JWT_ACCESS_TOKEN_LIFETIME_HOURS=${var.jwt_access_token_lifetime_hours}
+              export JWT_REFRESH_TOKEN_LIFETIME_DAYS=${var.jwt_refresh_token_lifetime_days}
+              
+              # Persistir variables de entorno
+              echo "DATABASE_HOST=${aws_instance.database.private_ip}" | sudo tee -a /etc/environment
+              echo "DATABASE_NAME=${var.database_name}" | sudo tee -a /etc/environment
+              echo "DATABASE_USER=${var.database_user}" | sudo tee -a /etc/environment
+              echo "DATABASE_PASSWORD=${var.db_password}" | sudo tee -a /etc/environment
+              echo "DATABASE_PORT=${var.database_port}" | sudo tee -a /etc/environment
+              echo "SECRET_KEY=${var.django_secret_key}" | sudo tee -a /etc/environment
+              echo "DEBUG=${var.debug_mode}" | sudo tee -a /etc/environment
+              echo "ENVIRONMENT=${var.environment}" | sudo tee -a /etc/environment
+              echo "JWT_ACCESS_TOKEN_LIFETIME_HOURS=${var.jwt_access_token_lifetime_hours}" | sudo tee -a /etc/environment
+              echo "JWT_REFRESH_TOKEN_LIFETIME_DAYS=${var.jwt_refresh_token_lifetime_days}" | sudo tee -a /etc/environment
               
               # Actualizar sistema e instalar dependencias
-              echo "$(date): Instalando dependencias..."
-              apt-get update -y
-              apt-get install -y python3-pip git postgresql-client nginx build-essential libpq-dev python3-dev
-              
-              # Instalar Django (manejar entorno externamente administrado)
-              echo "$(date): Instalando Django..."
-              pip3 install --break-system-packages django==4.2.24 psycopg2-binary djangorestframework djangorestframework-simplejwt django-cors-headers gunicorn || \
-              pip3 install django==4.2.24 psycopg2-binary djangorestframework djangorestframework-simplejwt django-cors-headers gunicorn
-              
-              # Verificar Django
-              python3 -c "import django; print('Django OK')" || { echo "Django no instalado"; exit 1; }
+              sudo apt-get update -y
+              sudo apt-get upgrade -y
+              sudo apt-get install -y python3-pip python3-venv git build-essential libpq-dev python3-dev postgresql-client
               
               # Clonar repositorio
-              echo "$(date): Clonando repositorio..."
-              mkdir -p /opt/apps && cd /opt/apps
-              rm -rf Inventario
-              git clone ${local.repository}
-              cd Inventario && git checkout ${local.branch} && cd ProvesiWMS
+              mkdir -p /opt/apps
+              cd /opt/apps
               
-              # Verificar archivos
-              [ ! -f manage.py ] && { echo "manage.py no encontrado"; exit 1; }
+              if [ ! -d Inventario ]; then
+                echo "$(date): Clonando repositorio..."
+                git clone ${local.repository}
+              fi
               
-              # Esperar base de datos
+              cd Inventario
+              echo "$(date): Cambiando a branch ${local.branch}..."
+              git fetch origin ${local.branch}
+              git checkout ${local.branch}
+              
+              # Crear entorno virtual
+              python3 -m venv venv
+              source venv/bin/activate
+              
+              # Instalar dependencias Python
+              pip install --upgrade pip
+              pip install django psycopg2-binary gunicorn djangorestframework djangorestframework-simplejwt django-cors-headers
+              
+              # Navegar al proyecto Django
+              cd ProvesiWMS
+              
+              # Esperar a que la base de datos esté lista
               echo "$(date): Esperando base de datos..."
               for i in {1..30}; do
                 pg_isready -h ${aws_instance.database.private_ip} -p ${var.database_port} -U ${var.database_user} && break
                 sleep 10
               done
               
-              # Migraciones (solo servidor 1)
+              # Aplicar migraciones solo en la primera instancia
               %{if count.index == 0}
               echo "$(date): Aplicando migraciones..."
-              python3 manage.py makemigrations --noinput || true
-              python3 manage.py migrate --noinput || true
-              [ -f setup_users.py ] && python3 setup_users.py || true
-              python3 manage.py collectstatic --noinput || true
+              python manage.py makemigrations --noinput || true
+              python manage.py migrate --noinput || true
+              [ -f setup_users.py ] && python setup_users.py || true
+              python manage.py collectstatic --noinput || true
               %{else}
+              echo "$(date): Esperando migraciones del servidor principal..."
               sleep 120
               %{endif}
               
-              # Configurar Nginx
-              echo "$(date): Configurando Nginx..."
-              cat > /etc/nginx/sites-available/default << 'EOF'
-              server {
-                  listen 80;
-                  location / {
-                      proxy_pass http://127.0.0.1:8000;
-                      proxy_set_header Host \$host;
-                  }
-                  location /static/ {
-                      alias /opt/apps/Inventario/ProvesiWMS/static/;
-                  }
-              }
-              EOF
-              systemctl restart nginx
-              
-              # Script de inicio
-              cat > /home/ubuntu/start-django.sh << 'EOF'
+              # Crear script de inicio
+              cat > /opt/apps/start_server.sh << 'EOF'
               #!/bin/bash
-              cd /opt/apps/Inventario/ProvesiWMS
               source /etc/environment
-              python3 manage.py runserver 0.0.0.0:8000
+              cd /opt/apps/Inventario/ProvesiWMS
+              source ../venv/bin/activate
+              gunicorn --bind 0.0.0.0:8000 --workers ${var.gunicorn_workers} --timeout 120 wms.wsgi:application
               EOF
-              chmod +x /home/ubuntu/start-django.sh
-              chown ubuntu:ubuntu /home/ubuntu/start-django.sh
+              
+              chmod +x /opt/apps/start_server.sh
+              
+              # Crear servicio systemd
+              cat > /etc/systemd/system/provesi-wms.service << 'EOF'
+              [Unit]
+              Description=Provesi WMS Django Application with JWT Authentication
+              After=network.target
+              
+              [Service]
+              Type=simple
+              User=ubuntu
+              WorkingDirectory=/opt/apps/Inventario/ProvesiWMS
+              Environment="PATH=/opt/apps/Inventario/venv/bin"
+              EnvironmentFile=/etc/environment
+              ExecStart=/opt/apps/start_server.sh
+              Restart=always
+              RestartSec=10
+              
+              [Install]
+              WantedBy=multi-user.target
+              EOF
+              
+              # Iniciar servicio
+              sudo systemctl daemon-reload
+              sudo systemctl enable provesi-wms
+              sudo systemctl start provesi-wms
+              
+              # Crear script de verificación manual
+              cat > /home/ubuntu/check-status.sh << 'EOF'
+              #!/bin/bash
+              echo "=== 📊 ESTADO DE PROVESIWMS ==="
+              echo "Fecha: $(date)"
+              echo ""
+              echo "=== �️  Servicio systemd ==="
+              sudo systemctl status provesi-wms --no-pager
+              echo ""
+              echo "=== 🌐 Variables de entorno ==="
+              env | grep -E "DATABASE_|SECRET_KEY|DEBUG|ENVIRONMENT|JWT_" | sort
+              echo ""
+              echo "=== ️  Conectividad a BD ==="
+              pg_isready -h $DATABASE_HOST -p $DATABASE_PORT -U $DATABASE_USER && echo "✅ Base de datos disponible" || echo "❌ Base de datos no disponible"
+              echo ""
+              echo "=== 📋 Logs del servicio ==="
+              sudo journalctl -u provesi-wms --lines=10 --no-pager
+              EOF
+              
+              chmod +x /home/ubuntu/check-status.sh
+              chown ubuntu:ubuntu /home/ubuntu/check-status.sh
               
               echo "$(date): ✅ CONFIGURACIÓN COMPLETADA - Servidor ${count.index + 1}"
-              echo "Para iniciar: ./start-django.sh"
+              echo "$(date): � Servicio iniciado automáticamente"
+              echo "$(date): 📊 Para verificar estado: ./check-status.sh"
               
               EOT
 
@@ -420,7 +417,7 @@ resource "aws_lb_target_group" "app" {
 
 # Registrar instancias en el Target Group
 resource "aws_lb_target_group_attachment" "app" {
-  count = 2
+  count = var.app_server_count
 
   target_group_arn = aws_lb_target_group.app.arn
   target_id        = aws_instance.app_server[count.index].id
@@ -452,101 +449,5 @@ resource "aws_lb_listener" "https" {
   default_action {
     type             = "forward"
     target_group_arn = aws_lb_target_group.app.arn
-  }
-}
-
-# CloudWatch Log Groups (si están habilitados)
-resource "aws_cloudwatch_log_group" "app_logs" {
-  count = var.enable_cloudwatch_logs ? 1 : 0
-
-  name              = "${local.project_name}-app-logs"
-  retention_in_days = 7
-
-  tags = local.common_tags
-}
-
-resource "aws_cloudwatch_log_group" "nginx_logs" {
-  count = var.enable_cloudwatch_logs ? 1 : 0
-
-  name              = "${local.project_name}-nginx-logs"
-  retention_in_days = 7
-
-  tags = local.common_tags
-}
-
-resource "aws_cloudwatch_log_group" "db_logs" {
-  count = var.enable_cloudwatch_logs ? 1 : 0
-
-  name              = "${local.project_name}-db-logs"
-  retention_in_days = 7
-
-  tags = local.common_tags
-}
-
-# Auto Scaling Group (opcional) - Simplificado
-resource "aws_launch_template" "app" {
-  count = var.enable_auto_scaling ? 1 : 0
-
-  name_prefix   = "${var.project_prefix}-app-template-"
-  image_id      = "ami-0e2c8caa4b6378d8c"
-  instance_type = var.instance_type
-
-  vpc_security_group_ids = [aws_security_group.app.id]
-
-  # User data inline (simplificado para Auto Scaling)
-  user_data = base64encode(<<-EOT
-    #!/bin/bash
-    echo "Auto Scaling instance configuration..."
-    # Configuración básica para Auto Scaling
-    # Las configuraciones detalladas se aplicarán manualmente
-    EOT
-  )
-
-  tag_specifications {
-    resource_type = "instance"
-    tags = merge(local.common_tags, {
-      Name = "${var.project_prefix}-app-server-asg"
-    })
-  }
-
-  lifecycle {
-    create_before_destroy = true
-  }
-}
-
-resource "aws_autoscaling_group" "app" {
-  count = var.enable_auto_scaling ? 1 : 0
-
-  name                = "${var.project_prefix}-app-asg"
-  vpc_zone_identifier = data.aws_subnets.available.ids
-  target_group_arns   = [aws_lb_target_group.app.arn]
-  health_check_type   = "ELB"
-
-  min_size         = var.min_servers
-  max_size         = var.max_servers
-  desired_capacity = var.desired_servers
-
-  launch_template {
-    id      = aws_launch_template.app[0].id
-    version = "$Latest"
-  }
-
-  lifecycle {
-    create_before_destroy = true
-  }
-
-  tag {
-    key                 = "Name"
-    value               = "${var.project_prefix}-app-asg"
-    propagate_at_launch = true
-  }
-
-  dynamic "tag" {
-    for_each = local.common_tags
-    content {
-      key                 = tag.key
-      value               = tag.value
-      propagate_at_launch = true
-    }
   }
 }
