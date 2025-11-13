@@ -76,29 +76,16 @@ locals {
   }
 }
 
-# Data Source: Obtener AMI más reciente de Ubuntu 24.04
-data "aws_ami" "ubuntu" {
-  most_recent = true
-  owners      = ["099720109477"]
-
-  filter {
-    name   = "name"
-    values = ["ubuntu/images/hvm-ssd-gp3/ubuntu-noble-24.04-amd64-server-*"]
-  }
-
-  filter {
-    name   = "virtualization-type"
-    values = ["hvm"]
-  }
-}
-
-# Data Source: Obtener VPC por defecto
+# Data Source: Obtener VPC por defecto (compatible con AWS Academy)
 data "aws_vpc" "default" {
-  default = true
+  filter {
+    name   = "isDefault"
+    values = ["true"]
+  }
 }
 
-# Data Source: Obtener subnets por defecto
-data "aws_subnets" "default" {
+# Data Source: Obtener subnets disponibles
+data "aws_subnets" "available" {
   filter {
     name   = "vpc-id"
     values = [data.aws_vpc.default.id]
@@ -212,7 +199,7 @@ resource "aws_security_group" "db" {
 
 # Instancia EC2: Base de datos PostgreSQL
 resource "aws_instance" "database" {
-  ami                         = data.aws_ami.ubuntu.id
+  ami                         = "ami-0e2c8caa4b6378d8c"  # Ubuntu 24.04 LTS us-east-1
   instance_type               = var.db_instance_type
   vpc_security_group_ids      = [aws_security_group.db.id]
   associate_public_ip_address = true
@@ -294,7 +281,7 @@ resource "aws_instance" "database" {
 resource "aws_instance" "app_server" {
   count = var.app_server_count
 
-  ami                         = data.aws_ami.ubuntu.id
+  ami                         = "ami-0e2c8caa4b6378d8c"  # Ubuntu 24.04 LTS us-east-1
   instance_type               = var.instance_type
   vpc_security_group_ids      = [aws_security_group.app.id]
   associate_public_ip_address = true
@@ -630,7 +617,7 @@ resource "aws_lb" "main" {
   internal           = false
   load_balancer_type = "application"
   security_groups    = [aws_security_group.alb.id]
-  subnets            = data.aws_subnets.default.ids
+  subnets            = data.aws_subnets.available.ids
 
   enable_deletion_protection = false
 

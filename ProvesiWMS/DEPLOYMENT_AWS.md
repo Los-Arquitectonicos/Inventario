@@ -25,6 +25,9 @@ cd Inventario/ProvesiWMS/terraform
 # Inicializar Terraform
 terraform init
 
+#Planear configuración
+terraform plan
+
 # Aplicar configuración (crear recursos)
 terraform apply
 ```
