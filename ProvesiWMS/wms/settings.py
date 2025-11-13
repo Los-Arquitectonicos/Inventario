@@ -194,10 +194,6 @@ if not DEBUG:
 # LOGGING CONFIGURATION FOR AWS
 # =========================
 
-# Crear directorio de logs si no existe
-LOG_DIR = os.path.join(BASE_DIR, 'logs')
-os.makedirs(LOG_DIR, exist_ok=True)
-
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
@@ -220,13 +216,13 @@ LOGGING = {
         'file': {
             'level': 'INFO',
             'class': 'logging.FileHandler',
-            'filename': os.path.join(LOG_DIR, 'django.log'),
+            'filename': '/tmp/django.log',
             'formatter': 'verbose',
         },
         'security': {
             'level': 'WARNING',
             'class': 'logging.FileHandler',
-            'filename': os.path.join(LOG_DIR, 'django-security.log'),
+            'filename': '/tmp/django-security.log',
             'formatter': 'verbose',
         },
     },

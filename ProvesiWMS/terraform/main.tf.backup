@@ -342,126 +342,31 @@ resource "aws_instance" "app_server" {
               sudo systemctl enable provesi-wms
               sudo systemctl start provesi-wms
               
-              # Crear scripts de gestión completos inline
+              # Crear script de verificación manual
               cat > /home/ubuntu/check-status.sh << 'EOF'
               #!/bin/bash
               echo "=== 📊 ESTADO DE PROVESIWMS ==="
               echo "Fecha: $(date)"
               echo ""
-              echo "=== ⚙️ Servicio systemd ==="
+              echo "=== �️  Servicio systemd ==="
               sudo systemctl status provesi-wms --no-pager
               echo ""
               echo "=== 🌐 Variables de entorno ==="
               env | grep -E "DATABASE_|SECRET_KEY|DEBUG|ENVIRONMENT|JWT_" | sort
               echo ""
-              echo "=== 🔗 Conectividad a BD ==="
+              echo "=== ️  Conectividad a BD ==="
               pg_isready -h $DATABASE_HOST -p $DATABASE_PORT -U $DATABASE_USER && echo "✅ Base de datos disponible" || echo "❌ Base de datos no disponible"
               echo ""
-              echo "=== 🌐 Puerto 8000 ==="
-              netstat -tlnp | grep :8000 && echo "✅ Puerto 8000 en uso" || echo "❌ Puerto 8000 libre"
-              echo ""
-              echo "=== � Logs del servicio (últimas 15 líneas) ==="
-              sudo journalctl -u provesi-wms --lines=15 --no-pager
-              echo ""
-              echo "=== ℹ️ COMANDOS ÚTILES ==="
-              echo "• Ver logs en tiempo real: ./logs-django.sh"
-              echo "• Reiniciar Django: ./restart-django.sh"
-              echo "• Detener Django: ./stop-django.sh"
-              echo "• Iniciar Django: ./start-django.sh"
-              echo "• Ver ayuda completa: ./help-django.sh"
+              echo "=== 📋 Logs del servicio ==="
+              sudo journalctl -u provesi-wms --lines=10 --no-pager
               EOF
               
-              cat > /home/ubuntu/restart-django.sh << 'EOF'
-              #!/bin/bash
-              echo "🔄 Reiniciando servicio Django..."
-              sudo systemctl restart provesi-wms
-              sleep 3
-              echo "📊 Estado del servicio:"
-              sudo systemctl status provesi-wms --no-pager
-              echo ""
-              echo "🌐 Verificando puerto 8000:"
-              netstat -tlnp | grep :8000
-              echo ""
-              echo "✅ Django reiniciado. Usa ./check-status.sh para más detalles."
-              EOF
-              
-              cat > /home/ubuntu/stop-django.sh << 'EOF'
-              #!/bin/bash
-              echo "⏹️ Deteniendo servicio Django..."
-              sudo systemctl stop provesi-wms
-              sleep 2
-              echo "📊 Estado del servicio:"
-              sudo systemctl status provesi-wms --no-pager
-              echo ""
-              echo "⚠️ Django detenido. Usa ./start-django.sh para reiniciar."
-              EOF
-              
-              cat > /home/ubuntu/start-django.sh << 'EOF'
-              #!/bin/bash
-              echo "▶️ Iniciando servicio Django..."
-              sudo systemctl start provesi-wms
-              sleep 3
-              echo "�📊 Estado del servicio:"
-              sudo systemctl status provesi-wms --no-pager
-              echo ""
-              echo "🌐 Verificando puerto 8000:"
-              netstat -tlnp | grep :8000
-              echo ""
-              echo "✅ Django iniciado. Usa ./check-status.sh para más detalles."
-              EOF
-              
-              cat > /home/ubuntu/logs-django.sh << 'EOF'
-              #!/bin/bash
-              echo "📋 Logs en tiempo real de Django (Ctrl+C para salir):"
-              echo "Mostrando logs del servicio provesi-wms..."
-              echo ""
-              sudo journalctl -u provesi-wms -f
-              EOF
-              
-              cat > /home/ubuntu/help-django.sh << 'EOF'
-              #!/bin/bash
-              echo "🔧 Gestión de Django como servicio permanente"
-              echo ""
-              echo "=== 1️⃣ VERIFICAR ESTADO ACTUAL ==="
-              echo "Ejecuta: ./check-status.sh"
-              echo ""
-              echo "=== 2️⃣ GESTIÓN DEL SERVICIO ==="
-              echo "• Reiniciar: ./restart-django.sh"
-              echo "• Detener: ./stop-django.sh" 
-              echo "• Iniciar: ./start-django.sh"
-              echo "• Ver logs: ./logs-django.sh"
-              echo ""
-              echo "=== 3️⃣ COMANDOS SYSTEMD DIRECTOS ==="
-              echo "• sudo systemctl status provesi-wms"
-              echo "• sudo systemctl restart provesi-wms"
-              echo "• sudo systemctl stop provesi-wms"
-              echo "• sudo systemctl start provesi-wms"
-              echo ""
-              echo "=== 4️⃣ VERIFICAR LOGS ==="
-              echo "• sudo journalctl -u provesi-wms -f  (tiempo real)"
-              echo "• sudo journalctl -u provesi-wms --lines=50"
-              echo ""
-              echo "=== 5️⃣ VERIFICAR CONECTIVIDAD ==="
-              echo "• curl http://localhost:8000/inventario/"
-              echo "• netstat -tlnp | grep 8000"
-              echo ""
-              echo "=== ⚠️ IMPORTANTE ==="
-              echo "• Django se inicia automáticamente al reiniciar el servidor"
-              echo "• NO ejecutes 'python3 manage.py runserver' manualmente"
-              echo "• El puerto 8000 está reservado para el servicio systemd"
-              echo "• Usa el Load Balancer (puerto 80) para acceso externo"
-              EOF
-              
-              # Hacer todos los scripts ejecutables
-              chmod +x /home/ubuntu/*.sh
-              chown ubuntu:ubuntu /home/ubuntu/*.sh
+              chmod +x /home/ubuntu/check-status.sh
+              chown ubuntu:ubuntu /home/ubuntu/check-status.sh
               
               echo "$(date): ✅ CONFIGURACIÓN COMPLETADA - Servidor ${count.index + 1}"
-              echo "$(date): 🚀 Django ejecutándose como servicio systemd"
+              echo "$(date): � Servicio iniciado automáticamente"
               echo "$(date): 📊 Para verificar estado: ./check-status.sh"
-              echo "$(date): ⚙️ Para gestión completa: ./help-django.sh"
-              echo "$(date): ⚠️ NO ejecutar 'python3 manage.py runserver' manualmente"
-              echo "$(date): 🌐 Puerto 8000 reservado para el servicio automático"
               
               EOT
 
