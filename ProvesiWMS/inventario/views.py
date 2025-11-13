@@ -1575,6 +1575,7 @@ def api_listar_usuarios(request):
     except Exception as e:
         return JsonResponse({'error': f'Error interno: {str(e)}'}, status=500)
 
+@csrf_exempt
 @jwt_required
 @require_permission('can_view_all_data')
 def api_listar_pedidos(request):
