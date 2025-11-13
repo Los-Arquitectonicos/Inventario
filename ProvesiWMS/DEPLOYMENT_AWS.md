@@ -265,12 +265,57 @@ env | grep -E "DATABASE_|SECRET_KEY|DEBUG"
 
 ⚠️ **CUIDADO**: Esto eliminará toda la infraestructura y datos.
 
+### Método Normal:
 ```bash
 # En CloudShell, ir al directorio terraform
 cd Inventario/ProvesiWMS/terraform
 
 # Eliminar toda la infraestructura
 terraform destroy
+```
+
+Escribe **"yes"** para confirmar.
+
+### Si `terraform destroy` falla (error de provider):
+
+**Opción A: Limpieza manual + reset de Terraform**
+
+1. **En AWS Console, eliminar manualmente en este orden:**
+   - EC2 > Load Balancers > Eliminar ALB `provesi-alb-*`
+   - EC2 > Target Groups > Eliminar `provesi-app-tg`
+   - EC2 > Instances > Terminar todas las instancias `provesi-*`
+   - EC2 > Security Groups > Eliminar `provesi-*-sg`
+   - IAM > Server certificates > Eliminar `provesi-alb-cert-*`
+
+2. **En CloudShell, limpiar estado de Terraform:**
+   ```bash
+   cd ~/Inventario/ProvesiWMS/terraform
+   
+   # Respaldar estado
+   cp terraform.tfstate terraform.tfstate.backup.$(date +%Y%m%d_%H%M%S)
+   
+   # Limpiar completamente
+   rm -rf .terraform/
+   rm -f .terraform.lock.hcl
+   rm -f terraform.tfstate*
+   rm -rf ~/.terraform.d/plugin-cache/
+   
+   # Verificar que no queden recursos
+   echo "Infraestructura limpiada manualmente"
+   ```
+
+**Opción B: Reset completo del workspace**
+
+```bash
+# En CloudShell, eliminar todo el directorio
+cd ~
+rm -rf Inventario/
+
+# Volver a clonar para deployment fresco
+git clone https://github.com/Los-Arquitectonicos/Inventario.git
+cd Inventario/ProvesiWMS/terraform
+terraform init
+terraform apply
 ```
 
 Escribe **"yes"** para confirmar.
@@ -530,54 +575,6 @@ sudo pkill -f "manage.py runserver"
 sudo python3 manage.py runserver 0.0.0.0:8080
 ```
 
-## Limpieza (Eliminar Todo)
-
-⚠️ **CUIDADO**: Esto eliminará toda la infraestructura y datos.
-
-```bash
-# En CloudShell, ir al directorio terraform
-cd Inventario/ProvesiWMS/terraform
-
-# Eliminar toda la infraestructura
-terraform destroy
-```
-
-Escribe **"yes"** para confirmar.
-
-## Costos Estimados
-
-- **2x t3.medium**: ~$60/mes
-- **1x t3.small (DB)**: ~$30/mes  
-- **Load Balancer**: ~$23/mes
-- **Total**: ~$113/mes
-
-## Troubleshooting
-
-### Error: No se puede conectar por SSH
-```bash
-# Verificar que la clave tenga permisos correctos
-chmod 400 provesi-key.pem
-```
-
-### Error: Servidor Django no responde
-```bash
-# Verificar que el servidor esté corriendo
-ps aux | grep manage.py
-
-# Si no está corriendo, iniciarlo
-sudo python3 manage.py runserver 0.0.0.0:8080
-```
-
-### Error: Base de datos no conecta
-```bash
-# Verificar variables de entorno
-env | grep DATABASE
-```
-
----
-
-**¡Listo!** Tu aplicación ProvesiWMS está corriendo en AWS con autenticación JWT.
-
 ## 🔧 Proceso Simple Implementado
 
 ### ✅ Configuración Automática
@@ -595,18 +592,18 @@ python3 manage.py runserver 0.0.0.0:8000
 
 ### ✅ Acceso a la Aplicación
 - **Load Balancer URL**: `terraform output alb_url`
-- **Puerto externo**: 80 (HTTP)
+- **Puerto externo**: 443 (HTTPS) y 80 (HTTP redirect)
 - **Puerto interno**: 8000 (Django development server)
 
 ### ✅ Gestión Simple
 ```bash
 # Detener Django
-sudo pkill -f "manage.py runserver"
+pkill -f runserver
 
-# Iniciar Django
+# Iniciar Django en background
 cd ~/Inventario/ProvesiWMS
-python3 manage.py runserver 0.0.0.0:8000
+nohup python3 manage.py runserver 0.0.0.0:8000 > django.log 2>&1 &
 
 # Verificar estado
-ps aux | grep manage.py
+ps aux | grep runserver
 ```
