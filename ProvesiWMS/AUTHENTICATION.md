@@ -1,23 +1,23 @@
-# 🔐 Sistema de Autenticación ProvesiWMS
+#  Sistema de Autenticación ProvesiWMS
 
 ## Resumen
 ProvesiWMS implementa un sistema de autenticación robusto usando **Django Authentication + JWT** optimizado para **despliegue en AWS**. El sistema cumple con los requerimientos de seguridad para prevenir sniffing y modificaciones no autorizadas.
 
-## ✅ Requerimientos Cumplidos
+## Requerimientos Cumplidos
 
 ### 1. **Prevención de Sniffing**
-- ✅ **HTTPS obligatorio** en producción
-- ✅ Configuraciones SSL/TLS seguras
-- ✅ Headers de seguridad (HSTS, XSS Protection, etc.)
-- ✅ Cookies seguras con HttpOnly
+- **HTTPS obligatorio** en producción
+- Configuraciones SSL/TLS seguras
+- Headers de seguridad (HSTS, XSS Protection, etc.)
+- Cookies seguras con HttpOnly
 
 ### 2. **Prevención de Modificaciones No Autorizadas**
-- ✅ Autenticación JWT obligatoria para APIs sensibles
-- ✅ Sistema de permisos basado en roles
-- ✅ Middleware CSRF habilitado
-- ✅ Auditoría de accesos
+- Autenticación JWT obligatoria para APIs sensibles
+- Sistema de permisos basado en roles
+- Middleware CSRF habilitado
+- Auditoría de accesos
 
-## 🏗️ Arquitectura del Sistema
+##  Arquitectura del Sistema
 
 ### **Componentes Principales**
 
@@ -49,36 +49,36 @@ sequenceDiagram
     API-->>Client: Protected data
 ```
 
-## 🎯 Roles y Permisos
+## Roles y Permisos
 
 ### **Admin**
-- ✅ Crear/eliminar usuarios
-- ✅ Modificar todos los datos
-- ✅ Ver todos los datos
-- ✅ Acceder a reportes
-- ✅ Gestionar inventario completo
+- Crear/eliminar usuarios
+- Modificar todos los datos
+- Ver todos los datos
+- Acceder a reportes
+- Gestionar inventario completo
 
 ### **Gerente**
-- ❌ Crear/eliminar usuarios
-- ✅ Modificar datos operativos
-- ✅ Ver todos los datos
-- ✅ Acceder a reportes
-- ✅ Gestionar pedidos y clientes
+- Crear/eliminar usuarios
+- Modificar datos operativos
+- Ver todos los datos
+- Acceder a reportes
+- Gestionar pedidos y clientes
 
 ### **Supervisor**
-- ❌ Crear usuarios
-- ❌ Modificar datos críticos
-- ✅ Ver datos operativos
-- ✅ Gestionar inventario básico
-- ✅ Gestionar pedidos
+- Crear usuarios
+- Modificar datos críticos
+- Ver datos operativos
+- Gestionar inventario básico
+- Gestionar pedidos
 
 ### **Empleado**
-- ❌ Modificar datos
-- ❌ Ver datos sensibles
-- ❌ Acceder a reportes
-- ✅ Solo consultas básicas
+- Modificar datos
+- Ver datos sensibles
+- Acceder a reportes
+- Solo consultas básicas
 
-## 🚀 Despliegue en AWS
+##  Despliegue en AWS
 
 ### **1. Preparación del Entorno**
 
@@ -139,7 +139,7 @@ SECRET_KEY=django-insecure-replacement-key
 DEBUG=False
 ```
 
-## 📡 Endpoints de Autenticación
+##  Endpoints de Autenticación
 
 ### **Login**
 ```http
@@ -195,22 +195,22 @@ Content-Type: application/json
 }
 ```
 
-## 🔧 APIs Protegidas
+## APIs Protegidas
 
 ### **Nivel de Protección por Endpoint**
 
 | Endpoint | Autenticación | Permiso Requerido | Roles Permitidos |
 |----------|---------------|-------------------|------------------|
-| `GET /api/pedidos/` | ✅ JWT | `can_view_all_data` | admin, gerente, supervisor |
-| `POST /inventario/pedidos/crear/` | ✅ JWT | `can_manage_orders` | admin, gerente, supervisor |
-| `PUT /inventario/pedidos/{id}/actualizar-estado/` | ✅ JWT | `can_manage_orders` | admin, gerente, supervisor |
-| `GET /api/usuarios/` | ✅ JWT | - | admin, gerente |
-| `DELETE /api/articulos/eliminar_todos/` | ✅ JWT | - | admin |
-| `DELETE /api/productos/eliminar_todos/` | ✅ JWT | - | admin |
-| `POST /inventario/productos/crear/` | ✅ JWT | `can_manage_inventory` | admin, gerente, supervisor |
-| `POST /inventario/clientes/crear/` | ✅ JWT | `can_manage_clients` | admin, gerente |
+| `GET /api/pedidos/` | JWT | `can_view_all_data` | admin, gerente, supervisor |
+| `POST /inventario/pedidos/crear/` | JWT | `can_manage_orders` | admin, gerente, supervisor |
+| `PUT /inventario/pedidos/{id}/actualizar-estado/` | JWT | `can_manage_orders` | admin, gerente, supervisor |
+| `GET /api/usuarios/` | JWT | - | admin, gerente |
+| `DELETE /api/articulos/eliminar_todos/` | JWT | - | admin |
+| `DELETE /api/productos/eliminar_todos/` | JWT | - | admin |
+| `POST /inventario/productos/crear/` | JWT | `can_manage_inventory` | admin, gerente, supervisor |
+| `POST /inventario/clientes/crear/` | JWT | `can_manage_clients` | admin, gerente |
 
-## 🛡️ Configuraciones de Seguridad
+## Configuraciones de Seguridad
 
 ### **HTTPS y SSL**
 ```python
@@ -238,7 +238,7 @@ CSRF_TRUSTED_ORIGINS = [
 ]
 ```
 
-## 📊 Logging y Auditoría
+## Logging y Auditoría
 
 ### **Logs de Seguridad**
 ```python
@@ -302,7 +302,7 @@ curl -I https://your-domain/inventario/
 # Debe incluir: Strict-Transport-Security, X-Content-Type-Options, etc.
 ```
 
-## ⚡ Usuarios de Prueba
+## Usuarios de Prueba
 
 El script `setup_users.py` crea usuarios de prueba:
 
@@ -312,22 +312,22 @@ El script `setup_users.py` crea usuarios de prueba:
 | `gerente` | `Gerente2024!` | gerente | Gestión operativa |
 | `empleado` | `Empleado2024!` | empleado | Solo consultas |
 
-## 🚨 Consideraciones de Seguridad
+## Consideraciones de Seguridad
 
 ### **Producción**
-1. ✅ Cambiar todas las contraseñas por defecto
-2. ✅ Usar variables de entorno para secretos
-3. ✅ Configurar certificado SSL válido
-4. ✅ Habilitar CloudTrail para auditoría
-5. ✅ Configurar WAF para protección adicional
+1. Cambiar todas las contraseñas por defecto
+2. Usar variables de entorno para secretos
+3. Configurar certificado SSL válido
+4. Habilitar CloudTrail para auditoría
+5. Configurar WAF para protección adicional
 
 ### **Monitoreo**
-1. ✅ CloudWatch para logs
-2. ✅ Alertas por intentos de acceso fallidos
-3. ✅ Monitoreo de patrones de uso anómalos
-4. ✅ Backup automático de base de datos
+1. CloudWatch para logs
+2. Alertas por intentos de acceso fallidos
+3. Monitoreo de patrones de uso anómalos
+4. Backup automático de base de datos
 
-## 🎯 Próximos Pasos
+## Próximos Pasos
 
 1. **Deploy en AWS**: Usar Terraform/CloudFormation
 2. **Certificado SSL**: AWS Certificate Manager
@@ -337,9 +337,9 @@ El script `setup_users.py` crea usuarios de prueba:
 
 ---
 
-**✅ Sistema Completamente Funcional para AWS**
-- 🔒 HTTPS forzado en producción
-- 🎫 JWT authentication robusto
-- 👥 Sistema de roles granular
-- 📊 Logging y auditoría completos
-- 🛡️ Protección contra sniffing y modificaciones no autorizadas
+**Sistema Completamente Funcional para AWS**
+- HTTPS forzado en producción
+-  JWT authentication robusto
+-  Sistema de roles granular
+- Logging y auditoría completos
+- Protección contra sniffing y modificaciones no autorizadas

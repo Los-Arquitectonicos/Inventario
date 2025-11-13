@@ -34,7 +34,7 @@ terraform apply
 
 Escribe **"yes"** cuando te pregunte si quieres continuar.
 
-⏱️ **Tiempo estimado**: 10-15 minutos
+⏱ **Tiempo estimado**: 10-15 minutos
 
 ## Paso 4: Obtener IPs de las Instancias
 
@@ -263,7 +263,7 @@ env | grep -E "DATABASE_|SECRET_KEY|DEBUG"
 
 ## Limpieza (Eliminar Todo)
 
-⚠️ **CUIDADO**: Esto eliminará toda la infraestructura y datos.
+**CUIDADO**: Esto eliminará toda la infraestructura y datos.
 
 ### Método Normal:
 ```bash
@@ -575,27 +575,27 @@ sudo pkill -f "manage.py runserver"
 sudo python3 manage.py runserver 0.0.0.0:8080
 ```
 
-## 🔧 Proceso Simple Implementado
+## Proceso Simple Implementado
 
-### ✅ Configuración Automática
+### Configuración Automática
 - **Terraform** instala Django y todas las dependencias
 - **Variables de entorno** preconfiguradas automáticamente
 - **Migraciones** aplicadas en el primer servidor
 - **Base de datos** lista para usar
 
-### ✅ Inicio Manual Simple
+### Inicio Manual Simple
 ```bash
 # En cada servidor
 cd ~/Inventario/ProvesiWMS
 python3 manage.py runserver 0.0.0.0:8000
 ```
 
-### ✅ Acceso a la Aplicación
+### Acceso a la Aplicación
 - **Load Balancer URL**: `terraform output alb_url`
 - **Puerto externo**: 443 (HTTPS) y 80 (HTTP redirect)
 - **Puerto interno**: 8000 (Django development server)
 
-### ✅ Gestión Simple
+### Gestión Simple
 ```bash
 # Detener Django
 pkill -f runserver

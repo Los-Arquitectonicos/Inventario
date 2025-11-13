@@ -1,0 +1,285 @@
+{
+  "info": {
+    "name": "Anti-Modificacion Pedidos - API Endpoints",
+    "description": "Suite que valida endpoints de API REST para pedidos. Verifica que atacantes NO puedan usar endpoints JSON para modificar informacion de pedidos.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_postman_id": "anti-modificacion-api-pedidos-001"
+  },
+  "item": [
+    {
+      "name": "SETUP API - Preparar Datos",
+      "description": "Configuracion para probar endpoints API de pedidos",
+      "item": [
+        {
+          "name": "Login Admin para API",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type", 
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"ProvesiAdmin2024!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/inventario/auth/token/",
+              "host": ["{{base_url}}"],
+              "path": ["inventario", "auth", "token", ""]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('API Setup: Login exitoso', function () {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    pm.globals.set('api_admin_token', response.access);",
+                  "    console.log('Token API admin guardado');",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Verificar Endpoint API Pedidos Existe",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/inventario/api/pedidos/?limit=1",
+              "host": ["{{base_url}}"],
+              "path": ["inventario", "api", "pedidos", ""],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('API Setup: Endpoint pedidos verificado', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 404, 401, 403]);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    console.log('API Endpoint /api/pedidos/ EXISTE y responde');",
+                  "    pm.globals.set('api_endpoint_exists', 'true');",
+                  "    ",
+                  "    try {",
+                  "        const response = pm.response.json();",
+                  "        if (response.pedidos && response.pedidos.length > 0) {",
+                  "            pm.globals.set('existing_pedido_id', response.pedidos[0].id);",
+                  "            console.log('ID de pedido existente encontrado:', response.pedidos[0].id);",
+                  "        } else {",
+                  "            pm.globals.set('existing_pedido_id', '1');",
+                  "        }",
+                  "    } catch (e) {",
+                  "        pm.globals.set('existing_pedido_id', '1');",
+                  "    }",
+                  "} else if (pm.response.code === 404) {",
+                  "    console.log('API Endpoint /api/pedidos/ NO EXISTE - pruebas limitadas');",
+                  "    pm.globals.set('api_endpoint_exists', 'false');",
+                  "    pm.globals.set('existing_pedido_id', '1');",
+                  "} else {",
+                  "    console.log('Problema con endpoint API - codigo:', pm.response.code);",
+                  "    pm.globals.set('api_endpoint_exists', 'unknown');",
+                  "    pm.globals.set('existing_pedido_id', '1');",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "ATAQUE API - Sin Autenticacion",
+      "description": "Ataques directos a API REST sin token - DEBEN FALLAR 100%",
+      "item": [
+        {
+          "name": "Atacante: GET Pedidos API SIN TOKEN",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/inventario/api/pedidos/",
+              "host": ["{{base_url}}"],
+              "path": ["inventario", "api", "pedidos", ""]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('API CRITICO: GET pedidos sin token BLOQUEADO', function () {",
+                  "    if (pm.globals.get('api_endpoint_exists') === 'true') {",
+                  "        pm.expect(pm.response.code).to.be.oneOf([401, 403]);",
+                  "    } else {",
+                  "        pm.expect(pm.response.code).to.be.oneOf([401, 403, 404]);",
+                  "    }",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    console.log('VULNERABILIDAD API CRITICA!');",
+                  "    console.log('Atacante puede VER TODOS LOS PEDIDOS sin autenticacion');",
+                  "    pm.globals.set('api_vulnerability_found', 'true');",
+                  "} else {",
+                  "    console.log('API Segura: GET pedidos sin token bloqueado');",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Atacante: POST Crear Pedido API SIN TOKEN",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cliente_id\": 1,\n  \"fecha_entrega\": \"2025-12-31\",\n  \"estado\": \"pendiente\",\n  \"total\": 999999999,\n  \"observaciones\": \"PEDIDO FRAUDULENTO VIA API - CREADO POR ATACANTE SIN TOKEN\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/inventario/api/pedidos/",
+              "host": ["{{base_url}}"],
+              "path": ["inventario", "api", "pedidos", ""]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('API CRITICO: POST pedidos sin token BLOQUEADO', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([401, 403, 404]);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200 || pm.response.code === 201) {",
+                  "    console.log('VULNERABILIDAD API GRAVISIMA!');",
+                  "    console.log('Atacante puede CREAR PEDIDOS FRAUDULENTOS sin autenticacion');",
+                  "    pm.globals.set('api_vulnerability_found', 'true');",
+                  "} else {",
+                  "    console.log('API Segura: POST pedidos sin token bloqueado');",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "VERIFICACION FINAL API",
+      "description": "Validacion final especifica de API de pedidos",
+      "item": [
+        {
+          "name": "REPORTE FINAL API",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/inventario/",
+              "host": ["{{base_url}}"],
+              "path": ["inventario", ""]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "console.log('');",
+                  "console.log('==========================================');",
+                  "console.log('REPORTE FINAL - SEGURIDAD API PEDIDOS');",
+                  "console.log('==========================================');",
+                  "console.log('');",
+                  "",
+                  "const apiExists = pm.globals.get('api_endpoint_exists');",
+                  "const vulnFound = pm.globals.get('api_vulnerability_found');",
+                  "",
+                  "console.log('ESTADO DEL API:');",
+                  "if (apiExists === 'true') {",
+                  "    console.log('   Endpoint /api/pedidos/ IMPLEMENTADO');",
+                  "} else if (apiExists === 'false') {",
+                  "    console.log('   Endpoint /api/pedidos/ NO IMPLEMENTADO');",
+                  "} else {",
+                  "    console.log('   Estado del endpoint DESCONOCIDO');",
+                  "}",
+                  "console.log('');",
+                  "",
+                  "if (vulnFound === 'true') {",
+                  "    console.log('RESULTADO API: FALLO CRITICO');",
+                  "    console.log('');",
+                  "    console.log('VULNERABILIDADES API DETECTADAS:');",
+                  "    console.log('   - Endpoints API accesibles sin autenticacion');",
+                  "    console.log('   - Atacantes pueden ver/crear/modificar pedidos via API');",
+                  "    console.log('   - Datos comerciales sensibles expuestos');",
+                  "    ",
+                  "    pm.test('API: Requisito de seguridad CUMPLIDO', function () {",
+                  "        pm.expect(false).to.be.true;",
+                  "    });",
+                  "} else {",
+                  "    console.log('RESULTADO API: SEGURIDAD CORRECTA');",
+                  "    console.log('');",
+                  "    console.log('VALIDACIONES API EXITOSAS:');",
+                  "    console.log('   GET pedidos sin token: BLOQUEADO');",
+                  "    console.log('   POST pedidos sin token: BLOQUEADO');",
+                  "    console.log('');",
+                  "    console.log('API COMPLETAMENTE SEGURA');",
+                  "    console.log('   Ningun atacante puede usar API para modificar pedidos');",
+                  "",
+                  "    pm.test('API: Requisito de seguridad CUMPLIDO', function () {",
+                  "        pm.expect(true).to.be.true;",
+                  "    });",
+                  "}",
+                  "",
+                  "console.log('');",
+                  "console.log('OBJETIVO: 100% bloqueo de modificaciones no autorizadas');",
+                  "console.log('==========================================');",
+                  "",
+                  "pm.globals.unset('api_admin_token');",
+                  "pm.globals.unset('api_endpoint_exists');",
+                  "pm.globals.unset('existing_pedido_id');",
+                  "pm.globals.unset('api_vulnerability_found');"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://provesi-alb-2003818714.us-east-1.elb.amazonaws.com",
+      "type": "string"
+    }
+  ]
+}

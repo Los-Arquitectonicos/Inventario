@@ -7,7 +7,7 @@
   },
   "item": [
     {
-      "name": "🔒 Configuración de Variables",
+      "name": "Configuración de Variables",
       "description": "Variables globales para las pruebas de seguridad",
       "item": [
         {
@@ -38,7 +38,7 @@
       ]
     },
     {
-      "name": "🚨 Test 1: Acceso Sin Autenticación",
+      "name": "Test 1: Acceso Sin Autenticación",
       "description": "Intentar crear pedidos sin ningún token de autenticación",
       "item": [
         {
@@ -66,17 +66,17 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('🔒 Acceso denegado sin token', function () {",
+                  "pm.test('Acceso denegado sin token', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([401, 403]);",
                   "});",
                   "",
-                  "pm.test('🔒 Respuesta contiene mensaje de error apropiado', function () {",
+                  "pm.test('Respuesta contiene mensaje de error apropiado', function () {",
                   "    const response = pm.response.json();",
                   "    pm.expect(response).to.have.property('error');",
                   "    pm.expect(response.error.toLowerCase()).to.include('token');",
                   "});",
                   "",
-                  "pm.test('🔒 No revela información sensible', function () {",
+                  "pm.test('No revela información sensible', function () {",
                   "    const responseText = pm.response.text();",
                   "    pm.expect(responseText.toLowerCase()).to.not.include('password');",
                   "    pm.expect(responseText.toLowerCase()).to.not.include('secret');",
@@ -117,7 +117,7 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('🔒 Modificación de pedido denegada sin token', function () {",
+                  "pm.test('Modificación de pedido denegada sin token', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([401, 403, 404, 405]);",
                   "});",
                   "",
@@ -144,7 +144,7 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('🔒 Eliminación de pedido denegada sin token', function () {",
+                  "pm.test('Eliminación de pedido denegada sin token', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([401, 403, 405]);",
                   "});",
                   "",
@@ -158,7 +158,7 @@
       ]
     },
     {
-      "name": "🎭 Test 2: Tokens Falsos/Inválidos",
+      "name": "Test 2: Tokens Falsos/Inválidos",
       "description": "Intentar usar tokens JWT falsos, malformados o expirados",
       "item": [
         {
@@ -190,11 +190,11 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('🔒 Token falso rechazado', function () {",
+                  "pm.test('Token falso rechazado', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([401, 403]);",
                   "});",
                   "",
-                  "pm.test('🔒 Mensaje de error apropiado para token inválido', function () {",
+                  "pm.test('Mensaje de error apropiado para token inválido', function () {",
                   "    const response = pm.response.json();",
                   "    pm.expect(response.error.toLowerCase()).to.include('inválido');",
                   "});",
@@ -235,7 +235,7 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('🔒 Token malformado rechazado', function () {",
+                  "pm.test('Token malformado rechazado', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([401, 403]);",
                   "});",
                   "",
@@ -275,7 +275,7 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('🔒 Intento de inyección SQL bloqueado', function () {",
+                  "pm.test('Intento de inyección SQL bloqueado', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([401, 403, 400]);",
                   "});",
                   "",
@@ -289,7 +289,7 @@
       ]
     },
     {
-      "name": "🌐 Test 3: Bypass de Autenticación",
+      "name": "Test 3: Bypass de Autenticación",
       "description": "Intentar evadir la autenticación usando diferentes métodos",
       "item": [
         {
@@ -321,7 +321,7 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('🔒 Basic Auth rechazado', function () {",
+                  "pm.test('Basic Auth rechazado', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([401, 403]);",
                   "});",
                   "",
@@ -369,7 +369,7 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('🔒 Headers alternativos rechazados', function () {",
+                  "pm.test('Headers alternativos rechazados', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([401, 403]);",
                   "});",
                   "",
@@ -419,7 +419,7 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('🔒 Parámetros de auth en URL rechazados', function () {",
+                  "pm.test('Parámetros de auth en URL rechazados', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([401, 403]);",
                   "});",
                   "",
@@ -433,7 +433,7 @@
       ]
     },
     {
-      "name": "💀 Test 4: Ataques de Inyección",
+      "name": "Test 4: Ataques de Inyección",
       "description": "Intentar inyecciones SQL, XSS y otros ataques en los datos",
       "item": [
         {
@@ -461,11 +461,11 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('🔒 Inyección SQL bloqueada', function () {",
+                  "pm.test('Inyección SQL bloqueada', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([400, 401, 403]);",
                   "});",
                   "",
-                  "pm.test('🔒 No ejecuta comandos SQL maliciosos', function () {",
+                  "pm.test('No ejecuta comandos SQL maliciosos', function () {",
                   "    const responseText = pm.response.text();",
                   "    pm.expect(responseText.toLowerCase()).to.not.include('syntax error');",
                   "    pm.expect(responseText.toLowerCase()).to.not.include('sql');",
@@ -503,11 +503,11 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('🔒 XSS bloqueado', function () {",
+                  "pm.test('XSS bloqueado', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([400, 401, 403]);",
                   "});",
                   "",
-                  "pm.test('🔒 Scripts no ejecutados', function () {",
+                  "pm.test('Scripts no ejecutados', function () {",
                   "    const responseText = pm.response.text();",
                   "    pm.expect(responseText).to.not.include('<script>');",
                   "    pm.expect(responseText).to.not.include('javascript:');",
@@ -545,11 +545,11 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('🔒 Path traversal bloqueado', function () {",
+                  "pm.test('Path traversal bloqueado', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([400, 401, 403]);",
                   "});",
                   "",
-                  "pm.test('🔒 No accede a archivos del sistema', function () {",
+                  "pm.test('No accede a archivos del sistema', function () {",
                   "    const responseText = pm.response.text();",
                   "    pm.expect(responseText).to.not.include('root:');",
                   "    pm.expect(responseText).to.not.include('etc/passwd');",
@@ -584,7 +584,7 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('🔒 Acceso a usuarios denegado', function () {",
+                  "pm.test('Acceso a usuarios denegado', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([401, 403]);",
                   "});",
                   "",
@@ -611,7 +611,7 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('🔒 Panel admin protegido', function () {",
+                  "pm.test('Panel admin protegido', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([401, 403, 302]);",
                   "});",
                   "",
@@ -638,7 +638,7 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('🔒 Estadísticas protegidas', function () {",
+                  "pm.test('Estadísticas protegidas', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([401, 403]);",
                   "});",
                   "",
@@ -674,7 +674,7 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('🔒 Creación de usuario admin bloqueada', function () {",
+                  "pm.test('Creación de usuario admin bloqueada', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([401, 403, 405]);",
                   "});",
                   "",
@@ -688,7 +688,7 @@
       ]
     },
     {
-      "name": "⚡ Test 6: Ataques de Fuerza Bruta",
+      "name": "Test 6: Ataques de Fuerza Bruta",
       "description": "Múltiples intentos de acceso rápidos",
       "item": [
         {
@@ -716,14 +716,14 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('🔒 Login fallido con password aleatorio', function () {",
+                  "pm.test('Login fallido con password aleatorio', function () {",
                   "    pm.expect(pm.response.code).to.be.oneOf([400, 401, 403]);",
                   "});",
                   "",
-                  "pm.test('🔒 Rate limiting aplicado (opcional)', function () {",
+                  "pm.test('Rate limiting aplicado (opcional)', function () {",
                   "    // Verificar si hay rate limiting después de múltiples intentos",
                   "    if (pm.response.code === 429) {",
-                  "        console.log('✅ Rate limiting detectado - Buena seguridad');",
+                  "        console.log('Rate limiting detectado - Buena seguridad');",
                   "    }",
                   "});",
                   "",
@@ -737,7 +737,7 @@
       ]
     },
     {
-      "name": "📊 Test 7: Resumen de Seguridad",
+      "name": "Test 7: Resumen de Seguridad",
       "description": "Validación final de todas las pruebas de seguridad",
       "item": [
         {
@@ -756,13 +756,13 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('🔒 Headers de seguridad presentes', function () {",
+                  "pm.test('Headers de seguridad presentes', function () {",
                   "    pm.expect(pm.response.headers.get('X-Frame-Options')).to.exist;",
                   "    pm.expect(pm.response.headers.get('X-Content-Type-Options')).to.exist;",
                   "    pm.expect(pm.response.headers.get('Strict-Transport-Security')).to.exist;",
                   "});",
                   "",
-                  "pm.test('🔒 Información del servidor limitada', function () {",
+                  "pm.test('Información del servidor limitada', function () {",
                   "    const server = pm.response.headers.get('Server');",
                   "    if (server) {",
                   "        pm.expect(server.toLowerCase()).to.not.include('apache/2.');",
@@ -774,10 +774,10 @@
                   "const totalAttempts = pm.globals.get('attack_attempts') || 0;",
                   "const timestamp = pm.globals.get('test_timestamp');",
                   "",
-                  "pm.test('📊 RESULTADO FINAL: Todos los ataques bloqueados', function () {",
-                  "    console.log(`🔒 REPORTE DE SEGURIDAD - ${timestamp}`);",
-                  "    console.log(`🚨 Total de intentos de ataque: ${totalAttempts}`);",
-                  "    console.log(`✅ Expectativa: 100% de ataques bloqueados`);",
+                  "pm.test('RESULTADO FINAL: Todos los ataques bloqueados', function () {",
+                  "    console.log(`REPORTE DE SEGURIDAD - ${timestamp}`);",
+                  "    console.log(`Total de intentos de ataque: ${totalAttempts}`);",
+                  "    console.log(`Expectativa: 100% de ataques bloqueados`);",
                   "    ",
                   "    pm.expect(totalAttempts).to.be.greaterThan(0, 'Se ejecutaron pruebas de ataque');",
                   "    ",

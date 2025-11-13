@@ -1,0 +1,31 @@
+{
+  "timestamp": "2025-10-15T20:27:26.644093",
+  "duracion_segundos": 299.91363310813904,
+  "duracion_minutos": 4.998560551802317,
+  "total_requests": 39231,
+  "exitosos": 39229,
+  "fallidos": 2,
+  "tasa_exito_pct": 99.9949019907726,
+  "tasa_fallo_pct": 0.005098009227396702,
+  "req_por_segundo": 130.80765816955906,
+  "req_por_minuto": 7848.459490173544,
+  "articulos_por_segundo": 130.80098958307542,
+  "tiempo_estimado_10k_seg": 76.45202098145225,
+  "tiempo_estimado_10k_min": 1.274200349690871,
+  "cumple_objetivo_5min": true,
+  "response_time_min_ms": 91.1412239074707,
+  "response_time_max_ms": 668.8671112060547,
+  "response_time_avg_ms": 134.61873718471176,
+  "response_time_p50_ms": 126.78337097167969,
+  "response_time_p95_ms": 193.02701950073242,
+  "response_time_p99_ms": 246.5658187866211,
+  "objetivos": {
+    "throughput_min_100": true,
+    "throughput_max_2000": false,
+    "tiempo_10k_menos_5min": true,
+    "tasa_exito_95pct": true
+  },
+  "errores_detalle": {
+    "400: {\"error\": \"Ya existe un art\\u00edculo con c\\u00f3d": 2
+  }
+}

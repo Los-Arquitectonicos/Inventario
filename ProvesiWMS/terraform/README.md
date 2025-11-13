@@ -8,7 +8,7 @@ Para un deployment paso a paso desde AWS Dashboard (sin SSH), consulta:
 
 **📖 [DEPLOYMENT_AWS.md](../DEPLOYMENT_AWS.md)**
 
-## ✅ Entorno de Pruebas Preconfigurado
+## Entorno de Pruebas Preconfigurado
 
 - **Variables incluidas**: Todas las configuraciones están en `terraform.tfvars`
 - **Sin configuración SSH**: Usa EC2 Instance Connect desde la consola
@@ -108,7 +108,7 @@ terraform plan
 
 | Archivo | Descripción |
 |---------|-------------|
-| `terraform.tfvars` | ✅ Variables preconfiguradas para testing |
+| `terraform.tfvars` | Variables preconfiguradas para testing |
 | `main.tf` | Definición de infraestructura AWS |
 | `variables.tf` | Definiciones de variables con validación |
 | `outputs.tf` | IPs y URLs post-deployment |

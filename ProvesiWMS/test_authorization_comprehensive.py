@@ -67,11 +67,11 @@ def get_jwt_token(username: str, password: str) -> str:
             data = response.json()
             return data.get("access", "")
         else:
-            print(f"❌ Error obteniendo token para {username}: {response.status_code}")
+            print(f"Error obteniendo token para {username}: {response.status_code}")
             print(f"Respuesta: {response.text}")
             return ""
     except Exception as e:
-        print(f"❌ Excepción obteniendo token para {username}: {e}")
+        print(f"Excepción obteniendo token para {username}: {e}")
         return ""
 
 def test_endpoint_without_auth(method: str, endpoint: str) -> bool:
@@ -94,11 +94,11 @@ def test_endpoint_without_auth(method: str, endpoint: str) -> bool:
             except:
                 pass
         
-        print(f"⚠️  {method} {endpoint} sin auth retornó {response.status_code} (esperado 401)")
+        print(f" {method} {endpoint} sin auth retornó {response.status_code} (esperado 401)")
         return False
         
     except Exception as e:
-        print(f"❌ Error probando {method} {endpoint} sin auth: {e}")
+        print(f"Error probando {method} {endpoint} sin auth: {e}")
         return False
 
 def test_endpoint_with_invalid_token(method: str, endpoint: str) -> bool:
@@ -126,11 +126,11 @@ def test_endpoint_with_invalid_token(method: str, endpoint: str) -> bool:
             except:
                 pass
         
-        print(f"⚠️  {method} {endpoint} con token inválido retornó {response.status_code} (esperado 401)")
+        print(f" {method} {endpoint} con token inválido retornó {response.status_code} (esperado 401)")
         return False
         
     except Exception as e:
-        print(f"❌ Error probando {method} {endpoint} con token inválido: {e}")
+        print(f"Error probando {method} {endpoint} con token inválido: {e}")
         return False
 
 def test_endpoint_with_role(method: str, endpoint: str, role: str, token: str, should_have_access: bool) -> bool:
@@ -164,7 +164,7 @@ def test_endpoint_with_role(method: str, endpoint: str, role: str, token: str, s
             if response.status_code in [200, 201]:
                 return True
             elif response.status_code == 403:
-                print(f"❌ {role} fue denegado acceso a {method} {endpoint} (debería tener acceso)")
+                print(f"{role} fue denegado acceso a {method} {endpoint} (debería tener acceso)")
                 try:
                     data = response.json()
                     print(f"   Respuesta: {data.get('error', 'Sin mensaje')}")
@@ -173,10 +173,10 @@ def test_endpoint_with_role(method: str, endpoint: str, role: str, token: str, s
                 return False
             elif response.status_code == 404:
                 # 404 puede ser aceptable si el endpoint no existe aún
-                print(f"⚠️  {method} {endpoint} retorna 404 (endpoint puede no existir)")
+                print(f" {method} {endpoint} retorna 404 (endpoint puede no existir)")
                 return True
             else:
-                print(f"❌ {role} recibió código inesperado {response.status_code} para {method} {endpoint}")
+                print(f"{role} recibió código inesperado {response.status_code} para {method} {endpoint}")
                 return False
         else:
             # El usuario NO debe tener acceso
@@ -187,37 +187,37 @@ def test_endpoint_with_role(method: str, endpoint: str, role: str, token: str, s
                         return True
                 except:
                     pass
-                print(f"⚠️  {role} fue denegado {method} {endpoint} pero la respuesta no indica denegación por permisos")
+                print(f" {role} fue denegado {method} {endpoint} pero la respuesta no indica denegación por permisos")
                 return True
             elif response.status_code in [200, 201]:
-                print(f"❌ {role} tuvo acceso a {method} {endpoint} (NO debería tener acceso)")
+                print(f"{role} tuvo acceso a {method} {endpoint} (NO debería tener acceso)")
                 return False
             else:
-                print(f"⚠️  {role} recibió código inesperado {response.status_code} para {method} {endpoint} (sin acceso)")
+                print(f" {role} recibió código inesperado {response.status_code} para {method} {endpoint} (sin acceso)")
                 return True
                 
     except Exception as e:
-        print(f"❌ Error probando {method} {endpoint} con rol {role}: {e}")
+        print(f"Error probando {method} {endpoint} con rol {role}: {e}")
         return False
 
 def main():
-    print("🔐 ANÁLISIS EXHAUSTIVO DE AUTORIZACIÓN - ProvesiWMS")
+    print(" ANÁLISIS EXHAUSTIVO DE AUTORIZACIÓN - ProvesiWMS")
     print("=" * 60)
     
     # Obtener tokens para cada rol
     tokens = {}
     for role, credentials in TEST_CREDENTIALS.items():
-        print(f"🔑 Obteniendo token para {role}...")
+        print(f"Obteniendo token para {role}...")
         token = get_jwt_token(credentials["username"], credentials["password"])
         if token:
             tokens[role] = token
-            print(f"✅ Token obtenido para {role}")
+            print(f"Token obtenido para {role}")
         else:
-            print(f"❌ No se pudo obtener token para {role}")
+            print(f"No se pudo obtener token para {role}")
             return
     
     print("\n" + "=" * 60)
-    print("📊 RESULTADOS DE PRUEBAS DE AUTORIZACIÓN")
+    print("RESULTADOS DE PRUEBAS DE AUTORIZACIÓN")
     print("=" * 60)
     
     total_tests = 0
@@ -226,59 +226,59 @@ def main():
     
     # Probar cada endpoint
     for method, endpoint, expected_permissions in ENDPOINTS_TO_TEST:
-        print(f"\n🎯 Probando: {method} {endpoint}")
+        print(f"\nProbando: {method} {endpoint}")
         print("-" * 40)
         
         # Prueba sin autenticación
-        print("  🚫 Sin autenticación...", end=" ")
+        print("   Sin autenticación...", end=" ")
         if test_endpoint_without_auth(method, endpoint):
-            print("✅ CORRECTO (401)")
+            print("CORRECTO (401)")
             passed_tests += 1
         else:
-            print("❌ FALLO")
+            print("FALLO")
             failed_tests += 1
         total_tests += 1
         
         # Prueba con token inválido
-        print("  🚫 Token inválido...", end=" ")
+        print("   Token inválido...", end=" ")
         if test_endpoint_with_invalid_token(method, endpoint):
-            print("✅ CORRECTO (401)")
+            print("CORRECTO (401)")
             passed_tests += 1
         else:
-            print("❌ FALLO")
+            print("FALLO")
             failed_tests += 1
         total_tests += 1
         
         # Prueba con cada rol
         for role, should_have_access in expected_permissions.items():
             if role in tokens:
-                print(f"  👤 Rol {role} (esperado: {'✅' if should_have_access else '❌'})...", end=" ")
+                print(f"   Rol {role} (esperado: {'' if should_have_access else ''})...", end=" ")
                 if test_endpoint_with_role(method, endpoint, role, tokens[role], should_have_access):
-                    print("✅ CORRECTO")
+                    print("CORRECTO")
                     passed_tests += 1
                 else:
-                    print("❌ FALLO")
+                    print("FALLO")
                     failed_tests += 1
                 total_tests += 1
     
     # Resumen final
     print("\n" + "=" * 60)
-    print("📋 RESUMEN FINAL")
+    print("RESUMEN FINAL")
     print("=" * 60)
     print(f"Total de pruebas: {total_tests}")
-    print(f"Pruebas exitosas: {passed_tests} ✅")
-    print(f"Pruebas fallidas: {failed_tests} ❌")
+    print(f"Pruebas exitosas: {passed_tests} ")
+    print(f"Pruebas fallidas: {failed_tests} ")
     print(f"Porcentaje de éxito: {(passed_tests/total_tests)*100:.1f}%")
     
     if failed_tests == 0:
-        print("\n🎉 ¡TODAS LAS PRUEBAS DE AUTORIZACIÓN PASARON!")
+        print("\n¡TODAS LAS PRUEBAS DE AUTORIZACIÓN PASARON!")
         print("   El sistema tiene implementación correcta de seguridad.")
     else:
-        print(f"\n⚠️  SE ENCONTRARON {failed_tests} PROBLEMAS DE SEGURIDAD")
+        print(f"\n SE ENCONTRARON {failed_tests} PROBLEMAS DE SEGURIDAD")
         print("   Revisa los fallos arriba para identificar endpoints vulnerables.")
         
         # Identificar los problemas más comunes
-        print("\n🔧 RECOMENDACIONES:")
+        print("\nRECOMENDACIONES:")
         print("1. Verifica que todos los endpoints API tengan decoradores @jwt_required")
         print("2. Agrega decoradores @require_permission apropiados")
         print("3. Verifica la matriz de permisos en auth_utils.py")

@@ -18,13 +18,13 @@ Se han implementado APIs REST completas para todos los modelos del sistema, con 
 | `GET /inventario/api/facturas/` | Lista todas las facturas | metodo_pago, fecha_inicio, fecha_fin |
 | `GET /inventario/api/articulos/` | Lista todos los artículos | producto_id, ubicacion_id, sin_salida, bodega_id, codigo_barras, pasillo |
 
-### 📊 Parámetros de Paginación
+### Parámetros de Paginación
 
 Todos los endpoints soportan los siguientes parámetros:
 - `limit`: Número máximo de resultados (default: 100)
 - `offset`: Número de registros a omitir (default: 0)
 
-### 🔍 Ejemplos de Uso
+### Ejemplos de Uso
 
 #### 1. Listar Productos con Filtros
 ```bash
@@ -65,7 +65,7 @@ curl "http://127.0.0.1:8001/inventario/api/pedidos/?estado=pendiente"
 curl "http://127.0.0.1:8001/inventario/api/pedidos/?fecha_inicio=2025-01-01&fecha_fin=2025-12-31"
 ```
 
-### 📋 Estructura de Respuesta
+### Estructura de Respuesta
 
 Todas las APIs retornan una respuesta JSON con la siguiente estructura:
 
@@ -84,17 +84,17 @@ Todas las APIs retornan una respuesta JSON con la siguiente estructura:
 }
 ```
 
-### 🎯 Características Implementadas
+### Características Implementadas
 
-✅ **Paginación Completa**: Todos los endpoints soportan limit/offset  
-✅ **Filtros Específicos**: Cada modelo tiene filtros relevantes  
-✅ **Relaciones Optimizadas**: Uso de select_related para mejor rendimiento  
-✅ **Datos Calculados**: Incluye campos computados como márgenes, totales, etc.  
-✅ **Manejo de Errores**: Respuestas estructuradas para errores 400/500  
-✅ **Validación de Parámetros**: Validación de tipos y valores  
-✅ **Información de Estado**: Campos booleanos como hay_stock, esta_vigente, etc.  
+**Paginación Completa**: Todos los endpoints soportan limit/offset  
+**Filtros Específicos**: Cada modelo tiene filtros relevantes  
+**Relaciones Optimizadas**: Uso de select_related para mejor rendimiento  
+**Datos Calculados**: Incluye campos computados como márgenes, totales, etc.  
+**Manejo de Errores**: Respuestas estructuradas para errores 400/500  
+**Validación de Parámetros**: Validación de tipos y valores  
+**Información de Estado**: Campos booleanos como hay_stock, esta_vigente, etc.  
 
-### 🔧 Información Adicional por Modelo
+### Información Adicional por Modelo
 
 #### Productos (`/api/productos/`)
 - Margen de ganancia calculado automáticamente
@@ -130,14 +130,14 @@ Todas las APIs retornan una respuesta JSON con la siguiente estructura:
 - **Filtros a Nivel DB**: Filtrado en base de datos, no en Python
 - **Campos Calculados**: Cálculos eficientes con agregaciones Django
 
-### ⚡ Pruebas Realizadas
+### Pruebas Realizadas
 
 Todas las APIs han sido probadas exitosamente con:
-- ✅ Respuesta correcta de estructura JSON
-- ✅ Paginación funcional (has_next/has_previous)
-- ✅ Filtros operativos
-- ✅ Manejo de datos vacíos
-- ✅ Relaciones correctamente cargadas
-- ✅ Campos calculados funcionando
+- Respuesta correcta de estructura JSON
+- Paginación funcional (has_next/has_previous)
+- Filtros operativos
+- Manejo de datos vacíos
+- Relaciones correctamente cargadas
+- Campos calculados funcionando
 
 **Total de endpoints implementados: 8 APIs completas**

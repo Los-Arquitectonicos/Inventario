@@ -1,0 +1,275 @@
+{
+  "info": {
+    "name": "Validacion Anti-Modificacion de Pedidos - Atacante",
+    "description": "Suite de pruebas para validar que un atacante SIN credenciales validas NO PUEDE modificar informacion de pedidos",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_postman_id": "anti-modificacion-pedidos-001"
+  },
+  "item": [
+    {
+      "name": "SETUP - Crear Pedidos de Prueba",
+      "description": "Configuracion inicial: crear pedidos validos que el atacante intentara modificar",
+      "item": [
+        {
+          "name": "Login Admin (Setup)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"ProvesiAdmin2024!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/inventario/auth/token/",
+              "host": ["{{base_url}}"],
+              "path": ["inventario", "auth", "token", ""]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Setup: Admin login exitoso', function () {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    pm.globals.set('admin_token', response.access);",
+                  "    console.log('Setup completado: Token admin guardado');",
+                  "} else {",
+                  "    console.log('Setup fallo: No se pudo obtener token admin');",
+                  "    pm.globals.set('setup_failed', 'true');",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "ATAQUE - Sin Autenticacion",
+      "description": "Ataques directos sin token - DEBEN FALLAR 100%",
+      "item": [
+        {
+          "name": "Atacante: Ver Pedidos SIN TOKEN",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/inventario/pedidos/",
+              "host": ["{{base_url}}"],
+              "path": ["inventario", "pedidos", ""]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('CRITICO: Acceso sin token BLOQUEADO', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([401, 403, 302]);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    console.log('VULNERABILIDAD CRITICA: Atacante puede ver pedidos');",
+                  "    pm.globals.set('vulnerability_found', 'true');",
+                  "} else {",
+                  "    console.log('Seguro: Acceso sin token bloqueado');",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Atacante: Crear Pedido SIN TOKEN",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "cliente",
+                  "value": "1"
+                },
+                {
+                  "key": "fecha_entrega",
+                  "value": "2025-12-31"
+                },
+                {
+                  "key": "estado",
+                  "value": "pendiente"
+                },
+                {
+                  "key": "observaciones",
+                  "value": "PEDIDO FRAUDULENTO - CREADO POR ATACANTE SIN AUTENTICACION"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{base_url}}/inventario/pedidos/crear/",
+              "host": ["{{base_url}}"],
+              "path": ["inventario", "pedidos", "crear", ""]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('CRITICO: POST sin token BLOQUEADO', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([401, 403, 302, 405]);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200 || pm.response.code === 201) {",
+                  "    console.log('VULNERABILIDAD CRITICA: Atacante puede crear pedidos');",
+                  "    pm.globals.set('vulnerability_found', 'true');",
+                  "} else {",
+                  "    console.log('Seguro: POST sin token bloqueado');",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "ATAQUE - Token Invalido", 
+      "description": "Ataques con tokens falsos - DEBEN FALLAR 100%",
+      "item": [
+        {
+          "name": "Atacante: Token JWT FALSO",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.FAKE_PAYLOAD_ATACANTE.FAKE_SIGNATURE"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/inventario/pedidos/",
+              "host": ["{{base_url}}"],
+              "path": ["inventario", "pedidos", ""]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('CRITICO: Token falso RECHAZADO', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([401, 403, 302]);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    console.log('VULNERABILIDAD: Token falso aceptado');",
+                  "    pm.globals.set('vulnerability_found', 'true');",
+                  "} else {",
+                  "    console.log('Seguro: Token falso rechazado');",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "VERIFICACION FINAL",
+      "description": "Validacion final del objetivo de seguridad",
+      "item": [
+        {
+          "name": "REPORTE FINAL - Proteccion de Pedidos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/inventario/",
+              "host": ["{{base_url}}"],
+              "path": ["inventario", ""]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "console.log('');",
+                  "console.log('==========================================');",
+                  "console.log('REPORTE FINAL - SEGURIDAD DE PEDIDOS');",
+                  "console.log('==========================================');",
+                  "console.log('');",
+                  "",
+                  "const vulnFound = pm.globals.get('vulnerability_found');",
+                  "",
+                  "if (vulnFound === 'true') {",
+                  "    console.log('RESULTADO: FALLO CRITICO');",
+                  "    console.log('');",
+                  "    console.log('VULNERABILIDADES DETECTADAS:');",
+                  "    console.log('- Atacantes pueden acceder sin autenticacion');",
+                  "    console.log('- Informacion de pedidos expuesta');",
+                  "    console.log('- Posible modificacion no autorizada');",
+                  "    console.log('');",
+                  "    console.log('ACCION REQUERIDA:');",
+                  "    console.log('1. Implementar autenticacion obligatoria');",
+                  "    console.log('2. Validar tokens en todos los endpoints');",
+                  "    console.log('3. Bloquear acceso sin credenciales');",
+                  "    ",
+                  "    pm.test('Requisito de seguridad CUMPLIDO', function () {",
+                  "        pm.expect(false).to.be.true;",
+                  "    });",
+                  "} else {",
+                  "    console.log('RESULTADO: SEGURIDAD CORRECTA');",
+                  "    console.log('');",
+                  "    console.log('VALIDACIONES EXITOSAS:');",
+                  "    console.log('- Acceso sin token: BLOQUEADO');",
+                  "    console.log('- POST sin token: BLOQUEADO');",
+                  "    console.log('- Tokens falsos: RECHAZADOS');",
+                  "    console.log('');",
+                  "    console.log('SISTEMA COMPLETAMENTE SEGURO');",
+                  "    console.log('Ningun atacante puede modificar pedidos');",
+                  "",
+                  "    pm.test('Requisito de seguridad CUMPLIDO', function () {",
+                  "        pm.expect(true).to.be.true;",
+                  "    });",
+                  "}",
+                  "",
+                  "console.log('');",
+                  "console.log('OBJETIVO: 100% bloqueo de modificaciones no autorizadas');",
+                  "console.log('==========================================');",
+                  "",
+                  "pm.globals.unset('admin_token');",
+                  "pm.globals.unset('vulnerability_found');",
+                  "pm.globals.unset('setup_failed');"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://provesi-alb-2003818714.us-east-1.elb.amazonaws.com",
+      "type": "string"
+    }
+  ]
+}

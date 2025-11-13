@@ -7,7 +7,7 @@
   },
   "item": [
     {
-      "name": "🔧 Setup & Authentication",
+      "name": "Setup & Authentication",
       "description": "Obtener tokens válidos para cada rol y configurar variables",
       "item": [
         {
@@ -42,9 +42,9 @@
                   "if (pm.response.code === 200) {",
                   "    const response = pm.response.json();",
                   "    pm.globals.set('admin_token', response.access);",
-                  "    console.log('✅ Admin token saved');",
+                  "    console.log('Admin token saved');",
                   "} else {",
-                  "    console.log('❌ Admin login failed:', pm.response.text());",
+                  "    console.log('Admin login failed:', pm.response.text());",
                   "}"
                 ]
               }
@@ -83,9 +83,9 @@
                   "if (pm.response.code === 200) {",
                   "    const response = pm.response.json();",
                   "    pm.globals.set('gerente_token', response.access);",
-                  "    console.log('✅ Gerente token saved');",
+                  "    console.log('Gerente token saved');",
                   "} else {",
-                  "    console.log('❌ Gerente login failed:', pm.response.text());",
+                  "    console.log('Gerente login failed:', pm.response.text());",
                   "}"
                 ]
               }
@@ -124,9 +124,9 @@
                   "if (pm.response.code === 200) {",
                   "    const response = pm.response.json();",
                   "    pm.globals.set('empleado_token', response.access);",
-                  "    console.log('✅ Empleado token saved');",
+                  "    console.log('Empleado token saved');",
                   "} else {",
-                  "    console.log('❌ Empleado login failed:', pm.response.text());",
+                  "    console.log('Empleado login failed:', pm.response.text());",
                   "}"
                 ]
               }
@@ -136,7 +136,7 @@
       ]
     },
     {
-      "name": "🚨 Critical Security Tests - No Authentication",
+      "name": "Critical Security Tests - No Authentication",
       "description": "Verificar que TODOS los endpoints rechazan acceso sin autenticación",
       "item": [
         {
@@ -155,11 +155,11 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('🔒 CRITICAL: Productos endpoint rejects no auth', function () {",
+                  "pm.test('CRITICAL: Productos endpoint rejects no auth', function () {",
                   "    pm.expect(pm.response.code).to.equal(401);",
                   "});",
                   "",
-                  "pm.test('🔒 CRITICAL: Error message mentions token', function () {",
+                  "pm.test('CRITICAL: Error message mentions token', function () {",
                   "    try {",
                   "        const response = pm.response.json();",
                   "        pm.expect(response.error.toLowerCase()).to.include('token');",
@@ -169,7 +169,7 @@
                   "});",
                   "",
                   "if (pm.response.code !== 401) {",
-                  "    console.log('🚨 SECURITY VULNERABILITY: Products accessible without auth!');",
+                  "    console.log('SECURITY VULNERABILITY: Products accessible without auth!');",
                   "    console.log('Response:', pm.response.text());",
                   "}"
                 ]
@@ -193,12 +193,12 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('🔒 CRITICAL: Clientes endpoint rejects no auth', function () {",
+                  "pm.test('CRITICAL: Clientes endpoint rejects no auth', function () {",
                   "    pm.expect(pm.response.code).to.equal(401);",
                   "});",
                   "",
                   "if (pm.response.code !== 401) {",
-                  "    console.log('🚨 SECURITY VULNERABILITY: Clientes accessible without auth!');",
+                  "    console.log('SECURITY VULNERABILITY: Clientes accessible without auth!');",
                   "    console.log('Response:', pm.response.text());",
                   "}"
                 ]
@@ -222,12 +222,12 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('🔒 CRITICAL: Bodegas endpoint rejects no auth', function () {",
+                  "pm.test('CRITICAL: Bodegas endpoint rejects no auth', function () {",
                   "    pm.expect(pm.response.code).to.equal(401);",
                   "});",
                   "",
                   "if (pm.response.code !== 401) {",
-                  "    console.log('🚨 SECURITY VULNERABILITY: Bodegas accessible without auth!');",
+                  "    console.log('SECURITY VULNERABILITY: Bodegas accessible without auth!');",
                   "}"
                 ]
               }
@@ -250,12 +250,12 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('🔒 CRITICAL: Facturas endpoint rejects no auth', function () {",
+                  "pm.test('CRITICAL: Facturas endpoint rejects no auth', function () {",
                   "    pm.expect(pm.response.code).to.equal(401);",
                   "});",
                   "",
                   "if (pm.response.code !== 401) {",
-                  "    console.log('🚨 SECURITY VULNERABILITY: Financial data accessible without auth!');",
+                  "    console.log('SECURITY VULNERABILITY: Financial data accessible without auth!');",
                   "}"
                 ]
               }
@@ -265,7 +265,7 @@
       ]
     },
     {
-      "name": "🔑 Invalid Token Tests",
+      "name": "Invalid Token Tests",
       "description": "Verificar que tokens inválidos son rechazados",
       "item": [
         {
@@ -289,11 +289,11 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('🔒 Invalid token rejected', function () {",
+                  "pm.test('Invalid token rejected', function () {",
                   "    pm.expect(pm.response.code).to.equal(401);",
                   "});",
                   "",
-                  "pm.test('🔒 Error indicates invalid token', function () {",
+                  "pm.test('Error indicates invalid token', function () {",
                   "    const response = pm.response.json();",
                   "    pm.expect(response.code).to.equal('INVALID_TOKEN');",
                   "});"
@@ -329,11 +329,11 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('✅ Admin can access productos', function () {",
+                  "pm.test('Admin can access productos', function () {",
                   "    pm.expect(pm.response.code).to.equal(200);",
                   "});",
                   "",
-                  "pm.test('✅ Response has productos array', function () {",
+                  "pm.test('Response has productos array', function () {",
                   "    const response = pm.response.json();",
                   "    pm.expect(response).to.have.property('productos');",
                   "    pm.expect(response.productos).to.be.an('array');",
@@ -364,11 +364,11 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('✅ Gerente can access productos', function () {",
+                  "pm.test('Gerente can access productos', function () {",
                   "    pm.expect(pm.response.code).to.equal(200);",
                   "});",
                   "",
-                  "pm.test('✅ Response has productos array', function () {",
+                  "pm.test('Response has productos array', function () {",
                   "    const response = pm.response.json();",
                   "    pm.expect(response).to.have.property('productos');",
                   "});"
@@ -398,18 +398,18 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('🔒 CRITICAL: Empleado access to productos DENIED', function () {",
+                  "pm.test('CRITICAL: Empleado access to productos DENIED', function () {",
                   "    pm.expect(pm.response.code).to.equal(403);",
                   "});",
                   "",
-                  "pm.test('🔒 CRITICAL: Error indicates permission denied', function () {",
+                  "pm.test('CRITICAL: Error indicates permission denied', function () {",
                   "    const response = pm.response.json();",
                   "    pm.expect(response.code).to.equal('PERMISSION_DENIED');",
                   "    pm.expect(response.required_permission).to.equal('can_view_all_data');",
                   "});",
                   "",
                   "if (pm.response.code === 200) {",
-                  "    console.log('🚨 CRITICAL SECURITY FLAW: Empleado can see all productos!');",
+                  "    console.log('CRITICAL SECURITY FLAW: Empleado can see all productos!');",
                   "    console.log('This violates principle of least privilege');",
                   "}"
                 ]
@@ -446,17 +446,17 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('🔒 CRITICAL: Empleado CANNOT create productos', function () {",
+                  "pm.test('CRITICAL: Empleado CANNOT create productos', function () {",
                   "    pm.expect(pm.response.code).to.equal(403);",
                   "});",
                   "",
-                  "pm.test('🔒 CRITICAL: Permission denied for inventory management', function () {",
+                  "pm.test('CRITICAL: Permission denied for inventory management', function () {",
                   "    const response = pm.response.json();",
                   "    pm.expect(response.code).to.equal('PERMISSION_DENIED');",
                   "});",
                   "",
                   "if (pm.response.code === 200 || pm.response.code === 201) {",
-                  "    console.log('🚨 CRITICAL: Empleado can create products - MAJOR SECURITY ISSUE!');",
+                  "    console.log('CRITICAL: Empleado can create products - MAJOR SECURITY ISSUE!');",
                   "}"
                 ]
               }
@@ -484,11 +484,11 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('✅ Admin can access usuarios', function () {",
+                  "pm.test('Admin can access usuarios', function () {",
                   "    pm.expect(pm.response.code).to.equal(200);",
                   "});",
                   "",
-                  "pm.test('✅ Response has usuarios array', function () {",
+                  "pm.test('Response has usuarios array', function () {",
                   "    const response = pm.response.json();",
                   "    pm.expect(response).to.have.property('usuarios');",
                   "});"
@@ -518,17 +518,17 @@
               "listen": "test",
               "script": {
                 "exec": [
-                  "pm.test('🔒 CRITICAL: Empleado CANNOT access usuarios', function () {",
+                  "pm.test('CRITICAL: Empleado CANNOT access usuarios', function () {",
                   "    pm.expect(pm.response.code).to.equal(403);",
                   "});",
                   "",
-                  "pm.test('🔒 CRITICAL: Role not allowed for usuarios', function () {",
+                  "pm.test('CRITICAL: Role not allowed for usuarios', function () {",
                   "    const response = pm.response.json();",
                   "    pm.expect(response.code).to.equal('ROLE_NOT_ALLOWED');",
                   "});",
                   "",
                   "if (pm.response.code === 200) {",
-                  "    console.log('🚨 PRIVACY VIOLATION: Empleado can see user data!');",
+                  "    console.log('PRIVACY VIOLATION: Empleado can see user data!');",
                   "}"
                 ]
               }
@@ -538,7 +538,7 @@
       ]
     },
     {
-      "name": "📊 Final Security Summary",
+      "name": "Final Security Summary",
       "description": "Resumen final de todas las pruebas de seguridad",
       "item": [
         {
@@ -572,7 +572,7 @@
                   "console.log('🔐 SECURITY AUDIT SUMMARY');",
                   "console.log('========================');",
                   "console.log('');",
-                  "console.log('✅ Tests that SHOULD PASS (Secure Implementation):');",
+                  "console.log('Tests that SHOULD PASS (Secure Implementation):');",
                   "console.log('   - All endpoints reject requests without JWT tokens (401)');",
                   "console.log('   - All endpoints reject invalid JWT tokens (401)');",
                   "console.log('   - Admin can access all data endpoints');",
@@ -580,17 +580,17 @@
                   "console.log('   - Empleados are denied access to sensitive data (403)');",
                   "console.log('   - Only admin/gerente can see user management endpoints');",
                   "console.log('');",
-                  "console.log('❌ Tests that INDICATE VULNERABILITIES:');",
+                  "console.log('Tests that INDICATE VULNERABILITIES:');",
                   "console.log('   - Any endpoint returning 200 without authentication');",
                   "console.log('   - Empleados getting 200 responses for restricted data');",
                   "console.log('   - Missing permission checks (403 errors not returned when expected)');",
                   "console.log('');",
-                  "console.log('🎯 EXPECTED PERMISSION MATRIX:');",
+                  "console.log('EXPECTED PERMISSION MATRIX:');",
                   "console.log('   Admin: Full access to all endpoints');",
                   "console.log('   Gerente: Access to business data, no user management');",
                   "console.log('   Empleado: Very limited access, mostly denied');",
                   "console.log('');",
-                  "console.log('📋 If ANY test fails, there is a security vulnerability!');",
+                  "console.log('If ANY test fails, there is a security vulnerability!');",
                   "",
                   "pm.test('Security audit completed', function () {",
                   "    pm.expect(pm.response.code).to.equal(200);",

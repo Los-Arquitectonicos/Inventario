@@ -1,12 +1,12 @@
 # 🔐 REPORTE DE AUDITORÍA DE SEGURIDAD - ProvesiWMS
 
-## 📋 RESUMEN EJECUTIVO
+## RESUMEN EJECUTIVO
 
 **Fecha de Auditoría:** 13 de Noviembre, 2025  
 **Sistema Analizado:** ProvesiWMS - Sistema de Gestión de Inventario  
 **Auditor:** AI Security Analyst  
 
-### 🚨 HALLAZGOS CRÍTICOS
+### HALLAZGOS CRÍTICOS
 - **21 vulnerabilidades críticas** encontradas en los endpoints de API
 - **42% de los endpoints** carecían de autenticación apropiada
 - **100% de los endpoints con autenticación** tenían problemas de autorización
@@ -14,11 +14,11 @@
 
 ---
 
-## 🎯 ANÁLISIS DETALLADO
+## ANÁLISIS DETALLADO
 
 ### 1. VULNERABILIDADES DE AUTENTICACIÓN (CRÍTICAS)
 
-#### ❌ Endpoints SIN autenticación JWT:
+#### Endpoints SIN autenticación JWT:
 ```
 GET /inventario/api/clientes/     - Datos de clientes accesibles públicamente
 GET /inventario/api/bodegas/      - Información de bodegas sin protección  
@@ -31,7 +31,7 @@ GET /inventario/api/facturas/     - DATOS FINANCIEROS sin protección
 
 ### 2. VULNERABILIDADES DE AUTORIZACIÓN (CRÍTICAS)
 
-#### ❌ Empleados con acceso a datos restringidos:
+#### Empleados con acceso a datos restringidos:
 ```
 GET /inventario/api/productos/  - Empleados ven catálogo completo
 POST /inventario/api/productos/ - Empleados pueden crear productos
@@ -42,7 +42,7 @@ GET /inventario/api/clientes/   - Empleados ven datos de todos los clientes
 
 ### 3. PROBLEMAS DE CONFIGURACIÓN
 
-#### ❌ Orden incorrecto de decoradores:
+#### Orden incorrecto de decoradores:
 ```python
 # INCORRECTO:
 @require_roles('admin', 'gerente')
@@ -55,7 +55,7 @@ GET /inventario/api/clientes/   - Empleados ven datos de todos los clientes
 
 ---
 
-## 🔧 CORRECCIONES APLICADAS
+## CORRECCIONES APLICADAS
 
 ### 1. Autenticación JWT Agregada
 
@@ -74,12 +74,12 @@ def api_listar_clientes(request):
 ```
 
 **Endpoints corregidos:**
-- ✅ `api_listar_clientes`
-- ✅ `api_listar_bodegas` 
-- ✅ `api_listar_articulos`
-- ✅ `api_listar_cotizaciones`
-- ✅ `api_listar_facturas`
-- ✅ `api_listar_ubicaciones`
+- `api_listar_clientes`
+- `api_listar_bodegas` 
+- `api_listar_articulos`
+- `api_listar_cotizaciones`
+- `api_listar_facturas`
+- `api_listar_ubicaciones`
 
 ### 2. Autorización Basada en Permisos
 
@@ -99,8 +99,8 @@ ROLE_PERMISSIONS = {
         'can_create_users': False,  # No puede crear usuarios
     },
     'empleado': {
-        'can_view_all_data': False,  # ❌ No puede ver todos los datos
-        'can_manage_inventory': False,  # ❌ No puede gestionar inventario
+        'can_view_all_data': False,  # No puede ver todos los datos
+        'can_manage_inventory': False,  # No puede gestionar inventario
         # ... permisos muy limitados
     }
 }
@@ -136,31 +136,31 @@ elif request.method == 'POST':
 
 ### Resultados Esperados (Post-Corrección):
 ```
-✅ Sin autenticación: 401 (JWT requerido)
-✅ Token inválido: 401 (Token inválido)  
-✅ Admin: 200 (acceso completo)
-✅ Gerente: 200 (acceso a datos de negocio)
-✅ Empleado: 403 (acceso denegado)
+Sin autenticación: 401 (JWT requerido)
+Token inválido: 401 (Token inválido)  
+Admin: 200 (acceso completo)
+Gerente: 200 (acceso a datos de negocio)
+Empleado: 403 (acceso denegado)
 ```
 
 ---
 
-## 📊 MATRIZ DE PERMISOS CORREGIDA
+## MATRIZ DE PERMISOS CORREGIDA
 
 | Endpoint | Admin | Gerente | Empleado | Justificación |
 |----------|-------|---------|----------|---------------|
-| GET /api/productos/ | ✅ | ✅ | ❌ | Empleados no necesitan ver todo el catálogo |
-| POST /api/productos/ | ✅ | ✅ | ❌ | Solo management puede crear productos |
-| GET /api/clientes/ | ✅ | ✅ | ❌ | Datos sensibles de clientes |
-| GET /api/facturas/ | ✅ | ✅ | ❌ | Información financiera confidencial |
-| GET /api/usuarios/ | ✅ | ✅ | ❌ | Datos de empleados confidenciales |
-| GET /api/pedidos/ | ✅ | ✅ | ❌ | Información comercial estratégica |
+| GET /api/productos/ | | | | Empleados no necesitan ver todo el catálogo |
+| POST /api/productos/ | | | | Solo management puede crear productos |
+| GET /api/clientes/ | | | | Datos sensibles de clientes |
+| GET /api/facturas/ | | | | Información financiera confidencial |
+| GET /api/usuarios/ | | | | Datos de empleados confidenciales |
+| GET /api/pedidos/ | | | | Información comercial estratégica |
 
 ---
 
-## 🔍 ESTADO ACTUAL DEL SERVIDOR
+## ESTADO ACTUAL DEL SERVIDOR
 
-⚠️ **IMPORTANTE:** Las correcciones aplicadas están en el código fuente local pero **NO se han desplegado** al servidor de producción en AWS.
+**IMPORTANTE:** Las correcciones aplicadas están en el código fuente local pero **NO se han desplegado** al servidor de producción en AWS.
 
 ### Verificación del Estado:
 ```bash
@@ -177,20 +177,20 @@ curl https://provesi-alb-2003818714.us-east-1.elb.amazonaws.com/inventario/api/c
 
 ---
 
-## 📋 RECOMENDACIONES INMEDIATAS
+## RECOMENDACIONES INMEDIATAS
 
-### 🚨 ACCIÓN URGENTE (Próximas 24 horas):
+### ACCIÓN URGENTE (Próximas 24 horas):
 1. **Desplegar correcciones** inmediatamente
 2. **Revisar logs de acceso** para detectar explotación
 3. **Notificar a stakeholders** sobre ventana de vulnerabilidad
 
-### 🔧 ACCIONES A MEDIANO PLAZO:
+### ACCIONES A MEDIANO PLAZO:
 1. **Implementar monitoreo** de intentos de acceso no autorizado
 2. **Configurar alertas** para fallos de autenticación
 3. **Realizar auditorías** de seguridad periódicas
 4. **Implementar rate limiting** para prevenir ataques de fuerza bruta
 
-### 🛡️ MEJORAS DE SEGURIDAD ADICIONALES:
+### MEJORAS DE SEGURIDAD ADICIONALES:
 1. **Implementar refresh token rotation**
 2. **Agregar logging detallado** de acceso a datos sensibles
 3. **Configurar HTTPS** estricto (HSTS)
@@ -198,7 +198,7 @@ curl https://provesi-alb-2003818714.us-east-1.elb.amazonaws.com/inventario/api/c
 
 ---
 
-## 🎯 CONCLUSIONES
+## CONCLUSIONES
 
 ### Problemas Encontrados:
 - **Sistema críticamente vulnerable** antes de las correcciones
@@ -211,7 +211,7 @@ curl https://provesi-alb-2003818714.us-east-1.elb.amazonaws.com/inventario/api/c
 - **Principio de menor privilegio** aplicado consistentemente
 
 ### Próximos Pasos:
-1. ✅ **Código corregido** (completado)
+1. **Código corregido** (completado)
 2. ⏳ **Despliegue pendiente** (crítico)
 3. ⏳ **Validación post-despliegue** (requerida)
 4. ⏳ **Monitoreo continuo** (recomendado)

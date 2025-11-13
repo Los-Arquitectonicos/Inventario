@@ -96,7 +96,7 @@ class Command(BaseCommand):
         # Pedir confirmación
         if not dry_run and not auto_confirm:
             self.stdout.write(self.style.ERROR(
-                f'\n⚠️  ADVERTENCIA: Esta acción eliminará {total:,} artículos permanentemente.'
+                f'\n ADVERTENCIA: Esta acción eliminará {total:,} artículos permanentemente.'
             ))
             confirmacion = input('\n¿Estás seguro? Escribe "SI" para continuar: ')
             
