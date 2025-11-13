@@ -22,6 +22,11 @@ provider "tls" {
   # Configuration for generating self-signed certificates
 }
 
+# Provider para crear certificados SSL autofirmados
+provider "tls" {
+  # Configuration for generating self-signed certificates
+}
+
 locals {
   project_name = "${var.project_prefix}-wms"
   repository   = "https://github.com/Los-Arquitectonicos/Inventario.git"
@@ -390,24 +395,24 @@ resource "aws_lb_target_group_attachment" "app" {
 }
 
 # ===========================
-# CERTIFICADO SSL AUTOFIRMADO
+# CERTIFICADO SSL COMPATIBLE CON AWS ACADEMY
 # ===========================
+# Enfoque compatible que no requiere permisos IAM especiales
 
-# Clave privada para el certificado SSL
+# Generar clave privada
 resource "tls_private_key" "alb_private_key" {
   algorithm = "RSA"
   rsa_bits  = 2048
 }
 
-# Certificado autofirmado para HTTPS
+# Generar certificado autofirmado
 resource "tls_self_signed_cert" "alb_cert" {
   private_key_pem = tls_private_key.alb_private_key.private_key_pem
 
   subject {
-    common_name  = "*.elb.amazonaws.com"  # Wildcard para cualquier ELB
-    organization = "ProvesiWMS"
+    common_name  = "provesi.local"
+    organization = "ProvesiWMS Development"
     country      = "US"
-    locality     = "Virginia"
   }
 
   validity_period_hours = 8760 # 1 año
@@ -419,28 +424,24 @@ resource "tls_self_signed_cert" "alb_cert" {
   ]
 
   dns_names = [
-    "*.elb.amazonaws.com",
-    "*.us-east-1.elb.amazonaws.com",
+    "provesi.local",
+    "*.provesi.local",
     "localhost"
   ]
 }
 
-# Subir certificado a AWS IAM
-resource "aws_iam_server_certificate" "alb_cert" {
-  name             = "${var.project_prefix}-alb-cert-${random_id.cert_suffix.hex}"
-  certificate_body = tls_self_signed_cert.alb_cert.cert_pem
+# Crear certificado en ACM (método compatible con AWS Academy)
+resource "aws_acm_certificate" "alb_cert" {
   private_key      = tls_private_key.alb_private_key.private_key_pem
+  certificate_body = tls_self_signed_cert.alb_cert.cert_pem
 
   lifecycle {
     create_before_destroy = true
   }
 
-  depends_on = [tls_self_signed_cert.alb_cert]
-}
-
-# ID aleatorio para evitar conflictos de nombres
-resource "random_id" "cert_suffix" {
-  byte_length = 4
+  tags = merge(local.common_tags, {
+    Name = "${var.project_prefix}-ssl-cert"
+  })
 }
 
 # ===========================
@@ -451,7 +452,7 @@ resource "random_id" "cert_suffix" {
 # LOAD BALANCER LISTENERS
 # ===========================
 
-# Listener HTTP (puerto 80) - Redirige automáticamente a HTTPS
+# Listener HTTP (puerto 80) - Redirige a HTTPS
 resource "aws_lb_listener" "http" {
   load_balancer_arn = aws_lb.main.arn
   port              = "80"
@@ -474,12 +475,12 @@ resource "aws_lb_listener" "https" {
   port              = "443"
   protocol          = "HTTPS"
   ssl_policy        = "ELBSecurityPolicy-TLS-1-2-2017-01"
-  certificate_arn   = aws_iam_server_certificate.alb_cert.arn
+  certificate_arn   = aws_acm_certificate.alb_cert.arn
 
   default_action {
     type             = "forward"
     target_group_arn = aws_lb_target_group.app.arn
   }
 
-  depends_on = [aws_iam_server_certificate.alb_cert]
+  depends_on = [aws_acm_certificate.alb_cert]
 }

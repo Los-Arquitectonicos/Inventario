@@ -1,18 +1,18 @@
 # Outputs principales de la infraestructura
 
-output "ssl_certificate_arn" {
-  description = "ARN of the self-signed SSL certificate"
-  value       = aws_iam_server_certificate.alb_cert.arn
-}
-
 output "alb_dns_name" {
   description = "DNS name of the Application Load Balancer"
   value       = aws_lb.main.dns_name
 }
 
 output "alb_url" {
-  description = "Complete HTTPS URL to access the application"
+  description = "HTTPS URL to access the application"
   value       = "https://${aws_lb.main.dns_name}/inventario/"
+}
+
+output "ssl_certificate_arn" {
+  description = "ARN of the SSL certificate in ACM"
+  value       = aws_acm_certificate.alb_cert.arn
 }
 
 output "app_server_1_public_ip" {

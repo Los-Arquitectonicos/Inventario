@@ -131,7 +131,7 @@ terraform output alb_url
 ```
 
 **Importante sobre HTTPS:**
-- La aplicación usa un **certificado autofirmado** generado automáticamente
+- La aplicación usa un **certificado autofirmado** en AWS ACM
 - Tu navegador mostrará una **advertencia de seguridad** (normal en desarrollo)
 - Haz clic en **"Avanzado"** → **"Continuar al sitio"** para acceder
 - Una vez dentro, verás la aplicación funcionando con HTTPS completo
