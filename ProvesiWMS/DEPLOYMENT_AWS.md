@@ -126,11 +126,19 @@ tail -f django.log
 ## Paso 6: Probar la Aplicación
 
 ```bash
-# En CloudShell, obtener URL del Load Balancer
+# En CloudShell, obtener URL HTTPS del Load Balancer
 terraform output alb_url
 ```
 
-Abre esa URL HTTPS en tu navegador. Deberás **aceptar la advertencia de certificado autofirmado** (es normal en desarrollo) y luego verás la aplicación funcionando.
+**Importante sobre HTTPS:**
+- La aplicación usa un **certificado autofirmado** generado automáticamente
+- Tu navegador mostrará una **advertencia de seguridad** (normal en desarrollo)
+- Haz clic en **"Avanzado"** → **"Continuar al sitio"** para acceder
+- Una vez dentro, verás la aplicación funcionando con HTTPS completo
+
+**URLs de acceso:**
+- **HTTPS (recomendado):** `https://tu-alb-url/inventario/`
+- **HTTP:** Redirige automáticamente a HTTPS
 
 ## Usuarios por Defecto
 

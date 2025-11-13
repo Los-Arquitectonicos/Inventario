@@ -19,7 +19,7 @@ provider "aws" {
 
 # Provider para crear certificados SSL autofirmados
 provider "tls" {
-  # No configuration needed for generating certificates
+  # Configuration for generating self-signed certificates
 }
 
 locals {
@@ -389,40 +389,69 @@ resource "aws_lb_target_group_attachment" "app" {
   port             = 8000
 }
 
-# Crear certificado autofirmado para HTTPS en desarrollo
+# ===========================
+# CERTIFICADO SSL AUTOFIRMADO
+# ===========================
+
+# Clave privada para el certificado SSL
 resource "tls_private_key" "alb_private_key" {
   algorithm = "RSA"
   rsa_bits  = 2048
 }
 
+# Certificado autofirmado para HTTPS
 resource "tls_self_signed_cert" "alb_cert" {
   private_key_pem = tls_private_key.alb_private_key.private_key_pem
 
   subject {
-    common_name  = aws_lb.main.dns_name
-    organization = "ProvesiWMS Development"
+    common_name  = "*.elb.amazonaws.com"  # Wildcard para cualquier ELB
+    organization = "ProvesiWMS"
+    country      = "US"
+    locality     = "Virginia"
   }
 
-  validity_period_hours = 8760 # 1 year
+  validity_period_hours = 8760 # 1 año
 
   allowed_uses = [
     "key_encipherment",
     "digital_signature",
     "server_auth",
   ]
+
+  dns_names = [
+    "*.elb.amazonaws.com",
+    "*.us-east-1.elb.amazonaws.com",
+    "localhost"
+  ]
 }
 
+# Subir certificado a AWS IAM
 resource "aws_iam_server_certificate" "alb_cert" {
-  name_prefix      = "${var.project_prefix}-alb-cert"
+  name             = "${var.project_prefix}-alb-cert-${random_id.cert_suffix.hex}"
   certificate_body = tls_self_signed_cert.alb_cert.cert_pem
   private_key      = tls_private_key.alb_private_key.private_key_pem
 
   lifecycle {
     create_before_destroy = true
   }
+
+  depends_on = [tls_self_signed_cert.alb_cert]
 }
 
-# Listener para el ALB (puerto 80) - Redirige a HTTPS
+# ID aleatorio para evitar conflictos de nombres
+resource "random_id" "cert_suffix" {
+  byte_length = 4
+}
+
+# ===========================
+# APPLICATION LOAD BALANCER
+# ===========================
+
+# ===========================
+# LOAD BALANCER LISTENERS
+# ===========================
+
+# Listener HTTP (puerto 80) - Redirige automáticamente a HTTPS
 resource "aws_lb_listener" "http" {
   load_balancer_arn = aws_lb.main.arn
   port              = "80"
@@ -439,7 +468,7 @@ resource "aws_lb_listener" "http" {
   }
 }
 
-# Listener para el ALB (puerto 443 - HTTPS)
+# Listener HTTPS (puerto 443) - Endpoint principal
 resource "aws_lb_listener" "https" {
   load_balancer_arn = aws_lb.main.arn
   port              = "443"
@@ -451,4 +480,6 @@ resource "aws_lb_listener" "https" {
     type             = "forward"
     target_group_arn = aws_lb_target_group.app.arn
   }
+
+  depends_on = [aws_iam_server_certificate.alb_cert]
 }
