@@ -43,20 +43,21 @@ sudo apt-get install -y \
 # ===================================
 
 log "Instalando dependencias Python..."
-sudo pip3 install --upgrade pip
 
-# Verificar si el entorno está externamente administrado
-if pip3 install django==4.2.24 --dry-run 2>&1 | grep -q "externally-managed-environment"; then
-    log "Entorno Python externamente administrado detectado, usando --break-system-packages"
-    sudo pip3 install --break-system-packages \
-        django==4.2.24 \
-        psycopg2-binary \
-        djangorestframework \
-        djangorestframework-simplejwt \
-        django-cors-headers \
-        gunicorn
-else
-    log "Instalando paquetes Python normalmente"
+# Primero actualizar pip
+sudo pip3 install --upgrade pip --break-system-packages 2>/dev/null || sudo pip3 install --upgrade pip
+
+log "Instalando paquetes Python con --break-system-packages..."
+sudo pip3 install --break-system-packages \
+    django==4.2.24 \
+    psycopg2-binary \
+    djangorestframework \
+    djangorestframework-simplejwt \
+    django-cors-headers \
+    gunicorn
+
+if [ $? -ne 0 ]; then
+    log "Error instalando con --break-system-packages, intentando instalación normal..."
     sudo pip3 install \
         django==4.2.24 \
         psycopg2-binary \
