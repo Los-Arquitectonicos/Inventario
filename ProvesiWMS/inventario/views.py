@@ -86,8 +86,8 @@ def productos_sin_stock(request):
         'productos': productos
     })
 
-@require_permission('can_manage_inventory')
 @jwt_required
+@require_permission('can_manage_inventory')
 def crear_producto(request):
     """
     Vista para crear un nuevo producto mediante POST request.
@@ -177,8 +177,8 @@ def crear_producto(request):
         # GET request - mostrar formulario
         return render(request, 'inventario/productos/crear.html')
 
-@require_permission('can_manage_inventory')  
 @jwt_required
+@require_permission('can_manage_inventory')
 def actualizar_producto(request, producto_id):
     """
     Vista para actualizar un producto existente.
@@ -229,8 +229,8 @@ def actualizar_producto(request, producto_id):
     elif request.method == 'GET':
         return render(request, 'inventario/productos/editar.html', {'producto': producto})
 
+@jwt_required
 @require_permission('can_manage_inventory')
-@jwt_required  
 def eliminar_producto(request, producto_id):
     """
     Vista para eliminar un producto.
@@ -519,8 +519,8 @@ class PedidoDetailView(DetailView):
         context['total'] = self.object.calcular_total() # type: ignore
         return context
 
-@require_permission('can_manage_orders')
 @jwt_required
+@require_permission('can_manage_orders')
 def crear_pedido(request):
     """
     Vista para crear un nuevo pedido.
@@ -582,8 +582,8 @@ def crear_pedido(request):
         'productos': productos
     })
 
-@require_permission('can_manage_orders')
 @jwt_required
+@require_permission('can_manage_orders')
 def actualizar_estado_pedido(request, pedido_id):
     """
     Vista para actualizar el estado de un pedido.
@@ -653,8 +653,8 @@ class ClienteDetailView(DetailView):
         context['pedidos'] = Pedido.objects.filter(cliente=self.object).order_by('-fecha_creacion')[:10] # type: ignore
         return context
 
-@require_permission('can_manage_clients')
 @jwt_required
+@require_permission('can_manage_clients')
 def crear_cliente(request):
     """
     Vista para crear un nuevo cliente.
@@ -1575,69 +1575,131 @@ def api_listar_usuarios(request):
     except Exception as e:
         return JsonResponse({'error': f'Error interno: {str(e)}'}, status=500)
 
-@require_permission('can_view_all_data')
 @jwt_required
+@require_permission('can_view_all_data')
 def api_listar_pedidos(request):
     """
-    API endpoint para listar todos los pedidos del sistema.
+    API endpoint para listar todos los pedidos del sistema y crear nuevos pedidos.
+    GET: Lista pedidos con filtros y paginación
+    POST: Crea un nuevo pedido
     """
-    try:
-        limit = int(request.GET.get('limit', 100))
-        offset = int(request.GET.get('offset', 0))
-        estado = request.GET.get('estado')
-        cliente_id = request.GET.get('cliente_id')
-        fecha_inicio = request.GET.get('fecha_inicio')
-        fecha_fin = request.GET.get('fecha_fin')
+    if request.method == 'GET':
+        try:
+            limit = int(request.GET.get('limit', 100))
+            offset = int(request.GET.get('offset', 0))
+            estado = request.GET.get('estado')
+            cliente_id = request.GET.get('cliente_id')
+            fecha_inicio = request.GET.get('fecha_inicio')
+            fecha_fin = request.GET.get('fecha_fin')
+            
+            queryset = Pedido.objects.select_related('cliente').all()
+            
+            if estado:
+                queryset = queryset.filter(estado=estado)
+            if cliente_id:
+                queryset = queryset.filter(cliente_id=cliente_id)
+            if fecha_inicio:
+                queryset = queryset.filter(fecha_creacion__date__gte=fecha_inicio)
+            if fecha_fin:
+                queryset = queryset.filter(fecha_creacion__date__lte=fecha_fin)
+            
+            total_count = queryset.count()
+            pedidos = queryset.order_by('-fecha_creacion')[offset:offset + limit]
+            
+            pedidos_data = []
+            for pedido in pedidos:
+                pedido_info = {
+                    'id': pedido.pk,
+                    'numero_pedido': pedido.numero_pedido,
+                    'estado': pedido.estado,
+                    'fecha_creacion': pedido.fecha_creacion.isoformat(),
+                    'fecha_completado': pedido.fecha_completado.isoformat() if pedido.fecha_completado else None,
+                    'cliente': {
+                        'id': pedido.cliente.pk,
+                        'nombre': pedido.cliente.nombre,
+                        'email': pedido.cliente.email
+                    },
+                    'total': float(pedido.calcular_total()),
+                    'total_productos': PedidoProducto.objects.filter(pedido=pedido).count(),
+                    'puede_cancelar': pedido.puede_cancelar(),
+                    'cotizacion_id': pedido.cotizacion.pk if pedido.cotizacion else None
+                }
+                pedidos_data.append(pedido_info)
+            
+            return JsonResponse({
+                'success': True,
+                'count': len(pedidos_data),
+                'total': total_count,
+                'offset': offset,
+                'limit': limit,
+                'has_next': (offset + limit) < total_count,
+                'has_previous': offset > 0,
+                'pedidos': pedidos_data
+            })
+            
+        except ValueError as e:
+            return JsonResponse({'error': f'Parámetros inválidos: {str(e)}'}, status=400)
+        except Exception as e:
+            return JsonResponse({'error': f'Error interno: {str(e)}'}, status=500)
+    
+    elif request.method == 'POST':
+        # Solo usuarios con permiso de gestionar pedidos pueden crear
+        from inventario.auth_utils import has_permission
+        if not has_permission(request.user, 'can_manage_orders'):
+            return JsonResponse({
+                'success': False,
+                'error': 'No tienes permiso para crear pedidos',
+                'code': 'PERMISSION_DENIED'
+            }, status=403)
         
-        queryset = Pedido.objects.select_related('cliente').all()
-        
-        if estado:
-            queryset = queryset.filter(estado=estado)
-        if cliente_id:
-            queryset = queryset.filter(cliente_id=cliente_id)
-        if fecha_inicio:
-            queryset = queryset.filter(fecha_creacion__date__gte=fecha_inicio)
-        if fecha_fin:
-            queryset = queryset.filter(fecha_creacion__date__lte=fecha_fin)
-        
-        total_count = queryset.count()
-        pedidos = queryset.order_by('-fecha_creacion')[offset:offset + limit]
-        
-        pedidos_data = []
-        for pedido in pedidos:
-            pedido_info = {
-                'id': pedido.pk,
-                'numero_pedido': pedido.numero_pedido,
-                'estado': pedido.estado,
-                'fecha_creacion': pedido.fecha_creacion.isoformat(),
-                'fecha_completado': pedido.fecha_completado.isoformat() if pedido.fecha_completado else None,
-                'cliente': {
-                    'id': pedido.cliente.pk,
-                    'nombre': pedido.cliente.nombre,
-                    'email': pedido.cliente.email
-                },
-                'total': float(pedido.calcular_total()),
-                'total_productos': PedidoProducto.objects.filter(pedido=pedido).count(),
-                'puede_cancelar': pedido.puede_cancelar(),
-                'cotizacion_id': pedido.cotizacion.pk if pedido.cotizacion else None
-            }
-            pedidos_data.append(pedido_info)
-        
-        return JsonResponse({
-            'success': True,
-            'count': len(pedidos_data),
-            'total': total_count,
-            'offset': offset,
-            'limit': limit,
-            'has_next': (offset + limit) < total_count,
-            'has_previous': offset > 0,
-            'pedidos': pedidos_data
-        })
-        
-    except ValueError as e:
-        return JsonResponse({'error': f'Parámetros inválidos: {str(e)}'}, status=400)
-    except Exception as e:
-        return JsonResponse({'error': f'Error interno: {str(e)}'}, status=500)
+        try:
+            import json
+            data = json.loads(request.body)
+            cliente_id = data.get('cliente_id')
+            fecha_entrega = data.get('fecha_entrega')
+            estado = data.get('estado', 'pendiente')
+            observaciones = data.get('observaciones', '')
+            
+            # Validar cliente existe
+            try:
+                cliente = Cliente.objects.get(id=cliente_id)
+            except Cliente.DoesNotExist:
+                return JsonResponse({
+                    'error': 'Cliente no encontrado'
+                }, status=404)
+            
+            # Generar número de pedido único
+            ultimo_pedido = Pedido.objects.order_by('-id').first()
+            numero_pedido = f"PED-{(ultimo_pedido.pk + 1 if ultimo_pedido else 1):06d}"
+            
+            # Crear pedido
+            pedido = Pedido.objects.create(
+                numero_pedido=numero_pedido,
+                cliente=cliente,
+                estado=estado,
+                fecha_entrega=fecha_entrega,
+                observaciones=observaciones
+            )
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Pedido creado exitosamente',
+                'pedido': {
+                    'id': pedido.pk,
+                    'numero_pedido': pedido.numero_pedido,
+                    'estado': pedido.estado,
+                    'cliente_id': cliente.pk,
+                    'fecha_creacion': pedido.fecha_creacion.isoformat()
+                }
+            }, status=201)
+            
+        except Exception as e:
+            if 'JSON' in str(e) or 'json' in str(e).lower():
+                return JsonResponse({'error': 'JSON inválido'}, status=400)
+            return JsonResponse({'error': f'Error interno: {str(e)}'}, status=500)
+    
+    else:
+        return JsonResponse({'error': 'Método no permitido'}, status=405)
 
 def api_listar_cotizaciones(request):
     """

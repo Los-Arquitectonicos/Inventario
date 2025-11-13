@@ -35,6 +35,9 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         # Agregar información adicional del usuario
         user = self.user
         
+        if user is None:
+            raise ValueError("Usuario no encontrado")
+        
         # Obtener o crear el Usuario del modelo de inventario
         from inventario.models import Usuario
         try:
@@ -51,9 +54,9 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
             user_role = 'empleado'
             user_id_inventario = usuario_inventario.pk
             
-        data.update({
+        user_data = {
             'user': {
-                'id': user.id,
+                'id': user.pk,
                 'username': user.username,
                 'email': user.email,
                 'first_name': user.first_name,
@@ -64,7 +67,9 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
                 'role': user_role,
             },
             'login_time': datetime.now(timezone.utc).isoformat()
-        })
+        }
+        
+        data.update(user_data)
         
         # Registrar el login
         logger.info(f"Usuario {user.username} ({user_role}) ha iniciado sesión")
@@ -141,7 +146,7 @@ def login_api(request):
                     'access': str(access),
                     'refresh': str(refresh),
                     'user': {
-                        'id': user.id,
+                        'id': user.pk,
                         'username': user.username,
                         'email': user.email,
                         'first_name': user.first_name,
@@ -247,7 +252,7 @@ def user_profile(request):
         return Response({
             'success': True,
             'user': {
-                'id': user.id,
+                'id': user.pk,
                 'username': user.username,
                 'email': user.email,
                 'first_name': user.first_name,
@@ -305,7 +310,7 @@ def verify_token(request):
                 'success': True,
                 'valid': True,
                 'user': {
-                    'id': user.id,
+                    'id': user.pk,
                     'username': user.username,
                     'email': user.email,
                 },

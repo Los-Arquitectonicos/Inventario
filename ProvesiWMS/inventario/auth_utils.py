@@ -11,6 +11,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.exceptions import PermissionDenied
 from django.conf import settings
+from django.views import View
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -83,7 +84,7 @@ def get_user_role(user):
         from inventario.models import Usuario
         usuario_inventario = Usuario.objects.get(nombre_usuario=user.username)
         return usuario_inventario.rol
-    except Usuario.DoesNotExist:
+    except Exception:  # Catch all exceptions including Usuario.DoesNotExist
         return 'empleado'  # Rol por defecto
 
 def has_permission(user, permission):
@@ -328,7 +329,7 @@ def get_user_permissions(user):
     role = get_user_role(user)
     return ROLE_PERMISSIONS.get(role, {})
 
-class AuthenticationMixin:
+class AuthenticationMixin(View):
     """
     Mixin que se puede usar con vistas basadas en clases para agregar autenticación.
     """
@@ -342,7 +343,7 @@ class AuthenticationMixin:
             }, status=401)
         return super().dispatch(request, *args, **kwargs)
 
-class PermissionMixin:
+class PermissionMixin(View):
     """
     Mixin que requiere un permiso específico para vistas basadas en clases.
     
