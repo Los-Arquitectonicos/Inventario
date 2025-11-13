@@ -1,0 +1,618 @@
+{
+  "info": {
+    "name": "Security Validation Tests - Corrected Implementation",
+    "description": "Pruebas exhaustivas de seguridad que validan la implementación CORRECTA de autenticación y autorización. Estas pruebas verifican que TODOS los endpoints requieren JWT válido y permisos apropiados según el rol.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_postman_id": "security-validation-corrected-001"
+  },
+  "item": [
+    {
+      "name": "🔧 Setup & Authentication",
+      "description": "Obtener tokens válidos para cada rol y configurar variables",
+      "item": [
+        {
+          "name": "Get Admin Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"ProvesiAdmin2024!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/inventario/auth/token/",
+              "host": ["{{base_url}}"],
+              "path": ["inventario", "auth", "token", ""]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Admin login successful', function () {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    pm.globals.set('admin_token', response.access);",
+                  "    console.log('✅ Admin token saved');",
+                  "} else {",
+                  "    console.log('❌ Admin login failed:', pm.response.text());",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Gerente Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"gerente\",\n  \"password\": \"Gerente2024!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/inventario/auth/token/",
+              "host": ["{{base_url}}"],
+              "path": ["inventario", "auth", "token", ""]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Gerente login successful', function () {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    pm.globals.set('gerente_token', response.access);",
+                  "    console.log('✅ Gerente token saved');",
+                  "} else {",
+                  "    console.log('❌ Gerente login failed:', pm.response.text());",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Empleado Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"empleado\",\n  \"password\": \"Empleado2024!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/inventario/auth/token/",
+              "host": ["{{base_url}}"],
+              "path": ["inventario", "auth", "token", ""]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Empleado login successful', function () {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    pm.globals.set('empleado_token', response.access);",
+                  "    console.log('✅ Empleado token saved');",
+                  "} else {",
+                  "    console.log('❌ Empleado login failed:', pm.response.text());",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "🚨 Critical Security Tests - No Authentication",
+      "description": "Verificar que TODOS los endpoints rechazan acceso sin autenticación",
+      "item": [
+        {
+          "name": "Test Productos - No Auth",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/inventario/api/productos/",
+              "host": ["{{base_url}}"],
+              "path": ["inventario", "api", "productos", ""]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('🔒 CRITICAL: Productos endpoint rejects no auth', function () {",
+                  "    pm.expect(pm.response.code).to.equal(401);",
+                  "});",
+                  "",
+                  "pm.test('🔒 CRITICAL: Error message mentions token', function () {",
+                  "    try {",
+                  "        const response = pm.response.json();",
+                  "        pm.expect(response.error.toLowerCase()).to.include('token');",
+                  "    } catch(e) {",
+                  "        pm.expect.fail('Response should be JSON with error field');",
+                  "    }",
+                  "});",
+                  "",
+                  "if (pm.response.code !== 401) {",
+                  "    console.log('🚨 SECURITY VULNERABILITY: Products accessible without auth!');",
+                  "    console.log('Response:', pm.response.text());",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Test Clientes - No Auth", 
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/inventario/api/clientes/",
+              "host": ["{{base_url}}"],
+              "path": ["inventario", "api", "clientes", ""]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('🔒 CRITICAL: Clientes endpoint rejects no auth', function () {",
+                  "    pm.expect(pm.response.code).to.equal(401);",
+                  "});",
+                  "",
+                  "if (pm.response.code !== 401) {",
+                  "    console.log('🚨 SECURITY VULNERABILITY: Clientes accessible without auth!');",
+                  "    console.log('Response:', pm.response.text());",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Test Bodegas - No Auth",
+          "request": {
+            "method": "GET", 
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/inventario/api/bodegas/",
+              "host": ["{{base_url}}"],
+              "path": ["inventario", "api", "bodegas", ""]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('🔒 CRITICAL: Bodegas endpoint rejects no auth', function () {",
+                  "    pm.expect(pm.response.code).to.equal(401);",
+                  "});",
+                  "",
+                  "if (pm.response.code !== 401) {",
+                  "    console.log('🚨 SECURITY VULNERABILITY: Bodegas accessible without auth!');",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Test Facturas - No Auth",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/inventario/api/facturas/",
+              "host": ["{{base_url}}"],
+              "path": ["inventario", "api", "facturas", ""]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('🔒 CRITICAL: Facturas endpoint rejects no auth', function () {",
+                  "    pm.expect(pm.response.code).to.equal(401);",
+                  "});",
+                  "",
+                  "if (pm.response.code !== 401) {",
+                  "    console.log('🚨 SECURITY VULNERABILITY: Financial data accessible without auth!');",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "🔑 Invalid Token Tests",
+      "description": "Verificar que tokens inválidos son rechazados",
+      "item": [
+        {
+          "name": "Test Invalid Token - Productos",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer invalid_token_12345"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/inventario/api/productos/",
+              "host": ["{{base_url}}"],
+              "path": ["inventario", "api", "productos", ""]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('🔒 Invalid token rejected', function () {",
+                  "    pm.expect(pm.response.code).to.equal(401);",
+                  "});",
+                  "",
+                  "pm.test('🔒 Error indicates invalid token', function () {",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.code).to.equal('INVALID_TOKEN');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "👤 Role-Based Authorization Tests",
+      "description": "Verificar que la autorización basada en roles funciona correctamente",
+      "item": [
+        {
+          "name": "Admin Access - Productos (Should Work)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/inventario/api/productos/",
+              "host": ["{{base_url}}"],
+              "path": ["inventario", "api", "productos", ""]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('✅ Admin can access productos', function () {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});",
+                  "",
+                  "pm.test('✅ Response has productos array', function () {",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response).to.have.property('productos');",
+                  "    pm.expect(response.productos).to.be.an('array');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Gerente Access - Productos (Should Work)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{gerente_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/inventario/api/productos/",
+              "host": ["{{base_url}}"],
+              "path": ["inventario", "api", "productos", ""]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('✅ Gerente can access productos', function () {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});",
+                  "",
+                  "pm.test('✅ Response has productos array', function () {",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response).to.have.property('productos');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Empleado Access - Productos (Should FAIL)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization", 
+                "value": "Bearer {{empleado_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/inventario/api/productos/",
+              "host": ["{{base_url}}"],
+              "path": ["inventario", "api", "productos", ""]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('🔒 CRITICAL: Empleado access to productos DENIED', function () {",
+                  "    pm.expect(pm.response.code).to.equal(403);",
+                  "});",
+                  "",
+                  "pm.test('🔒 CRITICAL: Error indicates permission denied', function () {",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.code).to.equal('PERMISSION_DENIED');",
+                  "    pm.expect(response.required_permission).to.equal('can_view_all_data');",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    console.log('🚨 CRITICAL SECURITY FLAW: Empleado can see all productos!');",
+                  "    console.log('This violates principle of least privilege');",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Empleado Create Product (Should FAIL)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{empleado_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Producto Test Empleado\",\n  \"sku\": \"TEST-EMP-001\",\n  \"precio\": 100\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/inventario/api/productos/",
+              "host": ["{{base_url}}"],
+              "path": ["inventario", "api", "productos", ""]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('🔒 CRITICAL: Empleado CANNOT create productos', function () {",
+                  "    pm.expect(pm.response.code).to.equal(403);",
+                  "});",
+                  "",
+                  "pm.test('🔒 CRITICAL: Permission denied for inventory management', function () {",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.code).to.equal('PERMISSION_DENIED');",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200 || pm.response.code === 201) {",
+                  "    console.log('🚨 CRITICAL: Empleado can create products - MAJOR SECURITY ISSUE!');",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Admin Access - Usuarios (Should Work)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/inventario/api/usuarios/",
+              "host": ["{{base_url}}"],
+              "path": ["inventario", "api", "usuarios", ""]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('✅ Admin can access usuarios', function () {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});",
+                  "",
+                  "pm.test('✅ Response has usuarios array', function () {",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response).to.have.property('usuarios');",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Empleado Access - Usuarios (Should FAIL)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{empleado_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/inventario/api/usuarios/",
+              "host": ["{{base_url}}"],
+              "path": ["inventario", "api", "usuarios", ""]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('🔒 CRITICAL: Empleado CANNOT access usuarios', function () {",
+                  "    pm.expect(pm.response.code).to.equal(403);",
+                  "});",
+                  "",
+                  "pm.test('🔒 CRITICAL: Role not allowed for usuarios', function () {",
+                  "    const response = pm.response.json();",
+                  "    pm.expect(response.code).to.equal('ROLE_NOT_ALLOWED');",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    console.log('🚨 PRIVACY VIOLATION: Empleado can see user data!');",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "📊 Final Security Summary",
+      "description": "Resumen final de todas las pruebas de seguridad",
+      "item": [
+        {
+          "name": "Security Summary Report",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/inventario/api/productos/?limit=1",
+              "host": ["{{base_url}}"],
+              "path": ["inventario", "api", "productos", ""],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "console.log('');",
+                  "console.log('🔐 SECURITY AUDIT SUMMARY');",
+                  "console.log('========================');",
+                  "console.log('');",
+                  "console.log('✅ Tests that SHOULD PASS (Secure Implementation):');",
+                  "console.log('   - All endpoints reject requests without JWT tokens (401)');",
+                  "console.log('   - All endpoints reject invalid JWT tokens (401)');",
+                  "console.log('   - Admin can access all data endpoints');",
+                  "console.log('   - Gerente can access business data (products, orders, clients)');",
+                  "console.log('   - Empleados are denied access to sensitive data (403)');",
+                  "console.log('   - Only admin/gerente can see user management endpoints');",
+                  "console.log('');",
+                  "console.log('❌ Tests that INDICATE VULNERABILITIES:');",
+                  "console.log('   - Any endpoint returning 200 without authentication');",
+                  "console.log('   - Empleados getting 200 responses for restricted data');",
+                  "console.log('   - Missing permission checks (403 errors not returned when expected)');",
+                  "console.log('');",
+                  "console.log('🎯 EXPECTED PERMISSION MATRIX:');",
+                  "console.log('   Admin: Full access to all endpoints');",
+                  "console.log('   Gerente: Access to business data, no user management');",
+                  "console.log('   Empleado: Very limited access, mostly denied');",
+                  "console.log('');",
+                  "console.log('📋 If ANY test fails, there is a security vulnerability!');",
+                  "",
+                  "pm.test('Security audit completed', function () {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});",
+                  "",
+                  "// Clean up global variables",
+                  "pm.globals.unset('admin_token');",
+                  "pm.globals.unset('gerente_token');",
+                  "pm.globals.unset('empleado_token');"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url", 
+      "value": "https://provesi-alb-2003818714.us-east-1.elb.amazonaws.com",
+      "type": "string"
+    }
+  ]
+}

@@ -18,7 +18,7 @@ import os
 def generar_coleccion_limpieza():
     """Genera coleccion Postman para eliminar todos los datos."""
     
-    alb_url = "http://provesi-alb-135468775.us-east-1.elb.amazonaws.com"
+    alb_url = "https://provesi-alb-2003818714.us-east-1.elb.amazonaws.com"
     base_url = f"{alb_url}/inventario"
     
     requests = []

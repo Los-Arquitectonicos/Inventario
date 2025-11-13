@@ -18,7 +18,7 @@ from decimal import Decimal
 def generar_coleccion_completa():
     """Genera coleccion Postman con productos, bodegas y ubicaciones."""
 
-    alb_url = "http://provesi-alb-135468775.us-east-1.elb.amazonaws.com"
+    alb_url = "https://provesi-alb-2003818714.us-east-1.elb.amazonaws.com"
     base_url = f"{alb_url}/inventario"
     
     requests = []

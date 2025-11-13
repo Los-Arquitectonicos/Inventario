@@ -1162,6 +1162,9 @@ def api_pedido_total(request, pedido_id):
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=400)
 
+@csrf_exempt
+@jwt_required
+@require_permission('can_view_all_data')
 def api_listar_articulos(request):
     """
     API endpoint para listar todos los artículos del sistema.
@@ -1254,6 +1257,7 @@ def api_listar_articulos(request):
 
 @csrf_exempt
 @jwt_required
+@require_permission('can_view_all_data')
 def api_listar_productos(request):
     """
     API endpoint para listar todos los productos del sistema.
@@ -1322,6 +1326,15 @@ def api_listar_productos(request):
             return JsonResponse({'error': f'Error interno: {str(e)}'}, status=500)
     
     elif request.method == 'POST':
+        # Solo usuarios con permiso de gestionar inventario pueden crear productos
+        from inventario.auth_utils import has_permission
+        if not has_permission(request.user, 'can_manage_inventory'):
+            return JsonResponse({
+                'success': False,
+                'error': 'No tienes permiso para crear productos',
+                'code': 'PERMISSION_DENIED'
+            }, status=403)
+        
         try:
             # Obtener datos del request
             data = json.loads(request.body)
@@ -1372,6 +1385,9 @@ def api_listar_productos(request):
     else:
         return JsonResponse({'error': 'Método no permitido'}, status=405)
 
+@csrf_exempt
+@jwt_required
+@require_permission('can_view_all_data')
 def api_listar_bodegas(request):
     """
     API endpoint para listar todas las bodegas del sistema.
@@ -1417,6 +1433,9 @@ def api_listar_bodegas(request):
     except Exception as e:
         return JsonResponse({'error': f'Error interno: {str(e)}'}, status=500)
 
+@csrf_exempt
+@jwt_required
+@require_permission('can_view_all_data')
 def api_listar_ubicaciones(request):
     """
     API endpoint para listar todas las ubicaciones de bodega.
@@ -1477,6 +1496,9 @@ def api_listar_ubicaciones(request):
     except Exception as e:
         return JsonResponse({'error': f'Error interno: {str(e)}'}, status=500)
 
+@csrf_exempt
+@jwt_required
+@require_permission('can_view_all_data')
 def api_listar_clientes(request):
     """
     API endpoint para listar todos los clientes del sistema.
@@ -1527,8 +1549,9 @@ def api_listar_clientes(request):
     except Exception as e:
         return JsonResponse({'error': f'Error interno: {str(e)}'}, status=500)
 
-@require_roles('admin', 'gerente')
+@csrf_exempt
 @jwt_required
+@require_roles('admin', 'gerente')
 def api_listar_usuarios(request):
     """
     API endpoint para listar todos los usuarios del sistema.
@@ -1702,6 +1725,9 @@ def api_listar_pedidos(request):
     else:
         return JsonResponse({'error': 'Método no permitido'}, status=405)
 
+@csrf_exempt
+@jwt_required
+@require_permission('can_view_all_data')
 def api_listar_cotizaciones(request):
     """
     API endpoint para listar todas las cotizaciones del sistema.
@@ -1759,6 +1785,9 @@ def api_listar_cotizaciones(request):
     except Exception as e:
         return JsonResponse({'error': f'Error interno: {str(e)}'}, status=500)
 
+@csrf_exempt
+@jwt_required
+@require_permission('can_view_all_data')
 def api_listar_facturas(request):
     """
     API endpoint para listar todas las facturas del sistema.
