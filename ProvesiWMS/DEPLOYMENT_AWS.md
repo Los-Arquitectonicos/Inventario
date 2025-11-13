@@ -273,6 +273,24 @@ cd Inventario
 git checkout Sprint3V2
 ```
 
+### Error: "Permission denied: '/tmp/django.log'" o "Unable to configure handler 'file'"
+
+Si obtienes errores de permisos con logs de Django:
+
+```bash
+# El problema está en settings.py, se solucionó ya en el repositorio
+# Pero si persiste, puedes verificar:
+
+cd ~/Inventario/ProvesiWMS
+git pull origin Sprint3V2
+
+# O aplicar el fix manualmente editando wms/settings.py:
+# Cambiar LOGGING para usar solo 'console' handler, sin 'file'
+
+# Reintentar ejecutar Django
+python3 manage.py runserver 0.0.0.0:8000
+```
+
 Si obtienes este error al instalar paquetes con pip, es porque Ubuntu 24.04 protege el entorno Python del sistema. Soluciones:
 
 **Opción A: Usar --break-system-packages (Recomendado para AWS)**
