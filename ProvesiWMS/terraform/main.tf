@@ -286,7 +286,10 @@ resource "aws_instance" "app_server" {
   vpc_security_group_ids      = [aws_security_group.app.id]
   associate_public_ip_address = true
 
-  user_data = <<-EOT
+  user_data = templatefile("${path.module}/user_data_app.sh", {
+    SERVER_INDEX = count.index + 1
+    DATABASE_HOST_PLACEHOLDER = aws_instance.database.private_ip
+  })
               #!/bin/bash
               
               # Log de instalación
