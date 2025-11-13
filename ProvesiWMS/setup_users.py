@@ -7,12 +7,40 @@ Ejecutar después del deployment para crear usuarios admin.
 import os
 import sys
 import django
-from django.contrib.auth.models import User
-from django.core.management import call_command
+
+# Cargar variables de entorno desde /etc/environment si no están disponibles
+def load_environment_variables():
+    try:
+        with open('/etc/environment', 'r') as f:
+            for line in f:
+                if '=' in line and not line.startswith('#'):
+                    key, value = line.strip().split('=', 1)
+                    # Remover comillas si existen
+                    value = value.strip('"').strip("'")
+                    os.environ.setdefault(key, value)
+    except FileNotFoundError:
+        print("⚠️  /etc/environment no encontrado, usando variables actuales")
+
+# Cargar variables de entorno
+load_environment_variables()
+
+# Verificar variables críticas
+required_vars = ['DATABASE_HOST', 'DATABASE_NAME', 'DATABASE_USER', 'DATABASE_PASSWORD']
+missing_vars = [var for var in required_vars if not os.environ.get(var)]
+
+if missing_vars:
+    print(f"❌ Variables de entorno faltantes: {', '.join(missing_vars)}")
+    print("💡 Ejecuta: source /etc/environment")
+    sys.exit(1)
+
+print(f"✅ Conectando a base de datos en: {os.environ.get('DATABASE_HOST')}")
 
 # Configurar Django
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'wms.settings')
 django.setup()
+
+from django.contrib.auth.models import User
+from django.core.management import call_command
 
 from inventario.models import Usuario
 
