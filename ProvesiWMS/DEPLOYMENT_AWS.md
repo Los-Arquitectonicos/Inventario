@@ -63,25 +63,79 @@ Anota las IPs públicas de `app_server_1_public_ip` y `app_server_2_public_ip`.
 
 ### 5.3 Configurar Aplicación en el Servidor 1
 
+**Opción A: Script Automático (Recomendado)**
+
 ```bash
-# Ir al directorio de la aplicación
-cd /opt/apps/Inventario/ProvesiWMS
+# Descargar y ejecutar script de instalación automática
+curl -L https://raw.githubusercontent.com/Los-Arquitectonicos/Inventario/Sprint3V2/ProvesiWMS/install_provesi.sh | bash
+
+# Después de que termine, iniciar el servidor
+cd ~/Inventario/ProvesiWMS
+python3 manage.py runserver 0.0.0.0:8000
+```
+
+**Opción B: Instalación Manual**
+
+```bash
+# Primero instalar Django y dependencias
+sudo apt update
+sudo apt install -y python3-pip python3-dev libpq-dev
+
+# Instalar paquetes Python (manejar entorno externamente administrado)
+sudo pip3 install --break-system-packages django==4.2.24 psycopg2-binary djangorestframework djangorestframework-simplejwt django-cors-headers
+
+# Clonar repositorio si no existe
+cd ~
+git clone https://github.com/Los-Arquitectonicos/Inventario.git
+cd Inventario
+git checkout Sprint3V2
+cd ProvesiWMS
+
+# Cargar variables de entorno (si existen)
+source /etc/environment 2>/dev/null || echo "Variables de entorno no configuradas automáticamente"
+
+# Aplicar migraciones de la base de datos
+python3 manage.py migrate
 
 # Configurar usuarios iniciales (solo en el primer servidor)
 python3 setup_users.py
 
 # Iniciar servidor Django
-sudo python3 manage.py runserver 0.0.0.0:8080
+python3 manage.py runserver 0.0.0.0:8000
 ```
 
 ### 5.4 Configurar el Servidor 2
 
-```bash
-# Ir al directorio
-cd /opt/apps/Inventario/ProvesiWMS
+**Opción A: Script Automático (Recomendado)**
 
-# Iniciar servidor Django
-sudo python3 manage.py runserver 0.0.0.0:8080
+```bash
+# Descargar y ejecutar script de instalación (instancia secundaria)
+curl -L https://raw.githubusercontent.com/Los-Arquitectonicos/Inventario/Sprint3V2/ProvesiWMS/install_provesi.sh | bash -s false
+
+# Iniciar servidor
+cd ~/Inventario/ProvesiWMS  
+python3 manage.py runserver 0.0.0.0:8000
+```
+
+**Opción B: Instalación Manual**
+
+```bash
+# Instalar Django y dependencias
+sudo apt update
+sudo pip3 install --break-system-packages django==4.2.24 psycopg2-binary djangorestframework djangorestframework-simplejwt django-cors-headers
+
+# Clonar repositorio si no existe
+cd ~
+git clone https://github.com/Los-Arquitectonicos/Inventario.git
+cd Inventario
+git checkout Sprint3V2
+cd ProvesiWMS
+
+# Cargar variables de entorno
+source /etc/environment 2>/dev/null || echo "Variables de entorno no configuradas automáticamente"
+
+# Iniciar servidor Django (NO ejecutar migraciones ni setup_users en el segundo servidor)
+python3 manage.py runserver 0.0.0.0:8000
 ```
 
 ## Paso 6: Probar la Aplicación
@@ -125,14 +179,83 @@ ps aux | grep manage.py
 tail -f /var/log/django/app.log
 ```
 
+### Reinstalar Django y Dependencias
+
+```bash
+# Si encuentras errores de módulos no encontrados, instala todo manualmente
+sudo apt update
+sudo apt install -y python3-pip python3-dev libpq-dev build-essential postgresql-client
+sudo pip3 install --break-system-packages django==4.2.24 psycopg2-binary djangorestframework djangorestframework-simplejwt django-cors-headers
+
+# Verificar instalación
+python3 -c "import django; print('Django version:', django.get_version())"
+```
+
+### Reinstalar Django y Dependencias
+
+```bash
+# Si encuentras errores de módulos no encontrados, instala todo manualmente
+sudo apt update
+sudo apt install -y python3-pip python3-dev libpq-dev build-essential postgresql-client
+sudo pip3 install django==4.2.24 psycopg2-binary djangorestframework djangorestframework-simplejwt django-cors-headers
+
+# Verificar instalación
+python3 -c "import django; print('Django version:', django.get_version())"
+```
+
 ### Reiniciar Servidor Django
 
 ```bash
 # Detener servidor actual
-sudo pkill -f "manage.py runserver"
+sudo pkill -f "manage.py runserver" || pkill -f "python3.*runserver"
 
-# Iniciar nuevamente
-sudo python3 manage.py runserver 0.0.0.0:8080
+# Verificar que Django está instalado
+python3 -c "import django; print('Django OK')" || sudo pip3 install --break-system-packages django==4.2.24 psycopg2-binary
+
+# Ir al directorio correcto
+cd ~/Inventario/ProvesiWMS
+
+# Cargar variables de entorno si existen
+source /etc/environment 2>/dev/null || echo "Configurar variables manualmente"
+
+# Iniciar servidor
+python3 manage.py runserver 0.0.0.0:8080
+```
+
+### Configuración Completa Manual (si falló el script automático)
+
+```bash
+# 1. Clonar repositorio si no existe
+cd ~
+if [ ! -d "Inventario" ]; then
+    git clone https://github.com/Los-Arquitectonicos/Inventario.git
+fi
+cd Inventario
+git checkout Sprint3V2
+
+# 2. Instalar dependencias
+sudo apt update
+sudo apt install -y python3-pip python3-dev libpq-dev build-essential postgresql-client
+sudo pip3 install --break-system-packages django==4.2.24 psycopg2-binary djangorestframework djangorestframework-simplejwt django-cors-headers
+
+# 3. Obtener IP de base de datos (desde CloudShell)
+# terraform output database_private_ip
+
+# 4. Configurar variables de entorno (reemplaza IP_DE_TU_BD con la IP real)
+export DATABASE_HOST="IP_DE_TU_BD"  # Ejemplo: 172.31.45.123
+export DATABASE_NAME="provesi_wms"
+export DATABASE_USER="provesi_user" 
+export DATABASE_PASSWORD="provesi_password_2024"
+export SECRET_KEY="django-insecure-test-key-2024"
+export DEBUG="True"
+
+# 5. Aplicar configuración (solo en el primer servidor)
+cd ProvesiWMS
+python3 manage.py migrate
+python3 setup_users.py
+
+# 6. Iniciar servidor
+python3 manage.py runserver 0.0.0.0:8080
 ```
 
 ### Verificar Variables de Entorno
@@ -164,6 +287,87 @@ Escribe **"yes"** para confirmar.
 - **Total**: ~$113/mes
 
 ## Troubleshooting
+
+### Error: "externally-managed-environment"
+
+Si obtienes este error al instalar paquetes con pip, es porque Ubuntu 24.04 protege el entorno Python del sistema. Soluciones:
+
+**Opción A: Usar --break-system-packages (Recomendado para AWS)**
+
+```bash
+sudo pip3 install --break-system-packages django==4.2.24 psycopg2-binary djangorestframework djangorestframework-simplejwt django-cors-headers
+```
+
+**Opción B: Usar entorno virtual**
+
+```bash
+# Crear entorno virtual
+python3 -m venv ~/venv-provesi
+source ~/venv-provesi/bin/activate
+
+# Instalar dependencias en el entorno virtual
+pip install django==4.2.24 psycopg2-binary djangorestframework djangorestframework-simplejwt django-cors-headers
+
+# Recordar activar el entorno cada vez que uses Django
+source ~/venv-provesi/bin/activate
+cd ~/Inventario/ProvesiWMS
+python manage.py runserver 0.0.0.0:8000
+```
+
+### Error: "No module named 'django'"
+
+Si obtienes este error, significa que Django no se instaló automáticamente. Solución:
+
+```bash
+# Instalar Django y todas las dependencias necesarias
+sudo apt update
+sudo apt install -y python3-pip python3-dev libpq-dev build-essential
+sudo pip3 install django==4.2.24 psycopg2-binary djangorestframework djangorestframework-simplejwt django-cors-headers
+
+# Verificar que Django se instaló correctamente
+python3 -c "import django; print('Django version:', django.get_version())"
+
+# Si todo está bien, continuar con la configuración
+cd ~/Inventario/ProvesiWMS
+python3 manage.py migrate
+python3 setup_users.py
+python3 manage.py runserver 0.0.0.0:8080
+```
+
+### Error: Repositorio no clonado
+
+Si no existe el directorio `~/Inventario`, clónalo manualmente:
+
+```bash
+cd ~
+git clone https://github.com/Los-Arquitectonicos/Inventario.git
+cd Inventario
+git checkout Sprint3V2
+cd ProvesiWMS
+```
+
+### Error: Variables de entorno no configuradas
+
+Si las variables de base de datos no están configuradas automáticamente, configúralas manualmente:
+
+```bash
+# Configurar variables de entorno temporalmente
+export DATABASE_HOST="ip-de-tu-base-de-datos"
+export DATABASE_NAME="provesi_wms"
+export DATABASE_USER="provesi_user"
+export DATABASE_PASSWORD="provesi_password_2024"
+export SECRET_KEY="tu-secret-key-aqui"
+export DEBUG="True"
+
+# Para hacerlas permanentes
+echo 'export DATABASE_HOST="ip-de-tu-base-de-datos"' >> ~/.bashrc
+echo 'export DATABASE_NAME="provesi_wms"' >> ~/.bashrc
+echo 'export DATABASE_USER="provesi_user"' >> ~/.bashrc
+echo 'export DATABASE_PASSWORD="provesi_password_2024"' >> ~/.bashrc
+echo 'export SECRET_KEY="django-insecure-test-key-2024"' >> ~/.bashrc
+echo 'export DEBUG="True"' >> ~/.bashrc
+source ~/.bashrc
+```
 
 ### Error: No se puede conectar desde EC2 Console
 1. **Verifica** que la instancia esté en estado "running"
