@@ -22,11 +22,6 @@ provider "tls" {
   # Configuration for generating self-signed certificates
 }
 
-# Provider para crear certificados SSL autofirmados
-provider "tls" {
-  # Configuration for generating self-signed certificates
-}
-
 locals {
   project_name = "${var.project_prefix}-wms"
   repository   = "https://github.com/Los-Arquitectonicos/Inventario.git"
