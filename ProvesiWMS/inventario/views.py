@@ -3,6 +3,7 @@ from django.http import HttpResponse, JsonResponse
 from django.views.generic import ListView, DetailView, CreateView, UpdateView
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.csrf import csrf_exempt
 from django.db.models import Q, Sum, F
 from django.utils import timezone
 from decimal import Decimal
@@ -1251,70 +1252,125 @@ def api_listar_articulos(request):
 # APIs PARA LISTAR TODOS LOS MODELOS
 # =========================
 
+@csrf_exempt
+@jwt_required
 def api_listar_productos(request):
     """
     API endpoint para listar todos los productos del sistema.
-    Incluye paginación y filtros opcionales.
+    GET: Incluye paginación y filtros opcionales.
+    POST: Crear nuevo producto.
     """
-    try:
-        # Parámetros de consulta
-        limit = int(request.GET.get('limit', 100))
-        offset = int(request.GET.get('offset', 0))
-        marca = request.GET.get('marca')
-        precio_min = request.GET.get('precio_min')
-        precio_max = request.GET.get('precio_max')
-        sin_stock = request.GET.get('sin_stock', '').lower() == 'true'
-        
-        # Construir queryset
-        queryset = Producto.objects.all()
-        
-        # Aplicar filtros
-        if marca:
-            queryset = queryset.filter(marca__icontains=marca)
-        if precio_min:
-            queryset = queryset.filter(precio_venta__gte=float(precio_min))
-        if precio_max:
-            queryset = queryset.filter(precio_venta__lte=float(precio_max))
-        if sin_stock:
-            queryset = queryset.filter(cantidad_stock=0)
-        
-        total_count = queryset.count()
-        productos = queryset[offset:offset + limit]
-        
-        productos_data = []
-        for producto in productos:
-            producto_info = {
-                'id': producto.pk,
-                'nombre': producto.nombre,
-                'descripcion': producto.descripcion,
-                'marca': producto.marca,
-                'precio_costo': float(producto.precio_costo),
-                'precio_venta': float(producto.precio_venta),
-                'cantidad_stock': producto.cantidad_stock,
-                'peso': float(producto.peso),
-                'dimensiones': producto.dimensiones,
-                'color': producto.color,
-                'talla': producto.talla,
-                'margen_ganancia': float(producto.calcular_margen_ganancia()),
-                'hay_stock': producto.hay_stock()
-            }
-            productos_data.append(producto_info)
-        
-        return JsonResponse({
-            'success': True,
-            'count': len(productos_data),
-            'total': total_count,
-            'offset': offset,
-            'limit': limit,
-            'has_next': (offset + limit) < total_count,
-            'has_previous': offset > 0,
-            'productos': productos_data
-        })
-        
-    except ValueError as e:
-        return JsonResponse({'error': f'Parámetros inválidos: {str(e)}'}, status=400)
-    except Exception as e:
-        return JsonResponse({'error': f'Error interno: {str(e)}'}, status=500)
+    if request.method == 'GET':
+        try:
+            # Parámetros de consulta
+            limit = int(request.GET.get('limit', 100))
+            offset = int(request.GET.get('offset', 0))
+            marca = request.GET.get('marca')
+            precio_min = request.GET.get('precio_min')
+            precio_max = request.GET.get('precio_max')
+            sin_stock = request.GET.get('sin_stock', '').lower() == 'true'
+            
+            # Construir queryset
+            queryset = Producto.objects.all()
+            
+            # Aplicar filtros
+            if marca:
+                queryset = queryset.filter(marca__icontains=marca)
+            if precio_min:
+                queryset = queryset.filter(precio_venta__gte=float(precio_min))
+            if precio_max:
+                queryset = queryset.filter(precio_venta__lte=float(precio_max))
+            if sin_stock:
+                queryset = queryset.filter(cantidad_stock=0)
+            
+            total_count = queryset.count()
+            productos = queryset[offset:offset + limit]
+            
+            productos_data = []
+            for producto in productos:
+                producto_info = {
+                    'id': producto.pk,
+                    'nombre': producto.nombre,
+                    'descripcion': producto.descripcion,
+                    'marca': producto.marca,
+                    'precio_costo': float(producto.precio_costo),
+                    'precio_venta': float(producto.precio_venta),
+                    'cantidad_stock': producto.cantidad_stock,
+                    'peso': float(producto.peso),
+                    'dimensiones': producto.dimensiones,
+                    'color': producto.color,
+                    'talla': producto.talla,
+                    'margen_ganancia': float(producto.calcular_margen_ganancia()),
+                    'hay_stock': producto.hay_stock()
+                }
+                productos_data.append(producto_info)
+            
+            return JsonResponse({
+                'success': True,
+                'count': len(productos_data),
+                'total': total_count,
+                'offset': offset,
+                'limit': limit,
+                'has_next': (offset + limit) < total_count,
+                'has_previous': offset > 0,
+                'productos': productos_data
+            })
+            
+        except ValueError as e:
+            return JsonResponse({'error': f'Parámetros inválidos: {str(e)}'}, status=400)
+        except Exception as e:
+            return JsonResponse({'error': f'Error interno: {str(e)}'}, status=500)
+    
+    elif request.method == 'POST':
+        try:
+            # Obtener datos del request
+            data = json.loads(request.body)
+            
+            # Validar campos requeridos
+            required_fields = ['nombre', 'sku', 'precio']
+            missing_fields = [field for field in required_fields if not data.get(field)]
+            
+            if missing_fields:
+                return JsonResponse({
+                    'error': f'Campos requeridos faltantes: {", ".join(missing_fields)}'
+                }, status=400)
+            
+            # Crear el producto
+            producto = Producto.objects.create(
+                nombre=data['nombre'],
+                marca=data.get('marca', ''),
+                descripcion=data.get('descripcion', ''),
+                precio_costo=Decimal(str(data.get('precio_costo', data['precio']))),
+                precio_venta=Decimal(str(data['precio'])),
+                cantidad_stock=data.get('stock', 0),
+                peso=Decimal(str(data.get('peso', '0.0'))),
+                dimensiones=data.get('dimensiones', ''),
+                color=data.get('color', ''),
+                talla=data.get('talla', ''),
+            )
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Producto creado exitosamente',
+                'producto': {
+                    'id': producto.pk,
+                    'nombre': producto.nombre,
+                    'marca': producto.marca,
+                    'precio_venta': float(producto.precio_venta),
+                    'cantidad_stock': producto.cantidad_stock,
+                    'descripcion': producto.descripcion
+                }
+            }, status=201)
+            
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'JSON inválido'}, status=400)
+        except ValueError as e:
+            return JsonResponse({'error': f'Valores inválidos: {str(e)}'}, status=400)
+        except Exception as e:
+            return JsonResponse({'error': f'Error interno: {str(e)}'}, status=500)
+    
+    else:
+        return JsonResponse({'error': 'Método no permitido'}, status=405)
 
 def api_listar_bodegas(request):
     """
