@@ -213,27 +213,15 @@ LOGGING = {
             'class': 'logging.StreamHandler',
             'formatter': 'verbose',
         },
-        'file': {
-            'level': 'INFO',
-            'class': 'logging.FileHandler',
-            'filename': '/tmp/django.log',
-            'formatter': 'verbose',
-        },
-        'security': {
-            'level': 'WARNING',
-            'class': 'logging.FileHandler',
-            'filename': '/tmp/django-security.log',
-            'formatter': 'verbose',
-        },
     },
     'loggers': {
         'django.security': {
-            'handlers': ['security', 'console'],
+            'handlers': ['console'],
             'level': 'WARNING',
             'propagate': False,
         },
         'inventario': {
-            'handlers': ['console', 'file'],
+            'handlers': ['console'],
             'level': 'INFO',
             'propagate': False,
         },
