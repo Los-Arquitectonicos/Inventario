@@ -45,15 +45,9 @@ terraform output
 
 Anota las IPs públicas de `app_server_1_public_ip` y `app_server_2_public_ip`.
 
-## Paso 5: Configurar Servidores desde la Consola EC2
+## Paso 5: Iniciar Django en los Servidores
 
-### 5.1 Acceder a la Consola EC2
-
-1. **Ve a EC2** en AWS Console: https://console.aws.amazon.com/ec2/
-2. **Haz clic** en "Instances" en el menú lateral
-3. **Busca las instancias** con nombres `provesi-app-server-1` y `provesi-app-server-2`
-
-### 5.2 Conectar a la Primera Instancia
+### 5.1 Acceder a la Primera Instancia
 
 1. **Selecciona** `provesi-app-server-1`
 2. **Haz clic** en "Connect" (botón superior)
@@ -61,36 +55,39 @@ Anota las IPs públicas de `app_server_1_public_ip` y `app_server_2_public_ip`.
 4. **Deja** el username como `ubuntu`
 5. **Haz clic** en "Connect"
 
-### 5.3 Configurar Aplicación en el Servidor 1
-
-**Django se configura automáticamente durante el despliegue de Terraform y se ejecuta como servicio systemd.**
+### 5.2 Iniciar Django en el Servidor 1
 
 ```bash
-# Verificar que Django está funcionando
-./check-status.sh
+# Ir al directorio de la aplicación
+cd ~/Inventario/ProvesiWMS
 
-# Ver logs en tiempo real
-./logs-django.sh
+# Verificar variables de entorno
+echo $DATABASE_HOST
+echo $DATABASE_NAME
 
-# Gestionar el servicio
-./restart-django.sh  # Reiniciar
-./stop-django.sh     # Detener  
-./start-django.sh    # Iniciar
-./help-django.sh     # Ver ayuda completa
+# Iniciar servidor Django
+python3 manage.py runserver 0.0.0.0:8000
 ```
 
-**⚠️ IMPORTANTE**: NO ejecutes `python3 manage.py runserver` manualmente. Django ya está corriendo como servicio automático.
+### 5.3 Iniciar Django en el Servidor 2
 
-### 5.4 Configurar el Servidor 2
-
-**El segundo servidor también se configura automáticamente.** Solo verifica que esté funcionando:
+**Repite el proceso** para `provesi-app-server-2`:
 
 ```bash
-# En el Servidor 2, verificar estado
-./check-status.sh
+# Ir al directorio de la aplicación
+cd ~/Inventario/ProvesiWMS
 
-# Si necesitas gestionar el servicio
-./restart-django.sh
+# Iniciar servidor Django (NO hacer migraciones en el segundo servidor)
+python3 manage.py runserver 0.0.0.0:8000
+```
+
+### 5.4 Verificar que Django Está Funcionando
+
+```bash
+# En cada servidor, verificar que Django responde
+curl http://localhost:8000/inventario/
+
+# Debería mostrar la página principal de Django
 ```
 
 ## Paso 6: Probar la Aplicación
@@ -122,16 +119,19 @@ Body: {"username": "admin", "password": "admin123"}
 GET /inventario/
 ```
 
-## Comandos Útiles para la Consola EC2
-
-### Verificar Estado del Servidor
+### Error: Django no responde
 
 ```bash
-# Ver si el servidor Django está corriendo
+# Verificar que Django está corriendo
 ps aux | grep manage.py
 
-# Ver logs de la aplicación
-tail -f /var/log/django/app.log
+# Si no está corriendo, iniciarlo
+cd ~/Inventario/ProvesiWMS
+python3 manage.py runserver 0.0.0.0:8000
+
+# Verificar variables de entorno si hay errores
+echo $DATABASE_HOST
+echo $DATABASE_NAME
 ```
 
 ### Reinstalar Django y Dependencias
@@ -441,49 +441,37 @@ env | grep DATABASE
 
 ---
 
-**¡Listo!** Tu aplicación ProvesiWMS está corriendo en AWS con autenticación JWT y **gestión automática permanente** mediante systemd.
+**¡Listo!** Tu aplicación ProvesiWMS está corriendo en AWS con autenticación JWT.
 
-## 🔧 Solución Permanente Implementada
+## 🔧 Proceso Simple Implementado
 
-### ✅ Django como Servicio Automático
-- Django se **inicia automáticamente** al reiniciar el servidor
-- **Puerto 8000** reservado para el servicio systemd  
-- **NO necesitas** ejecutar `python3 manage.py runserver` manualmente
-- **Reinicio automático** en caso de fallos
+### ✅ Configuración Automática
+- **Terraform** instala Django y todas las dependencias
+- **Variables de entorno** preconfiguradas automáticamente
+- **Migraciones** aplicadas en el primer servidor
+- **Base de datos** lista para usar
 
-### ✅ Scripts de Gestión Incluidos
-Cada servidor tiene scripts preinstalados para gestión fácil:
-
+### ✅ Inicio Manual Simple
 ```bash
-./check-status.sh    # Estado completo del sistema
-./restart-django.sh  # Reiniciar Django
-./stop-django.sh     # Detener Django
-./start-django.sh    # Iniciar Django  
-./logs-django.sh     # Ver logs en tiempo real
-./help-django.sh     # Ayuda completa
+# En cada servidor
+cd ~/Inventario/ProvesiWMS
+python3 manage.py runserver 0.0.0.0:8000
 ```
 
-### ✅ Configuración Robusta
-- **Reinicio automático** si Django falla
-- **Variables de entorno** preconfiguradas
-- **Base de datos** conectada automáticamente
-- **Load Balancer** configurado en puerto 80
-- **Logs centralizados** con systemd
-
-### ✅ Acceso Correcto
+### ✅ Acceso a la Aplicación
 - **Load Balancer URL**: `terraform output alb_url`
 - **Puerto externo**: 80 (HTTP)
-- **Puerto interno**: 8000 (reservado para systemd)
-- **Nunca acceder directamente** al puerto 8000 desde fuera
+- **Puerto interno**: 8000 (Django development server)
 
-### ✅ Monitoreo y Troubleshooting
+### ✅ Gestión Simple
 ```bash
-# Ver estado
-sudo systemctl status provesi-wms
+# Detener Django
+sudo pkill -f "manage.py runserver"
 
-# Ver logs en tiempo real  
-sudo journalctl -u provesi-wms -f
+# Iniciar Django
+cd ~/Inventario/ProvesiWMS
+python3 manage.py runserver 0.0.0.0:8000
 
-# Verificar conectividad
-curl http://localhost:8000/inventario/
+# Verificar estado
+ps aux | grep manage.py
 ```
