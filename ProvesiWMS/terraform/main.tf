@@ -262,7 +262,22 @@ resource "aws_instance" "app_server" {
               sudo apt-get upgrade -y
               sudo apt-get install -y python3-pip python3-venv git build-essential libpq-dev python3-dev postgresql-client
               
-              # Clonar repositorio
+              # Instalar Django y dependencias globalmente para evitar problemas de entorno virtual
+              sudo pip3 install --break-system-packages django==4.2.24 psycopg2-binary djangorestframework djangorestframework-simplejwt django-cors-headers gunicorn
+              
+              # Clonar repositorio en directorio del usuario también
+              sudo -u ubuntu mkdir -p /home/ubuntu
+              cd /home/ubuntu
+              
+              sudo -u ubuntu git clone ${local.repository}
+              cd Inventario
+              sudo -u ubuntu git fetch origin ${local.branch}
+              sudo -u ubuntu git checkout ${local.branch}
+              
+              # Cambiar ownership del directorio al usuario ubuntu
+              chown -R ubuntu:ubuntu /home/ubuntu/Inventario
+              
+              # También mantener copia en /opt/apps para compatibilidad
               mkdir -p /opt/apps
               cd /opt/apps
               

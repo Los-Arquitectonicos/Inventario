@@ -61,9 +61,12 @@ Anota las IPs públicas de `app_server_1_public_ip` y `app_server_2_public_ip`.
 # Ir al directorio de la aplicación
 cd ~/Inventario/ProvesiWMS
 
+# Verificar que Django está instalado
+python3 -c "import django; print('Django version:', django.get_version())"
+
 # Verificar variables de entorno
-echo $DATABASE_HOST
-echo $DATABASE_NAME
+echo "DATABASE_HOST: $DATABASE_HOST"
+echo "DATABASE_NAME: $DATABASE_NAME"
 
 # Iniciar servidor Django
 python3 manage.py runserver 0.0.0.0:8000
@@ -76,6 +79,9 @@ python3 manage.py runserver 0.0.0.0:8000
 ```bash
 # Ir al directorio de la aplicación
 cd ~/Inventario/ProvesiWMS
+
+# Verificar que Django está instalado
+python3 -c "import django; print('Django version:', django.get_version())"
 
 # Iniciar servidor Django (NO hacer migraciones en el segundo servidor)
 python3 manage.py runserver 0.0.0.0:8000
@@ -243,7 +249,29 @@ Escribe **"yes"** para confirmar.
 
 ## Troubleshooting
 
-### Error: "externally-managed-environment"
+### Error: "No module named 'django'"
+
+Si obtienes este error, significa que Django no se instaló correctamente en la instancia:
+
+```bash
+# Verificar si Django está instalado
+python3 -c "import django; print('Django OK')" 2>/dev/null || echo "Django NO instalado"
+
+# Si Django no está instalado, instalarlo manualmente
+sudo pip3 install --break-system-packages django==4.2.24 psycopg2-binary djangorestframework djangorestframework-simplejwt django-cors-headers
+
+# Verificar instalación
+python3 -c "import django; print('Django version:', django.get_version())"
+
+# Verificar que el repositorio está clonado
+ls ~/Inventario/ProvesiWMS/
+
+# Si no existe, clonarlo manualmente
+cd ~
+git clone https://github.com/Los-Arquitectonicos/Inventario.git
+cd Inventario
+git checkout Sprint3V2
+```
 
 Si obtienes este error al instalar paquetes con pip, es porque Ubuntu 24.04 protege el entorno Python del sistema. Soluciones:
 
