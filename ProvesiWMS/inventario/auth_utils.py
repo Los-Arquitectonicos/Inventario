@@ -4,10 +4,13 @@ Proporciona control de acceso basado en roles y autenticación JWT.
 """
 
 import logging
+import jwt
 from functools import wraps
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
 from django.core.exceptions import PermissionDenied
+from django.conf import settings
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -245,7 +248,7 @@ def api_require_roles(*allowed_roles):
 
 def jwt_required(view_func):
     """
-    Decorador simple que requiere autenticación JWT.
+    Decorador que requiere autenticación JWT válida.
     
     Usage:
         @jwt_required
@@ -254,12 +257,61 @@ def jwt_required(view_func):
     """
     @wraps(view_func)
     def wrapper(request, *args, **kwargs):
-        if not request.user.is_authenticated:
+        # Obtener el token del header Authorization
+        auth_header = request.headers.get('Authorization')
+        if not auth_header:
             return JsonResponse({
                 'success': False,
                 'error': 'Token JWT requerido',
                 'code': 'JWT_REQUIRED'
             }, status=401)
+        
+        # Extraer el token del header "Bearer <token>"
+        try:
+            token = auth_header.split(' ')[1] if auth_header.startswith('Bearer ') else auth_header
+        except IndexError:
+            return JsonResponse({
+                'success': False,
+                'error': 'Formato de token inválido',
+                'code': 'INVALID_TOKEN_FORMAT'
+            }, status=401)
+        
+        # Validar el token JWT
+        try:
+            # Decodificar el token usando la SECRET_KEY de Django
+            payload = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
+            user_id = payload.get('user_id')
+            
+            if not user_id:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Token JWT inválido',
+                    'code': 'INVALID_TOKEN'
+                }, status=401)
+            
+            # Obtener el usuario
+            user = User.objects.get(id=user_id)
+            request.user = user
+            
+        except jwt.ExpiredSignatureError:
+            return JsonResponse({
+                'success': False,
+                'error': 'Token JWT expirado',
+                'code': 'TOKEN_EXPIRED'
+            }, status=401)
+        except jwt.InvalidTokenError:
+            return JsonResponse({
+                'success': False,
+                'error': 'Token JWT inválido',
+                'code': 'INVALID_TOKEN'
+            }, status=401)
+        except User.DoesNotExist:
+            return JsonResponse({
+                'success': False,
+                'error': 'Usuario no encontrado',
+                'code': 'USER_NOT_FOUND'
+            }, status=401)
+        
         return view_func(request, *args, **kwargs)
     return wrapper
 
