@@ -1,0 +1,34 @@
+[INFO] [MAIN] Iniciando análisis nivel Wireshark...
+[INFO] [SETUP] Verificando herramientas para análisis profundo...
+[INFO] [TOOLS] tshark no disponible - usando alternativas
+[WARNING] [TOOLS] nmap no disponible - escaneo limitado
+[ANALYSIS] [TLS] Analizando handshake TLS completo...
+[SUCCESS] [TLS] TLS 1.2 detectado - seguro
+[SUCCESS] [TLS] Perfect Forward Secrecy confirmado: New, TLSv1.2, Cipher is ECDHE-RSA-AES128-GCM-SHA256
+[SUCCESS] [TLS] Cadena de certificados capturada
+[INFO] [TLS] Validación:     Start Time: 1763078005
+    Timeout   : 7200 (sec)
+    Verify return code: 18 (self-signed certificate)
+    Extended master secret: yes
+---
+[ANALYSIS] [TRAFFIC] Iniciando captura de tráfico en tiempo real...
+[INFO] [TRAFFIC] Capturando 30 segundos de tráfico HTTPS...
+[WARNING] [TRAFFIC] No se pudieron capturar paquetes
+[ANALYSIS] [VULN] Escaneando vulnerabilidades de red...
+[INFO] [VULN] Probando ataques de downgrade TLS...
+[SUCCESS] [VULN] Protocolo inseguro ssl2 rechazado
+[SUCCESS] [VULN] Protocolo inseguro ssl3 rechazado
+[CRITICAL] [VULN] Protocolo inseguro tls1 aceptado
+[CRITICAL] [VULN] Protocolo inseguro tls1_1 aceptado
+[SUCCESS] [VULN] Cipher débil RC4 rechazado
+[SUCCESS] [VULN] Cipher débil DES rechazado
+[SUCCESS] [VULN] Cipher débil 3DES rechazado
+[CRITICAL] [VULN] Cipher débil MD5 aceptado
+[CRITICAL] [VULN] Cipher débil NULL aceptado
+[ANALYSIS] [METADATA] Analizando metadata y timing attacks...
+[INFO] [METADATA] Endpoint /inventario/ - Tiempo promedio: 1.907s
+[INFO] [METADATA] Endpoint /inventario/pedidos/ - Tiempo promedio: 1.379s
+[INFO] [METADATA] Endpoint /inventario/api/ - Tiempo promedio: .647s
+[ANALYSIS] [REPORT] Generando reporte estilo Wireshark...
+[SUCCESS] [REPORT] Reporte generado: ./wireshark_level_20251113_185324/wireshark_style_report.txt
+[SUCCESS] [MAIN] Análisis nivel Wireshark completado
