@@ -634,7 +634,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"cliente_id\": {{test_cliente_id}},\n  \"estado\": \"pendiente\",\n  \"observaciones\": \"Pedido creado con autorización válida\"\n}"
+							"raw": "{\n  \"cliente_id\": {{test_cliente_id}},\n  \"estado\": \"pendiente\"\n}"
 						},
 						"url": {
 							"raw": "{{base_url}}/inventario/api/pedidos/",
@@ -701,7 +701,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"cliente_id\": {{test_cliente_id}},\n  \"estado\": \"en_proceso\",\n  \"observaciones\": \"Estado actualizado por administrador autorizado\"\n}"
+							"raw": "{\n  \"cliente_id\": {{test_cliente_id}},\n  \"estado\": \"preparando\"\n}"
 						},
 						"url": {
 							"raw": "{{base_url}}/inventario/api/pedidos/{{nuevo_pedido_id}}/",
@@ -720,18 +720,18 @@
 					"response": []
 				},
 				{
-					"name": "Autorizado: PATCH Actualizar Observaciones",
+					"name": "Autorizado: PUT Actualizar Cliente",
 					"event": [
 						{
 							"listen": "test",
 							"script": {
 								"exec": [
-									"pm.test('AUTORIZADO: PUT modificar observaciones EXITOSO', function () {",
+									"pm.test('AUTORIZADO: PUT modificar cliente EXITOSO', function () {",
 									"    pm.expect([200, 201]).to.include(pm.response.code);",
 									"});",
 									"",
 									"if (pm.response.code === 200 || pm.response.code === 201) {",
-									"    console.log('✅ AUTORIZADO: Observaciones actualizadas exitosamente');",
+									"    console.log('✅ AUTORIZADO: Cliente actualizado exitosamente');",
 									"    console.log('   Operación PUT con token admin EXITOSA');",
 									"    console.log('   Confirma que las modificaciones funcionan');",
 									"} else {",
@@ -757,7 +757,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"observaciones\": \"Actualizado por administrador - Token válido confirmado\"\n}"
+							"raw": "{\n  \"cliente_id\": {{test_cliente_id}}\n}"
 						},
 						"url": {
 							"raw": "{{base_url}}/inventario/api/pedidos/{{nuevo_pedido_id}}/",
@@ -795,7 +795,7 @@
 									"                console.log('✅ VERIFICACIÓN: Modificaciones confirmadas');",
 									"                console.log('   ID del pedido:', pedido.id);",
 									"                console.log('   Estado actual:', pedido.estado);",
-									"                console.log('   Observaciones:', pedido.observaciones || 'Sin observaciones');",
+									"                console.log('   Cliente ID:', pedido.cliente_id);",
 									"                console.log('');",
 									"                console.log('🔐 AUTORIZACIÓN FUNCIONAL:');",
 									"                console.log('   ✅ Token válido permite crear pedidos');",
@@ -885,7 +885,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"cliente_id\": {{test_cliente_id}},\n  \"estado\": \"completado\",\n  \"observaciones\": \"Pedido completado - Autorización validada exitosamente\"\n}"
+							"raw": "{\n  \"cliente_id\": {{test_cliente_id}},\n  \"estado\": \"entregado\"\n}"
 						},
 						"url": {
 							"raw": "{{base_url}}/inventario/api/pedidos/{{nuevo_pedido_id}}/",
@@ -1003,7 +1003,7 @@
 									"console.log('3. OPERACIONES AUTORIZADAS:');",
 									"console.log('   CREAR pedidos: ✅ FUNCIONA CON TOKEN VÁLIDO');",
 									"console.log('   MODIFICAR estado: ✅ FUNCIONA CON TOKEN VÁLIDO');",
-									"console.log('   ACTUALIZAR observaciones: ✅ FUNCIONA CON TOKEN VÁLIDO');",
+									"console.log('   ACTUALIZAR cliente: ✅ FUNCIONA CON TOKEN VÁLIDO');",
 									"console.log('   VERIFICAR cambios: ✅ PERSISTEN CORRECTAMENTE');",
 									"console.log('');",
 									"console.log('4. ESTADO FINAL DEL SISTEMA:');",
