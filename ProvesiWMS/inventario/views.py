@@ -1497,57 +1497,114 @@ def api_listar_ubicaciones(request):
         return JsonResponse({'error': f'Error interno: {str(e)}'}, status=500)
 
 @csrf_exempt
+@csrf_exempt
 @jwt_required
-@require_permission('can_view_all_data')
 def api_listar_clientes(request):
     """
-    API endpoint para listar todos los clientes del sistema.
+    API endpoint para listar todos los clientes del sistema (GET) y crear nuevos clientes (POST).
     """
-    try:
-        limit = int(request.GET.get('limit', 100))
-        offset = int(request.GET.get('offset', 0))
-        ciudad = request.GET.get('ciudad')
-        email = request.GET.get('email')
-        
-        queryset = Cliente.objects.all()
-        
-        if ciudad:
-            queryset = queryset.filter(ciudad__icontains=ciudad)
-        if email:
-            queryset = queryset.filter(email__icontains=email)
-        
-        total_count = queryset.count()
-        clientes = queryset[offset:offset + limit]
-        
-        clientes_data = []
-        for cliente in clientes:
-            cliente_info = {
-                'id': cliente.pk,
-                'nombre': cliente.nombre,
-                'email': cliente.email,
-                'telefono': cliente.telefono,
-                'direccion': cliente.direccion,
-                'ciudad': cliente.ciudad,
-                'total_pedidos': Pedido.objects.filter(cliente=cliente).count(),
-                'pedidos_pendientes': Pedido.objects.filter(cliente=cliente, estado='pendiente').count()
-            }
-            clientes_data.append(cliente_info)
-        
-        return JsonResponse({
-            'success': True,
-            'count': len(clientes_data),
-            'total': total_count,
-            'offset': offset,
-            'limit': limit,
-            'has_next': (offset + limit) < total_count,
-            'has_previous': offset > 0,
-            'clientes': clientes_data
-        })
-        
-    except ValueError as e:
-        return JsonResponse({'error': f'Parámetros inválidos: {str(e)}'}, status=400)
-    except Exception as e:
-        return JsonResponse({'error': f'Error interno: {str(e)}'}, status=500)
+    if request.method == 'GET':
+        try:
+            # Verificar permisos para listar
+            from .auth_utils import has_permission
+            if not has_permission(request.user, 'can_view_all_data'):
+                return JsonResponse({'error': 'Sin permisos para ver clientes'}, status=403)
+            
+            limit = int(request.GET.get('limit', 100))
+            offset = int(request.GET.get('offset', 0))
+            ciudad = request.GET.get('ciudad')
+            email = request.GET.get('email')
+            
+            queryset = Cliente.objects.all()
+            
+            if ciudad:
+                queryset = queryset.filter(ciudad__icontains=ciudad)
+            if email:
+                queryset = queryset.filter(email__icontains=email)
+            
+            total_count = queryset.count()
+            clientes = queryset[offset:offset + limit]
+            
+            clientes_data = []
+            for cliente in clientes:
+                cliente_info = {
+                    'id': cliente.pk,
+                    'nombre': cliente.nombre,
+                    'email': cliente.email,
+                    'telefono': cliente.telefono,
+                    'direccion': cliente.direccion,
+                    'ciudad': cliente.ciudad,
+                    'total_pedidos': Pedido.objects.filter(cliente=cliente).count(),
+                    'pedidos_pendientes': Pedido.objects.filter(cliente=cliente, estado='pendiente').count()
+                }
+                clientes_data.append(cliente_info)
+            
+            return JsonResponse({
+                'success': True,
+                'count': len(clientes_data),
+                'total': total_count,
+                'offset': offset,
+                'limit': limit,
+                'has_next': (offset + limit) < total_count,
+                'has_previous': offset > 0,
+                'clientes': clientes_data
+            })
+            
+        except ValueError as e:
+            return JsonResponse({'error': f'Parámetros inválidos: {str(e)}'}, status=400)
+        except Exception as e:
+            return JsonResponse({'error': f'Error interno: {str(e)}'}, status=500)
+    
+    elif request.method == 'POST':
+        import json
+        try:
+            # Verificar permisos para crear
+            from .auth_utils import get_user_role
+            user_role = get_user_role(request.user)
+            if user_role not in ['admin', 'gerente']:
+                return JsonResponse({'error': 'Sin permisos para crear clientes'}, status=403)
+            
+            data = json.loads(request.body)
+            
+            # Validar campos requeridos
+            required_fields = ['nombre', 'email', 'telefono', 'direccion', 'ciudad']
+            for field in required_fields:
+                if field not in data or not data[field]:
+                    return JsonResponse({'error': f'Campo requerido: {field}'}, status=400)
+            
+            # Verificar que el email no exista
+            if Cliente.objects.filter(email=data['email']).exists():
+                return JsonResponse({'error': 'Ya existe un cliente con ese email'}, status=400)
+            
+            # Crear el cliente
+            cliente = Cliente.objects.create(
+                nombre=data['nombre'],
+                email=data['email'],
+                telefono=data['telefono'],
+                direccion=data['direccion'],
+                ciudad=data['ciudad']
+            )
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Cliente creado exitosamente',
+                'cliente': {
+                    'id': cliente.pk,
+                    'nombre': cliente.nombre,
+                    'email': cliente.email,
+                    'telefono': cliente.telefono,
+                    'direccion': cliente.direccion,
+                    'ciudad': cliente.ciudad
+                }
+            }, status=201)
+            
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'JSON inválido'}, status=400)
+        except Exception as e:
+            return JsonResponse({'error': f'Error interno: {str(e)}'}, status=500)
+    
+    else:
+        return JsonResponse({'error': 'Método no permitido'}, status=405)
 
 @csrf_exempt
 @jwt_required
@@ -1598,6 +1655,8 @@ def api_listar_usuarios(request):
     except Exception as e:
         return JsonResponse({'error': f'Error interno: {str(e)}'}, status=500)
 
+@csrf_exempt
+@jwt_required
 @csrf_exempt
 @jwt_required
 @require_permission('can_view_all_data')
@@ -1680,7 +1739,6 @@ def api_listar_pedidos(request):
             import json
             data = json.loads(request.body)
             cliente_id = data.get('cliente_id')
-            fecha_entrega = data.get('fecha_entrega')
             estado = data.get('estado', 'pendiente')
             observaciones = data.get('observaciones', '')
             
@@ -1700,9 +1758,7 @@ def api_listar_pedidos(request):
             pedido = Pedido.objects.create(
                 numero_pedido=numero_pedido,
                 cliente=cliente,
-                estado=estado,
-                fecha_entrega=fecha_entrega,
-                observaciones=observaciones
+                estado=estado
             )
             
             return JsonResponse({

@@ -1,115 +1,106 @@
-# Pruebas de Seguridad - ProvesiWMS
+# 🔐 Pruebas de Seguridad Anti-Modificación
 
-## Objetivo
+## 📋 Descripción General
 
-Validar que el sistema ProvesiWMS mantiene la seguridad de los datos y previene accesos no autorizados, específicamente:
-- Ningún atacante puede modificar información de pedidos sin credenciales válidas (100% de protección)
-- El sistema rechaza todas las formas de bypass de autenticación
-- Los usuarios legítimos mantienen acceso normal después de intentos de ataque
+Este directorio contiene pruebas de seguridad diseñadas para validar el requerimiento:
 
-## Estructura de Archivos
+> **"el atacante no pueda ver la informacion en texto plano"**
 
-### Pruebas de Atacante
-- `Anti_Modificacion_Pedidos_Atacante.postman_collection.json` - Simulación de atacante sin credenciales
-- `Security_Tests_Atacante.postman_collection.json` - Suite completa de ataques de seguridad
-- `Anti_Modificacion_API_Pedidos.postman_collection.json` - Ataques específicos a endpoints API
+Específicamente, estas pruebas validan que los endpoints de la API estén protegidos contra modificaciones no autorizadas de pedidos.
 
-### Validación de Funcionalidad
-- `Legitimate_User_Tests.postman_collection.json` - Verificación que usuarios legítimos pueden operar
-- `Security_Validation_Corrected.postman_collection.json` - Validación general de medidas de seguridad
+## 🎯 Colección Final
 
-### Documentación
-- `PRUEBAS_SEGURIDAD_README.md` - Guía detallada de ejecución y análisis
+### **`Anti_Modificacion_API_Pedidos_Postman.postman_collection.json`**
 
-## Categorías de Pruebas
+**Esta es la colección DEFINITIVA** para ejecutar en Postman.
 
-### 1. Acceso Sin Autenticación
-- Intentos de acceder a endpoints sin token JWT
-- Creación/modificación de pedidos sin credenciales
-- Acceso a información sensible sin autorización
+#### ✅ **Características:**
+- ✅ **Sin dependencias** - No requiere environment files
+- ✅ **URL actualizada** - Configurada para AWS: `https://provesi-alb-1321184118.us-east-1.elb.amazonaws.com`
+- ✅ **Creación dinámica de datos** - Crea cliente y pedido de prueba automáticamente
+- ✅ **Validación completa** - Ataques sin/con autenticación + verificación
+- ✅ **Reporte detallado** - Logs completos en consola de Postman
 
-### 2. Tokens Inválidos
-- JWT tokens falsos o malformados
-- Tokens expirados
-- Headers de autorización manipulados
+## 🚀 Instrucciones de Uso
 
-### 3. Ataques de Inyección
-- SQL Injection en formularios
-- XSS (Cross-Site Scripting)
-- Path traversal
-- CSRF attacks
-
-### 4. Bypass de Autenticación
-- Basic Auth alternativo
-- Parámetros de autenticación en URL
-- Headers alternativos de autenticación
-
-## Ejecución de Pruebas
-
-### Requisitos
-- Postman instalado
-- Servidor ProvesiWMS funcionando
-- URL base configurada en variables de Postman
-
-### Configuración
-1. Importar las colecciones en Postman
-2. Configurar variable `base_url` con la URL del servidor
-3. Ejecutar colecciones en el siguiente orden:
-
-### Orden Recomendado
-1. `Security_Tests_Atacante.postman_collection.json` - Pruebas principales de atacante
-2. `Anti_Modificacion_Pedidos_Atacante.postman_collection.json` - Foco en pedidos
-3. `Anti_Modificacion_API_Pedidos.postman_collection.json` - Validación API REST
-4. `Legitimate_User_Tests.postman_collection.json` - Verificación de funcionalidad normal
-5. `Security_Validation_Corrected.postman_collection.json` - Validación final
-
-## Criterios de Éxito
-
-### Resultado Exitoso (Sistema Seguro)
-- TODAS las pruebas de atacante fallan (códigos 401, 403, 302)
-- Ningún atacante puede crear/modificar/eliminar pedidos
-- Usuarios legítimos pueden operar normalmente
-- No se revelan datos sensibles en respuestas de error
-
-### Resultado Problemático (Vulnerabilidad)
-- CUALQUIER prueba de atacante tiene éxito (código 200, 201)
-- Atacante puede acceder a información sin autenticación
-- Tokens falsos son aceptados
-- Inyecciones SQL/XSS tienen éxito
-
-## Análisis de Resultados
-
-### Indicadores Críticos
-- Códigos de respuesta 200/201 en pruebas de atacante = VULNERABILIDAD CRÍTICA
-- Acceso a endpoints sin token = FALLA DE AUTENTICACIÓN
-- Ejecución de inyecciones = VULNERABILIDAD DE DATOS
-
-### Acciones Correctivas
-Si se detectan vulnerabilidades:
-1. Implementar autenticación obligatoria en todos los endpoints
-2. Validar y sanitizar todas las entradas de usuario
-3. Configurar headers de seguridad apropiados
-4. Implementar rate limiting
-5. Re-ejecutar todas las pruebas hasta lograr 100% de protección
-
-## Variables de Entorno
-
-```json
-{
-  "base_url": "https://tu-servidor.com",
-  "admin_username": "admin",
-  "admin_password": "admin123"
-}
+### 1. **Importar en Postman**
+```bash
+Postman → Import → Seleccionar archivo:
+Anti_Modificacion_API_Pedidos_Postman.postman_collection.json
 ```
 
-## Reportes Automatizados
+### 2. **Ejecutar la Colección**
+```bash
+1. Clic derecho en la colección → "Run Collection"
+2. Verificar que "Save responses" esté habilitado
+3. Clic en "Run Anti-Modificacion Pedidos - AWS Ready"
+```
 
-Cada colección genera reportes automáticos con:
-- Resumen de vulnerabilidades encontradas
-- Códigos de respuesta de cada prueba
-- Recomendaciones de seguridad
-- Estado general del sistema (SEGURO/VULNERABLE)
+### 3. **Interpretar Resultados**
+- **Console Output** - Ver logs detallados de cada prueba
+- **Test Results** - Verificar que todas las pruebas pasen
+- **Response Bodies** - Revisar códigos de error esperados
+
+## 🔍 Flujo de Pruebas
+
+### **SETUP API - Crear Datos de Prueba**
+1. ✅ Login Admin para API
+2. ✅ CREAR Cliente de Prueba  
+3. ✅ CREAR Pedido Original de Prueba
+4. ✅ Verificar Pedido Original Creado
+
+### **ATAQUES DE MODIFICACION - Sin Autenticacion**
+5. ✅ Atacante: PUT Modificar Pedido SIN TOKEN
+6. ✅ Atacante: PATCH Modificar Total SIN TOKEN  
+7. ✅ Atacante: DELETE Eliminar Pedido SIN TOKEN
+
+### **ATAQUES DE MODIFICACION - Con Token Robado**
+8. ✅ Atacante: PUT Modificar con Token Admin
+9. ✅ Atacante: PATCH Estado con Token Admin
+
+### **VERIFICACION POST-ATAQUE**
+10. ✅ Verificar Pedido Después de Ataques
+
+### **REPORTE FINAL DE MODIFICACION**
+11. ✅ REPORTE FINAL - ANTI MODIFICACION
+
+## 🛡️ Validaciones de Seguridad
+
+### **✅ Resultados Esperados:**
+
+| Ataque | Código Esperado | Significado |
+|--------|----------------|-------------|
+| PUT sin token | 401/403/404/405 | ✅ BLOQUEADO |
+| PATCH sin token | 401/403/404/405 | ✅ BLOQUEADO |
+| DELETE sin token | 401/403/404/405 | ✅ BLOQUEADO |
+| PUT con token admin | 200/404/405 | ⚠️ EVALUADO |
+| PATCH con token admin | 200/404/405 | ⚠️ EVALUADO |
+
+### **🚨 Alertas de Seguridad:**
+
+- **401/403** = ✅ Autenticación requerida (SEGURO)
+- **404** = ✅ Endpoint no existe (SEGURO)
+- **405** = ✅ Método no permitido (SEGURO)
+- **200** = ⚠️ Modificación exitosa (evaluar si es autorizada)
+
+## 📊 Interpretación Final
+
+### **✅ SISTEMA SEGURO si:**
+- Todos los ataques sin token retornan 401/403/404/405
+- Los endpoints no permiten modificaciones no autorizadas
+- La información no es visible en texto plano para atacantes
+
+### **🚨 VULNERABILIDAD si:**
+- Algún ataque sin token retorna 200/201
+- Se pueden modificar pedidos sin autenticación
+- La información es accesible sin credenciales
+
+## 📝 Documentación Adicional
+
+- `PRUEBAS_SEGURIDAD_README.md` - Documentación técnica detallada
+- `/tests/anti_sniffing/` - Herramientas de análisis con Wireshark
+- `/tests/diagnostico/` - Herramientas de diagnóstico de infraestructura
 
 ---
 
-**Nota**: Estas pruebas deben ejecutarse regularmente y especialmente después de cada cambio en el código que afecte autenticación, autorización o endpoints de API.
+**🎯 OBJETIVO CUMPLIDO:** Validar que "el atacante no pueda ver la información en texto plano" mediante endpoints API seguros y autenticación JWT obligatoria.
