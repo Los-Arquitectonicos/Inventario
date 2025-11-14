@@ -90,6 +90,7 @@ urlpatterns = [
     path("api/clientes/", views.api_listar_clientes, name="api_listar_clientes"),
     path("api/usuarios/", views.api_listar_usuarios, name="api_listar_usuarios"),
     path("api/pedidos/", views.api_listar_pedidos, name="api_listar_pedidos"),
+    path("api/pedidos/<int:pedido_id>/", views.api_actualizar_pedido, name="api_actualizar_pedido"),
     path("api/cotizaciones/", views.api_listar_cotizaciones, name="api_listar_cotizaciones"),
     path("api/facturas/", views.api_listar_facturas, name="api_listar_facturas"),
     

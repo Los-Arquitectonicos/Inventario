@@ -582,6 +582,7 @@ def crear_pedido(request):
         'productos': productos
     })
 
+@csrf_exempt
 @jwt_required
 @require_permission('can_manage_orders')
 def actualizar_estado_pedido(request, pedido_id):
@@ -625,6 +626,91 @@ def actualizar_estado_pedido(request, pedido_id):
         'success': False,
         'error': 'Método no permitido'
     }, status=405)
+
+@csrf_exempt
+@jwt_required
+@require_permission('can_manage_orders')
+def api_actualizar_pedido(request, pedido_id):
+    """
+    API endpoint para actualizar un pedido específico por ID.
+    Maneja actualizaciones completas con PUT.
+    """
+    if request.method == 'PUT':
+        try:
+            pedido = get_object_or_404(Pedido, id=pedido_id)
+            data = json.loads(request.body)
+            
+            # Actualizar campos permitidos
+            if 'estado' in data:
+                nuevo_estado = data['estado']
+                if nuevo_estado in [estado[0] for estado in Pedido.ESTADOS_PEDIDO]:
+                    pedido.estado = nuevo_estado
+                    if nuevo_estado == 'entregado':
+                        pedido.marcar_completado()
+                else:
+                    return JsonResponse({
+                        'error': f'Estado inválido: {nuevo_estado}'
+                    }, status=400)
+            
+            if 'cliente_id' in data:
+                try:
+                    nuevo_cliente = Cliente.objects.get(id=data['cliente_id'])
+                    pedido.cliente = nuevo_cliente
+                except Cliente.DoesNotExist:
+                    return JsonResponse({
+                        'error': 'Cliente no encontrado'
+                    }, status=404)
+            
+            # Guardar cambios
+            pedido.save()
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Pedido actualizado exitosamente',
+                'pedido': {
+                    'id': pedido.pk,
+                    'numero_pedido': pedido.numero_pedido,
+                    'estado': pedido.estado,
+                    'cliente_id': pedido.cliente.pk,
+                    'fecha_creacion': pedido.fecha_creacion.isoformat(),
+                    'fecha_completado': pedido.fecha_completado.isoformat() if pedido.fecha_completado else None
+                }
+            })
+            
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'JSON inválido'}, status=400)
+        except Exception as e:
+            return JsonResponse({'error': f'Error interno: {str(e)}'}, status=500)
+    
+    elif request.method == 'GET':
+        # Obtener detalles de un pedido específico
+        try:
+            pedido = get_object_or_404(Pedido, id=pedido_id)
+            
+            return JsonResponse({
+                'success': True,
+                'pedido': {
+                    'id': pedido.pk,
+                    'numero_pedido': pedido.numero_pedido,
+                    'estado': pedido.estado,
+                    'fecha_creacion': pedido.fecha_creacion.isoformat(),
+                    'fecha_completado': pedido.fecha_completado.isoformat() if pedido.fecha_completado else None,
+                    'cliente': {
+                        'id': pedido.cliente.pk,
+                        'nombre': pedido.cliente.nombre,
+                        'email': pedido.cliente.email
+                    },
+                    'total': float(pedido.calcular_total()),
+                    'total_productos': PedidoProducto.objects.filter(pedido=pedido).count(),
+                    'puede_cancelar': pedido.puede_cancelar()
+                }
+            })
+            
+        except Exception as e:
+            return JsonResponse({'error': f'Error interno: {str(e)}'}, status=500)
+    
+    else:
+        return JsonResponse({'error': 'Método no permitido'}, status=405)
 
 # =========================
 # VISTAS DE CLIENTES
