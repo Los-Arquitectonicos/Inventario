@@ -1,0 +1,665 @@
+{
+  "info": {
+    "name": "Anti-Modificacion Pedidos - API Endpoints",
+    "description": "Suite que CREA pedidos de prueba y luego INTENTA MODIFICARLOS via API REST. Verifica que atacantes NO puedan usar endpoints JSON para modificar informacion de pedidos existentes.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_postman_id": "anti-modificacion-api-pedidos-001"
+  },
+  "item": [
+    {
+      "name": "SETUP API - Preparar Datos",
+      "description": "Configuracion para probar endpoints API de pedidos",
+      "item": [
+        {
+          "name": "1. Login Admin para API",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "console.log('🔧 =============');",
+                  "console.log('🔧 SETUP: CREANDO CLIENTE');",
+                  "console.log('🔧 =============');",
+                  "",
+                  "pm.test('Cliente setup completado', function () {",
+                  "    pm.expect([200, 201, 400, 404]).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "// Si no hay endpoint de clientes, crear cliente directamente via POST a pedidos",
+                  "if (pm.response.code === 404) {",
+                  "    console.log('📋 Endpoint de clientes no existe - creando cliente manualmente');",
+                  "    pm.globals.set('test_cliente_id', '1');",
+                  "} else if (pm.response.code === 200) {",
+                  "    const responseJson = pm.response.json();",
+                  "    if (responseJson.clientes && responseJson.clientes.length > 0) {",
+                  "        pm.globals.set('test_cliente_id', responseJson.clientes[0].id);",
+                  "        console.log('✅ Cliente encontrado con ID:', responseJson.clientes[0].id);",
+                  "    } else {",
+                  "        pm.globals.set('test_cliente_id', '1');",
+                  "        console.log('📋 Sin clientes - usando ID 1');",
+                  "    }",
+                  "} else if (pm.response.code === 201) {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.globals.set('test_cliente_id', responseJson.id);",
+                  "    console.log('✅ Cliente nuevo creado con ID:', responseJson.id);",
+                  "} else if (pm.response.code === 400) {",
+                  "    console.log('📋 Cliente ya existe - usando ID 1');",
+                  "    pm.globals.set('test_cliente_id', '1');",
+                  "} else {",
+                  "    console.log('📋 Respuesta inesperada - usando ID 1');",
+                  "    pm.globals.set('test_cliente_id', '1');",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/inventario/api/clientes/",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "inventario",
+                "api",
+                "clientes",
+                ""
+              ]
+            }
+          },
+          "response": []
+        },
+          {
+          "name": "1. Login Admin para API",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_admin_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"ProvesiAdmin2024!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/inventario/auth/token/",
+              "host": ["{{base_url}}"],
+              "path": ["inventario", "auth", "token", ""]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('API Setup: Login exitoso', function () {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    const response = pm.response.json();",
+                  "    pm.globals.set('api_admin_token', response.access);",
+                  "    console.log('Token API admin guardado');",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "2. CREAR Pedido Original de Prueba",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_admin_token}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cliente_id\": {{test_cliente_id}},\n  \"estado\": \"pendiente\",\n  \"observaciones\": \"PEDIDO ORIGINAL PARA PRUEBAS DE MODIFICACION - NO MODIFICAR\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/inventario/api/pedidos/",
+              "host": ["{{base_url}}"],
+              "path": ["inventario", "api", "pedidos", ""]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Setup: Pedido original creado exitosamente', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200 || pm.response.code === 201) {",
+                  "    try {",
+                  "        const response = pm.response.json();",
+                  "        if (response.pedido && response.pedido.id) {",
+                  "            pm.globals.set('pedido_original_id', response.pedido.id);",
+                  "            console.log('PEDIDO ORIGINAL CREADO - ID:', response.pedido.id);",
+                  "            console.log('Total original: $1000.00');",
+                  "            console.log('Estado original: pendiente');",
+                  "        } else if (response.id) {",
+                  "            pm.globals.set('pedido_original_id', response.id);",
+                  "            console.log('PEDIDO ORIGINAL CREADO - ID:', response.id);",
+                  "        } else {",
+                  "            console.log('Respuesta inesperada al crear pedido:', response);",
+                  "            pm.globals.set('pedido_original_id', '1');",
+                  "        }",
+                  "    } catch (e) {",
+                  "        console.log('Error parseando respuesta de creacion:', e);",
+                  "        pm.globals.set('pedido_original_id', '1');",
+                  "    }",
+                  "} else {",
+                  "    console.log('ERROR: No se pudo crear pedido original para pruebas');",
+                  "    console.log('Respuesta HTTP:', pm.response.code);",
+                  "    console.log('Respuesta body:', pm.response.text());",
+                  "    pm.globals.set('pedido_original_id', '999');",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Verificar Pedido Original Creado",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/inventario/api/pedidos/{{pedido_original_id}}/",
+              "host": ["{{base_url}}"],
+              "path": ["inventario", "api", "pedidos", "{{pedido_original_id}}", ""]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Setup: Pedido original existe y es verificable', function () {",
+                  "    pm.expect(pm.response.code).to.equal(200);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    const pedido = pm.response.json();",
+                  "    console.log('PEDIDO ORIGINAL VERIFICADO:');",
+                  "    console.log('   ID:', pedido.id);",
+                  "    console.log('   Total:', pedido.total);",
+                  "    console.log('   Estado:', pedido.estado);",
+                  "    console.log('   Observaciones:', pedido.observaciones);",
+                  "    console.log('');",
+                  "    console.log('LISTO PARA INTENTOS DE MODIFICACION...');",
+                  "} else {",
+                  "    console.log('ERROR: No se puede verificar pedido original');",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "ATAQUES DE MODIFICACION - Sin Autenticacion",
+      "description": "Intentos de modificar el pedido original SIN TOKEN - DEBEN FALLAR 100%",
+      "item": [
+        {
+          "name": "Atacante: PUT Modificar Pedido SIN TOKEN",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cliente_id\": 999,\n  \"fecha_entrega\": \"2030-01-01\",\n  \"estado\": \"completado\",\n  \"total\": 999999999.99,\n  \"observaciones\": \"PEDIDO MODIFICADO POR ATACANTE - FRAUDE DETECTADO - TOTAL ALTERADO\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/inventario/api/pedidos/{{pedido_original_id}}/",
+              "host": ["{{base_url}}"],
+              "path": ["inventario", "api", "pedidos", "{{pedido_original_id}}", ""]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('MODIFICACION CRITICA: PUT sin token BLOQUEADO', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([401, 403, 405]);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    console.log('🚨 VULNERABILIDAD GRAVISIMA DETECTADA! 🚨');",
+                  "    console.log('Atacante MODIFICO PEDIDO sin autenticacion');",
+                  "    console.log('Total cambiado de $1000 a $999,999,999.99');",
+                  "    console.log('Estado cambiado de \"pendiente\" a \"completado\"');",
+                  "    pm.globals.set('modificacion_exitosa', 'true');",
+                  "} else if (pm.response.code === 404) {",
+                  "    console.log('✅ PUT bloqueado - Endpoint no existe o pedido no encontrado');",
+                  "    console.log('   Esto es SEGURO: No se puede modificar lo que no existe');",
+                  "} else if (pm.response.code === 401) {",
+                  "    console.log('✅ PUT bloqueado - NO AUTORIZADO (401)');",
+                  "    console.log('   PERFECTO: Requiere autenticacion para modificar');",
+                  "} else if (pm.response.code === 403) {",
+                  "    console.log('✅ PUT bloqueado - PROHIBIDO (403)');",
+                  "    console.log('   PERFECTO: Sin permisos para modificar');",
+                  "} else {",
+                  "    console.log('✅ PUT bloqueado - Respuesta:', pm.response.code);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Atacante: PATCH Modificar Total SIN TOKEN",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"total\": 0.01,\n  \"observaciones\": \"TOTAL MODIFICADO POR ATACANTE - PEDIDO CASI GRATIS\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/inventario/api/pedidos/{{pedido_original_id}}/",
+              "host": ["{{base_url}}"],
+              "path": ["inventario", "api", "pedidos", "{{pedido_original_id}}", ""]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('MODIFICACION CRITICA: PATCH sin token BLOQUEADO', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([401, 403, 405]);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    console.log('🚨 VULNERABILIDAD FINANCIERA DETECTADA! 🚨');",
+                  "    console.log('Atacante MODIFICO TOTAL de pedido sin autenticacion');",
+                  "    console.log('Total reducido de $1000.00 a $0.01');",
+                  "    pm.globals.set('modificacion_exitosa', 'true');",
+                  "} else if (pm.response.code === 404) {",
+                  "    console.log('✅ PATCH bloqueado - Endpoint no existe o pedido no encontrado');",
+                  "    console.log('   Esto es SEGURO: No se puede modificar lo que no existe');",
+                  "} else if (pm.response.code === 401) {",
+                  "    console.log('✅ PATCH bloqueado - NO AUTORIZADO (401)');",
+                  "    console.log('   PERFECTO: Requiere autenticacion para modificar');",
+                  "} else if (pm.response.code === 403) {",
+                  "    console.log('✅ PATCH bloqueado - PROHIBIDO (403)');",
+                  "    console.log('   PERFECTO: Sin permisos para modificar');",
+                  "} else {",
+                  "    console.log('✅ PATCH bloqueado - Respuesta:', pm.response.code);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Atacante: DELETE Eliminar Pedido SIN TOKEN",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/inventario/api/pedidos/{{pedido_original_id}}/",
+              "host": ["{{base_url}}"],
+              "path": ["inventario", "api", "pedidos", "{{pedido_original_id}}", ""]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('ELIMINACION CRITICA: DELETE sin token BLOQUEADO', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([401, 403, 405]);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200 || pm.response.code === 204) {",
+                  "    console.log('🚨 VULNERABILIDAD DE ELIMINACION DETECTADA! 🚨');",
+                  "    console.log('Atacante ELIMINO PEDIDO sin autenticacion');",
+                  "    console.log('Pedido ID', pm.globals.get('pedido_original_id'), 'ELIMINADO');",
+                  "    pm.globals.set('eliminacion_exitosa', 'true');",
+                  "} else if (pm.response.code === 404) {",
+                  "    console.log('✅ DELETE bloqueado - Endpoint no existe o pedido no encontrado');",
+                  "    console.log('   Esto es SEGURO: No se puede eliminar lo que no existe');", 
+                  "} else if (pm.response.code === 401) {",
+                  "    console.log('✅ DELETE bloqueado - NO AUTORIZADO (401)');",
+                  "    console.log('   PERFECTO: Requiere autenticacion para eliminar');",
+                  "} else if (pm.response.code === 403) {",
+                  "    console.log('✅ DELETE bloqueado - PROHIBIDO (403)');",
+                  "    console.log('   PERFECTO: Sin permisos para eliminar');",
+                  "} else {",
+                  "    console.log('✅ DELETE bloqueado - Respuesta:', pm.response.code);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "ATAQUES DE MODIFICACION - Con Token Robado",
+      "description": "Intentos de modificar el pedido usando token de admin - Evalua permisos API",
+      "item": [
+        {
+          "name": "Atacante: PUT Modificar con Token Admin",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"cliente_id\": 666,\n  \"fecha_entrega\": \"2099-12-31\",\n  \"estado\": \"completado\",\n  \"total\": 888888888.88,\n  \"observaciones\": \"PEDIDO MODIFICADO POR ATACANTE CON TOKEN ROBADO - FRAUDE CON AUTENTICACION\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/inventario/api/pedidos/{{pedido_original_id}}/",
+              "host": ["{{base_url}}"],
+              "path": ["inventario", "api", "pedidos", "{{pedido_original_id}}", ""]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('MODIFICACION CON TOKEN: PUT debe ser evaluado', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 403, 404, 405]);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    console.log('⚠️  MODIFICACION CON TOKEN EXITOSA');",
+                  "    console.log('   Token admin permite modificar pedidos');",
+                  "    console.log('   Total cambiado a $888,888,888.88');",
+                  "    console.log('   Estado cambiado a \"completado\"');",
+                  "    pm.globals.set('modificacion_con_token', 'true');",
+                  "} else if (pm.response.code === 403) {",
+                  "    console.log('✅ PUT con token RECHAZADO - Permisos correctos');",
+                  "} else if (pm.response.code === 404) {",
+                  "    console.log('✅ PUT con token RECHAZADO - Pedido no existe');",
+                  "} else {",
+                  "    console.log('✅ PUT no soportado - Endpoint protegido');",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Atacante: PATCH Estado con Token Admin",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_admin_token}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"cancelado\",\n  \"observaciones\": \"PEDIDO CANCELADO POR ATACANTE CON TOKEN ADMIN ROBADO\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/inventario/api/pedidos/{{pedido_original_id}}/",
+              "host": ["{{base_url}}"],
+              "path": ["inventario", "api", "pedidos", "{{pedido_original_id}}", ""]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('MODIFICACION CON TOKEN: PATCH debe ser evaluado', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 403, 404, 405]);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    console.log('⚠️  PATCH CON TOKEN EXITOSO');",
+                  "    console.log('   Token admin permite cambiar estado');",
+                  "    console.log('   Estado cambiado a \"cancelado\"');",
+                  "    pm.globals.set('modificacion_con_token', 'true');",
+                  "} else if (pm.response.code === 403) {",
+                  "    console.log('✅ PATCH con token RECHAZADO - Permisos correctos');",
+                  "} else if (pm.response.code === 404) {",
+                  "    console.log('✅ PATCH con token RECHAZADO - Pedido no existe');",
+                  "} else {",
+                  "    console.log('✅ PATCH no soportado - Endpoint protegido');",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "VERIFICACION POST-ATAQUE",
+      "description": "Verifica el estado del pedido despues de intentos de modificacion",
+      "item": [
+        {
+          "name": "Verificar Pedido Despues de Ataques",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{api_admin_token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/inventario/api/pedidos/{{pedido_original_id}}/",
+              "host": ["{{base_url}}"],
+              "path": ["inventario", "api", "pedidos", "{{pedido_original_id}}", ""]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('POST-ATAQUE: Pedido verificable', function () {",
+                  "    pm.expect(pm.response.code).to.be.oneOf([200, 404]);",
+                  "});",
+                  "",
+                  "if (pm.response.code === 200) {",
+                  "    const pedido = pm.response.json();",
+                  "    console.log('');",
+                  "    console.log('ESTADO FINAL DEL PEDIDO:');",
+                  "    console.log('   ID:', pedido.id);",
+                  "    console.log('   Total:', pedido.total);",
+                  "    console.log('   Estado:', pedido.estado);",
+                  "    console.log('   Observaciones:', pedido.observaciones);",
+                  "    ",
+                  "    // Verificar si el pedido fue modificado",
+                  "    if (pedido.total === 1000.00 && pedido.estado === 'pendiente') {",
+                  "        console.log('');",
+                  "        console.log('✅ PEDIDO INTACTO - No modificado por ataques');",
+                  "        pm.globals.set('pedido_intacto', 'true');",
+                  "    } else {",
+                  "        console.log('');",
+                  "        console.log('🚨 PEDIDO MODIFICADO - Ataques exitosos');",
+                  "        console.log('   Total original: $1000.00');",
+                  "        console.log('   Estado original: pendiente');",
+                  "        pm.globals.set('pedido_intacto', 'false');",
+                  "    }",
+                  "} else if (pm.response.code === 404) {",
+                  "    console.log('🚨 PEDIDO ELIMINADO - DELETE exitoso');",
+                  "    pm.globals.set('pedido_eliminado', 'true');",
+                  "} else {",
+                  "    console.log('Error verificando estado del pedido');",
+                  "}"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "REPORTE FINAL DE MODIFICACION",
+      "description": "Reporte completo de intentos de modificacion de pedidos",
+      "item": [
+        {
+          "name": "REPORTE FINAL - ANTI MODIFICACION",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/inventario/",
+              "host": ["{{base_url}}"],
+              "path": ["inventario", ""]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "console.log('');",
+                  "console.log('==========================================');",
+                  "console.log('REPORTE FINAL - ANTI MODIFICACION PEDIDOS');",
+                  "console.log('==========================================');",
+                  "console.log('');",
+                  "",
+                  "const pedidoIntacto = pm.globals.get('pedido_intacto');",
+                  "const pedidoEliminado = pm.globals.get('pedido_eliminado');",
+                  "const modificacionSinToken = pm.globals.get('modificacion_exitosa');",
+                  "const modificacionConToken = pm.globals.get('modificacion_con_token');",
+                  "",
+                  "console.log('RESUMEN DE ATAQUES DE MODIFICACION:');",
+                  "console.log('');",
+                  "",
+                  "console.log('1. ATAQUES SIN AUTENTICACION:');",
+                  "console.log('   PUT sin token:', modificacionSinToken === 'true' ? '🚨 EXITOSO' : '✅ BLOQUEADO');",
+                  "console.log('   PATCH sin token:', modificacionSinToken === 'true' ? '🚨 EXITOSO' : '✅ BLOQUEADO');",
+                  "console.log('   DELETE sin token:', pedidoEliminado === 'true' ? '🚨 EXITOSO' : '✅ BLOQUEADO');",
+                  "console.log('');",
+                  "",
+                  "console.log('2. ATAQUES CON TOKEN ADMIN:');",
+                  "console.log('   PUT con token:', modificacionConToken === 'true' ? '⚠️  EXITOSO' : '✅ BLOQUEADO');",
+                  "console.log('   PATCH con token:', modificacionConToken === 'true' ? '⚠️  EXITOSO' : '✅ BLOQUEADO');",
+                  "console.log('');",
+                  "",
+                  "console.log('3. ESTADO FINAL DEL PEDIDO ORIGINAL:');",
+                  "if (pedidoEliminado === 'true') {",
+                  "    console.log('   ELIMINADO por atacante');",
+                  "} else if (pedidoIntacto === 'true') {",
+                  "    console.log('   INTACTO - Total: $1000.00, Estado: pendiente');",
+                  "} else if (pedidoIntacto === 'false') {",
+                  "    console.log('   MODIFICADO por atacante');",
+                  "} else {",
+                  "    console.log('   Pedido no existía o no se pudo crear para pruebas');",
+                  "}",
+                  "console.log('');",
+                  "",
+                  "// Evaluar resultado general",
+                  "let resultadoFinal = 'EXITOSO';",
+                  "let vulnerabilidadesCriticas = 0;",
+                  "",
+                  "if (modificacionSinToken === 'true' || pedidoEliminado === 'true') {",
+                  "    resultadoFinal = 'FALLO CRITICO';",
+                  "    vulnerabilidadesCriticas++;",
+                  "    console.log('🚨 FALLO CRITICO: Modificaciones sin autenticacion');",
+                  "} else {",
+                  "    console.log('✅ SEGURIDAD CORRECTA: No hay modificaciones sin autenticacion');",
+                  "}",
+                  "",
+                  "if (modificacionConToken === 'true') {",
+                  "    console.log('⚠️  ATENCION: Token admin permite modificaciones');",
+                  "    console.log('   (Evaluar si esto es comportamiento esperado)');",
+                  "}",
+                  "",
+                  "if (resultadoFinal === 'EXITOSO') {",
+                  "    console.log('✅ PRUEBA EXITOSA: Pedidos protegidos contra modificacion');",
+                  "    console.log('   Ningun atacante sin autenticacion puede modificar pedidos');",
+                  "}",
+                  "",
+                  "console.log('');",
+                  "console.log('OBJETIVO: Prevenir modificacion no autorizada de pedidos');",
+                  "console.log('RESULTADO:', resultadoFinal);",
+                  "console.log('==========================================');",
+                  "",
+                  "pm.test('ANTI-MODIFICACION: Pedidos protegidos', function () {",
+                  "    pm.expect(vulnerabilidadesCriticas).to.equal(0);",
+                  "});",
+                  "",
+                  "// Limpiar variables globales",
+                  "pm.globals.unset('api_admin_token');",
+                  "pm.globals.unset('pedido_original_id');",
+                  "pm.globals.unset('modificacion_exitosa');",
+                  "pm.globals.unset('eliminacion_exitosa');",
+                  "pm.globals.unset('modificacion_con_token');",
+                  "pm.globals.unset('pedido_intacto');",
+                  "pm.globals.unset('pedido_eliminado');"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://provesi-alb-2003818714.us-east-1.elb.amazonaws.com",
+      "type": "string"
+    }
+  ]
+}
