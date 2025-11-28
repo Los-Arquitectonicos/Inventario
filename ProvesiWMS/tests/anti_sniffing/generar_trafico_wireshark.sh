@@ -3,14 +3,14 @@
 # Script para generar tráfico mientras Wireshark captura
 # Úsalo mientras tienes Wireshark ejecutándose
 
-echo "🚀 Generando tráfico para análisis con Wireshark..."
-echo "⚠️  IMPORTANTE: Asegúrate de que Wireshark esté capturando primero!"
+echo "Generando tráfico para análisis con Wireshark..."
+echo "IMPORTANTE: Asegúrate de que Wireshark esté capturando primero!"
 echo ""
 
-BASE_URL="https://provesi-alb-2003818714.us-east-1.elb.amazonaws.com"
-HTTP_URL="http://provesi-alb-2003818714.us-east-1.elb.amazonaws.com"
+BASE_URL="https://provesi-alb-696561682.us-east-1.elb.amazonaws.com"
+HTTP_URL="http://provesi-alb-696561682.us-east-1.elb.amazonaws.com"
 
-echo "📊 Generando diferentes tipos de tráfico..."
+echo "Generando diferentes tipos de tráfico..."
 
 # 1. Tráfico HTTP (debe redirigir a HTTPS)
 echo "1. Probando HTTP (debe redirigir)..."
@@ -47,4 +47,4 @@ for i in {1..5}; do
 done
 
 echo ""
-echo "✅ Tráfico generado. Ahora detén la captura en Wireshark y analiza."
+echo "Tráfico generado. Ahora detén la captura en Wireshark y analiza."
