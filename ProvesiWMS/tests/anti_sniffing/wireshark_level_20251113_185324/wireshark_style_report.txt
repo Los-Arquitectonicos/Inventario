@@ -1,0 +1,38 @@
+================================================================
+REPORTE DE ANÁLISIS DE TRÁFICO - ESTILO WIRESHARK
+================================================================
+Timestamp: Thu Nov 13 18:54:03 -05 2025
+Target: https://provesi-alb-2003818714.us-east-1.elb.amazonaws.com
+Analysis Duration: Aproximadamente 2 minutos
+
+RESUMEN DE PROTOCOLOS DETECTADOS:
+=================================
+✓ HTTPS/TLS - Puerto 443 (Principal)
+✓ TCP - Capa de transporte
+✓ IP - Capa de red
+
+ANÁLISIS DE SEGURIDAD TLS:
+=========================
+New, TLSv1.2, Cipher is ECDHE-RSA-AES128-GCM-SHA256
+Protocol: TLSv1.2
+    Protocol  : TLSv1.2
+    Cipher    : ECDHE-RSA-AES128-GCM-SHA256
+    Verify return code: 18 (self-signed certificate)
+
+PAQUETES ANALIZADOS:
+===================
+Captura directa no disponible - Análisis basado en respuestas HTTP
+
+VULNERABILIDADES ENCONTRADAS:
+=============================
+[CRITICAL] [VULN] Protocolo inseguro tls1 aceptado
+[CRITICAL] [VULN] Protocolo inseguro tls1_1 aceptado
+[CRITICAL] [VULN] Cipher débil MD5 aceptado
+[CRITICAL] [VULN] Cipher débil NULL aceptado
+
+RECOMENDACIONES:
+================
+- Mantener TLS 1.2/1.3 únicamente
+- Verificar Perfect Forward Secrecy
+- Monitorear certificados regularmente
+- Implementar HSTS con preload

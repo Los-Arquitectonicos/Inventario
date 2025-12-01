@@ -1,0 +1,106 @@
+Connecting to 52.72.247.166
+depth=0 C=US, O=ProvesiWMS Development, CN=provesi.local
+verify error:num=18:self-signed certificate
+verify return:1
+depth=0 C=US, O=ProvesiWMS Development, CN=provesi.local
+verify return:1
+CONNECTED(00000006)
+---
+Certificate chain
+ 0 s:C=US, O=ProvesiWMS Development, CN=provesi.local
+   i:C=US, O=ProvesiWMS Development, CN=provesi.local
+   a:PKEY: RSA, 2048 (bit); sigalg: sha256WithRSAEncryption
+   v:NotBefore: Nov 13 15:18:10 2025 GMT; NotAfter: Nov 13 15:18:10 2026 GMT
+-----BEGIN CERTIFICATE-----
+MIIDgjCCAmqgAwIBAgIRAIvOWtYvXoI2LsospYcifl8wDQYJKoZIhvcNAQELBQAw
+RjELMAkGA1UEBhMCVVMxHzAdBgNVBAoTFlByb3Zlc2lXTVMgRGV2ZWxvcG1lbnQx
+FjAUBgNVBAMTDXByb3Zlc2kubG9jYWwwHhcNMjUxMTEzMTUxODEwWhcNMjYxMTEz
+MTUxODEwWjBGMQswCQYDVQQGEwJVUzEfMB0GA1UEChMWUHJvdmVzaVdNUyBEZXZl
+bG9wbWVudDEWMBQGA1UEAxMNcHJvdmVzaS5sb2NhbDCCASIwDQYJKoZIhvcNAQEB
+BQADggEPADCCAQoCggEBAM6NKu/7gjLkZOBX51N+C1C9MxhE0j2/bK5M/vrFObvD
+VMIpe4cL7Mt5jscoc/kDJnPIl7/E26Ipxw8bIdzRT5rI1w01DgBmBLn8JoYGQ3kM
+KVMJ5aakIeE8IfRuPS28P2RrN7XYFNjzxjJWLb54y33LoVp7uTw9XxQW73W7G/Br
+hY1CEXmGZ6r2FXZER30dit+9rnalYY+gSau3TvbqMnXwotu3pcZZ/sMOAagTrk+A
+BJK3tHOM5NEVJqN5lnQoaiqSmxiLl51Usl4Ko7D7gqKyDiiNuo4VFE6kzV0b2nyp
+qdh3g2qRvL1mVpTUIBnLIFUWpUUJ9SDuS5WDorDrAlECAwEAAaNrMGkwDgYDVR0P
+AQH/BAQDAgWgMBMGA1UdJQQMMAoGCCsGAQUFBwMBMAwGA1UdEwEB/wQCMAAwNAYD
+VR0RBC0wK4INcHJvdmVzaS5sb2NhbIIPKi5wcm92ZXNpLmxvY2Fsgglsb2NhbGhv
+c3QwDQYJKoZIhvcNAQELBQADggEBAJp+zee8+ehwhoEVE3IEaeNwCrfBfW7+jZiW
++7bzmCcoauwzT4G2PBlhaIyCYOlkZgo7OgB7S960xyMSgutuPdkMATw2uqcw+ShY
+O45tnE8xVzmA0noDxzBUVdJBKADKRHU8CXHdukl86KzY+igcve3OcYkUjU+PJWsI
+irvkSfwxll6S7KneDfprq4khJJtbZv5fhtVQJTt3nqFwyH4j9JYXDRlRzWab2/iV
+4Jn3UhPxIQByZwwiHOmRFwZxRwKZwUYobRYZGbNEHy7MNNoruih4bqQuwJUcRvJn
+YWeIhWt4m3yNC2VUshaZc6JGlS1QQ8Oi0S5PXsfoMcKcjXPAVMg=
+-----END CERTIFICATE-----
+ 1 s:C=US, O=ProvesiWMS Development, CN=provesi.local
+   i:C=US, O=ProvesiWMS Development, CN=provesi.local
+   a:PKEY: RSA, 2048 (bit); sigalg: sha256WithRSAEncryption
+   v:NotBefore: Nov 13 15:18:10 2025 GMT; NotAfter: Nov 13 15:18:10 2026 GMT
+-----BEGIN CERTIFICATE-----
+MIIDgjCCAmqgAwIBAgIRAIvOWtYvXoI2LsospYcifl8wDQYJKoZIhvcNAQELBQAw
+RjELMAkGA1UEBhMCVVMxHzAdBgNVBAoTFlByb3Zlc2lXTVMgRGV2ZWxvcG1lbnQx
+FjAUBgNVBAMTDXByb3Zlc2kubG9jYWwwHhcNMjUxMTEzMTUxODEwWhcNMjYxMTEz
+MTUxODEwWjBGMQswCQYDVQQGEwJVUzEfMB0GA1UEChMWUHJvdmVzaVdNUyBEZXZl
+bG9wbWVudDEWMBQGA1UEAxMNcHJvdmVzaS5sb2NhbDCCASIwDQYJKoZIhvcNAQEB
+BQADggEPADCCAQoCggEBAM6NKu/7gjLkZOBX51N+C1C9MxhE0j2/bK5M/vrFObvD
+VMIpe4cL7Mt5jscoc/kDJnPIl7/E26Ipxw8bIdzRT5rI1w01DgBmBLn8JoYGQ3kM
+KVMJ5aakIeE8IfRuPS28P2RrN7XYFNjzxjJWLb54y33LoVp7uTw9XxQW73W7G/Br
+hY1CEXmGZ6r2FXZER30dit+9rnalYY+gSau3TvbqMnXwotu3pcZZ/sMOAagTrk+A
+BJK3tHOM5NEVJqN5lnQoaiqSmxiLl51Usl4Ko7D7gqKyDiiNuo4VFE6kzV0b2nyp
+qdh3g2qRvL1mVpTUIBnLIFUWpUUJ9SDuS5WDorDrAlECAwEAAaNrMGkwDgYDVR0P
+AQH/BAQDAgWgMBMGA1UdJQQMMAoGCCsGAQUFBwMBMAwGA1UdEwEB/wQCMAAwNAYD
+VR0RBC0wK4INcHJvdmVzaS5sb2NhbIIPKi5wcm92ZXNpLmxvY2Fsgglsb2NhbGhv
+c3QwDQYJKoZIhvcNAQELBQADggEBAJp+zee8+ehwhoEVE3IEaeNwCrfBfW7+jZiW
++7bzmCcoauwzT4G2PBlhaIyCYOlkZgo7OgB7S960xyMSgutuPdkMATw2uqcw+ShY
+O45tnE8xVzmA0noDxzBUVdJBKADKRHU8CXHdukl86KzY+igcve3OcYkUjU+PJWsI
+irvkSfwxll6S7KneDfprq4khJJtbZv5fhtVQJTt3nqFwyH4j9JYXDRlRzWab2/iV
+4Jn3UhPxIQByZwwiHOmRFwZxRwKZwUYobRYZGbNEHy7MNNoruih4bqQuwJUcRvJn
+YWeIhWt4m3yNC2VUshaZc6JGlS1QQ8Oi0S5PXsfoMcKcjXPAVMg=
+-----END CERTIFICATE-----
+---
+Server certificate
+subject=C=US, O=ProvesiWMS Development, CN=provesi.local
+issuer=C=US, O=ProvesiWMS Development, CN=provesi.local
+---
+No client certificate CA names sent
+Peer signing digest: SHA256
+Peer signature type: rsa_pkcs1_sha256
+Peer Temp Key: ECDH, prime256v1, 256 bits
+---
+SSL handshake has read 2473 bytes and written 1709 bytes
+Verification error: self-signed certificate
+---
+New, TLSv1.2, Cipher is ECDHE-RSA-AES128-GCM-SHA256
+Protocol: TLSv1.2
+Server public key is 2048 bit
+Secure Renegotiation IS supported
+Compression: NONE
+Expansion: NONE
+No ALPN negotiated
+SSL-Session:
+    Protocol  : TLSv1.2
+    Cipher    : ECDHE-RSA-AES128-GCM-SHA256
+    Session-ID: 24E8381339175897A056B479C76B330566CEABC3847F538ABE8CCD656BC1A456
+    Session-ID-ctx: 
+    Master-Key: 9F9011E81F4E5EDA27F8FEE8C83CA5FC138EAFFB5B2AAC71906DCF5DAEC2364D9119A6C3DA02042E937E86034C5FA545
+    PSK identity: None
+    PSK identity hint: None
+    SRP username: None
+    TLS session ticket lifetime hint: 55552 (seconds)
+    TLS session ticket:
+    0000 - 01 02 27 77 b9 4b bf ad-d3 2d ec 39 38 57 c5 99   ..'w.K...-.98W..
+    0010 - c1 6b 07 3b cd 1e 86 54-d5 95 e7 98 d2 34 dd 35   .k.;...T.....4.5
+    0020 - ab ca f1 27 8f 1f 4b 50-06 d1 54 f2 a4 25 ce 47   ...'..KP..T..%.G
+    0030 - 26 e4 0e 72 e8 dd e8 af-4e 67 e6 91 e3 90 4b cc   &..r....Ng....K.
+    0040 - 07 33 72 f7 fd 41 0c c8-9c cd 52 b9 a9 77 2a 4d   .3r..A....R..w*M
+    0050 - 39 62 50 ec 61 f9 be f4-5e 11 73 35 95 b8 f1 d5   9bP.a...^.s5....
+    0060 - 01 27 c9 5e 52 5f c0 74-82 12 84 ba 43 60 e4 84   .'.^R_.t....C`..
+    0070 - 32 8a 74 1c 9f 9f 3a 29-11 3d 85 85 a7 ba ee 51   2.t...:).=.....Q
+    0080 - 08 b2 26 ed 6c 94 5c 4a-6b 56                     ..&.l.\JkV
+
+    Start Time: 1763078005
+    Timeout   : 7200 (sec)
+    Verify return code: 18 (self-signed certificate)
+    Extended master secret: yes
+---
+DONE

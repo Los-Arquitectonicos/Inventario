@@ -1,0 +1,29 @@
+{
+  "timestamp": "2025-10-15T20:35:47.441116",
+  "duracion_segundos": 299.9226450920105,
+  "duracion_minutos": 4.998710751533508,
+  "total_requests": 40942,
+  "exitosos": 40942,
+  "fallidos": 0,
+  "tasa_exito_pct": 100.0,
+  "tasa_fallo_pct": 0.0,
+  "req_por_segundo": 136.50853201644637,
+  "req_por_minuto": 8190.511920986782,
+  "articulos_por_segundo": 136.50853201644637,
+  "tiempo_estimado_10k_seg": 73.2554943803455,
+  "tiempo_estimado_10k_min": 1.2209249063390917,
+  "cumple_objetivo_5min": true,
+  "response_time_min_ms": 90.51799774169922,
+  "response_time_max_ms": 1173.1688976287842,
+  "response_time_avg_ms": 157.69240957030647,
+  "response_time_p50_ms": 142.3323154449463,
+  "response_time_p95_ms": 249.97591972351074,
+  "response_time_p99_ms": 394.0589427947998,
+  "objetivos": {
+    "throughput_min_100": true,
+    "throughput_max_2000": false,
+    "tiempo_10k_menos_5min": true,
+    "tasa_exito_95pct": true
+  },
+  "errores_detalle": {}
+}

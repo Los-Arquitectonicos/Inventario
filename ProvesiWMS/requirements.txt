@@ -1,0 +1,20 @@
+# Django Core
+Django==4.2.24
+psycopg2-binary==2.9.7
+
+# Django REST Framework para APIs
+djangorestframework==3.14.0
+
+# JWT Authentication
+djangorestframework-simplejwt==5.3.0
+
+# Security & Validation
+django-cors-headers==4.3.1
+cryptography==41.0.7
+
+# AWS Production
+gunicorn==21.2.0
+whitenoise==6.6.0
+
+# Development & Testing
+coverage==7.3.2

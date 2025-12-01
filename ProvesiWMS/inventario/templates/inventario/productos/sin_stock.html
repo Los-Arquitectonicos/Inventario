@@ -1,0 +1,108 @@
+{% extends 'inventario/base.html' %}
+
+{% block title %}Productos Sin Stock - ProvesiWMS{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Productos Sin Stock</h2>
+    <span class="badge bg-danger fs-6">{{ productos.count }} producto{{ productos.count|pluralize }}</span>
+</div>
+
+<div class="alert alert-warning">
+    <h4><i class="fas fa-exclamation-triangle"></i> Atención</h4>
+    <p>Los siguientes productos no tienen stock disponible. Considera reabastecer para evitar interrupciones en las ventas.</p>
+</div>
+
+{% if productos %}
+<div class="row">
+    {% for producto in productos %}
+    <div class="col-md-6 col-lg-4 mb-3">
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+                <h6 class="card-title mb-0">{{ producto.nombre }}</h6>
+            </div>
+            <div class="card-body">
+                <p class="card-text">
+                    <strong>Marca:</strong> {{ producto.marca }}<br>
+                    <strong>Color:</strong> {{ producto.color }}<br>
+                    <strong>Talla:</strong> {{ producto.talla }}<br>
+                    <strong>Precio Venta:</strong> ${{ producto.precio_venta }}<br>
+                    <strong>Stock:</strong> <span class="text-danger">{{ producto.cantidad_stock }} unidades</span>
+                </p>
+                <div class="d-flex justify-content-between">
+                    <a href="{% url 'inventario:producto_detalle' producto.pk %}" class="btn btn-primary btn-sm">Ver Detalle</a>
+                    <button class="btn btn-success btn-sm" onclick="mostrarModalReabastecer({{ producto.pk }}, '{{ producto.nombre|escapejs }}')">
+                        Reabastecer
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Modal para reabastecer -->
+<div class="modal fade" id="reabastecerModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Reabastecer Producto</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Producto: <strong id="nombreProducto"></strong></p>
+                <form id="reabastecerForm">
+                    <div class="mb-3">
+                        <label class="form-label">Cantidad a agregar:</label>
+                        <input type="number" class="form-control" id="cantidadAgregar" min="1" placeholder="Ingrese la cantidad">
+                    </div>
+                    <input type="hidden" id="productoId">
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-success" onclick="reabastecer()">Reabastecer</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% else %}
+<div class="alert alert-success text-center">
+    <h4><i class="fas fa-check-circle"></i> ¡Excelente!</h4>
+    <p>Todos los productos tienen stock disponible.</p>
+    <a href="{% url 'inventario:productos_lista' %}" class="btn btn-primary">Ver Todos los Productos</a>
+</div>
+{% endif %}
+
+<div class="mt-4">
+    <a href="{% url 'inventario:productos_lista' %}" class="btn btn-secondary">Volver a Productos</a>
+    <a href="{% url 'inventario:reporte_inventario' %}" class="btn btn-info">Ver Reporte de Inventario</a>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function mostrarModalReabastecer(productoId, nombreProducto) {
+    document.getElementById('productoId').value = productoId;
+    document.getElementById('nombreProducto').textContent = nombreProducto;
+    document.getElementById('cantidadAgregar').value = '';
+    
+    var modal = new bootstrap.Modal(document.getElementById('reabastecerModal'));
+    modal.show();
+}
+
+function reabastecer() {
+    var productoId = document.getElementById('productoId').value;
+    var cantidad = document.getElementById('cantidadAgregar').value;
+    
+    if (cantidad && cantidad > 0) {
+        // Aquí podrías hacer una llamada AJAX para reabastecer
+        alert('Funcionalidad de reabastecer: ' + cantidad + ' unidades para producto ID ' + productoId);
+        // location.reload(); // Recargar después de la operación
+    } else {
+        alert('Por favor ingrese una cantidad válida');
+    }
+}
+</script>
+{% endblock %}

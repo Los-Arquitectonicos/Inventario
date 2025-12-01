@@ -1,0 +1,91 @@
+{% extends 'inventario/base.html' %}
+
+{% block title %}Dashboard - ProvesiWMS{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h1>Dashboard de Inventario</h1>
+        <p class="text-muted">Resumen general del sistema de gestión de inventario</p>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-2 mb-3">
+        <div class="card text-white bg-primary">
+            <div class="card-body">
+                <h5 class="card-title">Productos</h5>
+                <h2>{{ total_productos }}</h2>
+                <small>Total en catálogo</small>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-2 mb-3">
+        <div class="card text-white bg-info">
+            <div class="card-body">
+                <h5 class="card-title">Bodegas</h5>
+                <h2>{{ total_bodegas }}</h2>
+                <small>Ubicaciones activas</small>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-2 mb-3">
+        <div class="card text-white bg-success">
+            <div class="card-body">
+                <h5 class="card-title">Clientes</h5>
+                <h2>{{ total_clientes }}</h2>
+                <small>Clientes registrados</small>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <div class="card text-white bg-warning">
+            <div class="card-body">
+                <h5 class="card-title">Pedidos Pendientes</h5>
+                <h2>{{ pedidos_pendientes }}</h2>
+                <small>Requieren atención</small>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-3 mb-3">
+        <div class="card text-white bg-danger">
+            <div class="card-body">
+                <h5 class="card-title">Sin Stock</h5>
+                <h2>{{ productos_sin_stock }}</h2>
+                <small>Productos agotados</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Acciones Rápidas</h5>
+            </div>
+            <div class="card-body">
+                <a href="{% url 'inventario:crear_pedido' %}" class="btn btn-primary mb-2 d-block">Crear Nuevo Pedido</a>
+                <a href="{% url 'inventario:productos_sin_stock' %}" class="btn btn-warning mb-2 d-block">Ver Productos Sin Stock</a>
+                <a href="{% url 'inventario:reporte_inventario' %}" class="btn btn-info d-block">Generar Reporte de Inventario</a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Reportes</h5>
+            </div>
+            <div class="card-body">
+                <a href="{% url 'inventario:reporte_ventas' %}" class="btn btn-outline-primary mb-2 d-block">Reporte de Ventas</a>
+                <a href="{% url 'inventario:reporte_inventario' %}" class="btn btn-outline-secondary d-block">Reporte de Inventario</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,26 @@
+{
+  "id": "test-environment-001",
+  "name": "Test Environment",
+  "values": [
+    {
+      "key": "base_url",
+      "value": "https://provesi-alb-1321184118.us-east-1.elb.amazonaws.com",
+      "enabled": true
+    },
+    {
+      "key": "api_admin_token",
+      "value": "",
+      "enabled": true
+    },
+    {
+      "key": "test_cliente_id",
+      "value": "",
+      "enabled": true
+    },
+    {
+      "key": "pedido_original_id",
+      "value": "",
+      "enabled": true
+    }
+  ]
+}
