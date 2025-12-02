@@ -65,8 +65,6 @@ output "notifications_url" {
   value       = "https://${aws_lb.main.dns_name}/api/notifications"
 }
 
-}
-
 output "ssh_app_server_2" {
   description = "SSH command for application server 2"
   value       = "ssh ubuntu@${aws_instance.app_server[1].public_ip}"
