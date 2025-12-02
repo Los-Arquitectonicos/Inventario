@@ -6,7 +6,10 @@ const UserSchema = new mongoose.Schema({
   role: { type: String, enum: ['admin', 'bodeguero', 'vendedor'], required: true },
   notifications: [
     {
+      title: { type: String },
       message: { type: String, required: true },
+      type: { type: String, default: 'info' },
+      priority: { type: String, default: 'normal' },
       read: { type: Boolean, default: false },
       timestamp: { type: Date, default: Date.now }
     }
