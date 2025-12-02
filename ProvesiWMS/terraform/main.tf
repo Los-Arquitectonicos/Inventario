@@ -655,8 +655,8 @@ resource "aws_lb_target_group" "notifications" {
 
   health_check {
     enabled             = true
-    path                = "/api/notifications" # Asumiendo que GET / retorna algo o 401, ajustar si es necesario
-    matcher             = "200,401" # 401 es aceptable si requiere auth
+    path                = "/health" # Use the health endpoint we added
+    matcher             = "200" # Only 200 for health checks
     interval            = 30
   }
 
