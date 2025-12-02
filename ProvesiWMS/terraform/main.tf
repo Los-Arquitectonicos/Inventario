@@ -25,7 +25,7 @@ provider "tls" {
 locals {
   project_name = "${var.project_prefix}-wms"
   repository   = "https://github.com/Los-Arquitectonicos/Inventario.git"
-  branch       = "Sprint3V2"
+  branch       = "notifications"
 
   common_tags = {
     Project     = local.project_name
@@ -478,4 +478,213 @@ resource "aws_lb_listener" "https" {
   }
 
   depends_on = [aws_acm_certificate.alb_cert]
+}
+
+# ==========================================
+# MICROSERVICIO DE NOTIFICACIONES & MONGODB
+# ==========================================
+
+# Security Group: Microservicio Notificaciones
+resource "aws_security_group" "notifications_sg" {
+  name        = "${var.project_prefix}-notifications-sg"
+  description = "Security group for Notifications Microservice"
+  vpc_id      = data.aws_vpc.default.id
+
+  ingress {
+    description     = "HTTP from ALB"
+    from_port       = 3001
+    to_port         = 3001
+    protocol        = "tcp"
+    security_groups = [aws_security_group.alb.id]
+  }
+
+  ingress {
+    description = "SSH from anywhere"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    description = "Allow all outbound traffic"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = merge(local.common_tags, {
+    Name = "${var.project_prefix}-notifications-sg"
+  })
+}
+
+# Security Group: MongoDB
+resource "aws_security_group" "mongodb_sg" {
+  name        = "${var.project_prefix}-mongodb-sg"
+  description = "Security group for MongoDB"
+  vpc_id      = data.aws_vpc.default.id
+
+  ingress {
+    description     = "MongoDB from Notifications"
+    from_port       = 27017
+    to_port         = 27017
+    protocol        = "tcp"
+    security_groups = [aws_security_group.notifications_sg.id]
+  }
+
+  ingress {
+    description = "SSH from anywhere"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    description = "Allow all outbound traffic"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = merge(local.common_tags, {
+    Name = "${var.project_prefix}-mongodb-sg"
+  })
+}
+
+# Instancia EC2: MongoDB
+resource "aws_instance" "mongodb" {
+  ami                         = data.aws_ami.ubuntu.id
+  instance_type               = "t3.small"
+  vpc_security_group_ids      = [aws_security_group.mongodb_sg.id]
+  associate_public_ip_address = true
+
+  user_data = <<-EOT
+              #!/bin/bash
+              exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
+              echo "Iniciando instalación de MongoDB..."
+              
+              sudo apt-get update
+              sudo apt-get install -y gnupg curl
+              
+              # Importar clave GPG de MongoDB
+              curl -fsSL https://www.mongodb.org/static/pgp/server-7.0.asc | \
+                 sudo gpg -o /usr/share/keyrings/mongodb-server-7.0.gpg \
+                 --dearmor
+              
+              # Agregar repositorio
+              echo "deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-server-7.0.gpg ] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/7.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-7.0.list
+              
+              sudo apt-get update
+              sudo apt-get install -y mongodb-org
+              
+              # Configurar bindIp para permitir conexiones remotas
+              sudo sed -i 's/bindIp: 127.0.0.1/bindIp: 0.0.0.0/' /etc/mongod.conf
+              
+              sudo systemctl start mongod
+              sudo systemctl enable mongod
+              
+              echo "MongoDB instalado y ejecutándose."
+              EOT
+
+  tags = merge(local.common_tags, {
+    Name = "${var.project_prefix}-mongodb"
+    Role = "database"
+  })
+}
+
+# Instancia EC2: Microservicio Notificaciones
+resource "aws_instance" "notifications" {
+  ami                         = data.aws_ami.ubuntu.id
+  instance_type               = "t3.small"
+  vpc_security_group_ids      = [aws_security_group.notifications_sg.id]
+  associate_public_ip_address = true
+
+  user_data = <<-EOT
+              #!/bin/bash
+              exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
+              echo "Iniciando configuración de Notifications Service..."
+              
+              # Instalar Node.js 20
+              curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+              sudo apt-get install -y nodejs git
+              
+              # Clonar repositorio y cambiar a la rama correcta
+              cd /home/ubuntu
+              sudo -u ubuntu git clone ${local.repository}
+              cd Inventario
+              sudo -u ubuntu git fetch origin ${local.branch}
+              sudo -u ubuntu git checkout ${local.branch}
+              
+              # Instalar PM2 globalmente
+              sudo npm install -g pm2
+              
+              # Instalar dependencias del microservicio
+              cd /home/ubuntu/Inventario/notifications
+              sudo -u ubuntu npm install
+              
+              # Configurar PM2 para inicio automático (Systemd)
+              # Esto genera y configura el servicio systemd para el usuario ubuntu
+              sudo env PATH=$PATH:/usr/bin /usr/lib/node_modules/pm2/bin/pm2 startup systemd -u ubuntu --hp /home/ubuntu
+              
+              # Iniciar aplicación con PM2 pasando variables de entorno
+              sudo -u ubuntu PORT=3001 MONGO_URI=mongodb://${aws_instance.mongodb.private_ip}:27017/provesi_notifications JWT_SECRET=${var.django_secret_key} pm2 start server.js --name notifications
+              
+              # Guardar la lista de procesos para que revivan al reinicio
+              sudo -u ubuntu pm2 save
+              
+              echo "Notifications Service iniciado y configurado para arranque automático."
+              EOT
+
+  tags = merge(local.common_tags, {
+    Name = "${var.project_prefix}-notifications"
+    Role = "microservice"
+  })
+  
+  depends_on = [aws_instance.mongodb]
+}
+
+# Target Group para Notificaciones
+resource "aws_lb_target_group" "notifications" {
+  name     = "${var.project_prefix}-notif-tg"
+  port     = 3001
+  protocol = "HTTP"
+  vpc_id   = data.aws_vpc.default.id
+
+  health_check {
+    enabled             = true
+    path                = "/api/notifications" # Asumiendo que GET / retorna algo o 401, ajustar si es necesario
+    matcher             = "200,401" # 401 es aceptable si requiere auth
+    interval            = 30
+  }
+
+  tags = merge(local.common_tags, {
+    Name = "${var.project_prefix}-notif-tg"
+  })
+}
+
+# Attachment para Notificaciones
+resource "aws_lb_target_group_attachment" "notifications" {
+  target_group_arn = aws_lb_target_group.notifications.arn
+  target_id        = aws_instance.notifications.id
+  port             = 3001
+}
+
+# Regla de Listener para enrutar /api/notifications*
+resource "aws_lb_listener_rule" "notifications" {
+  listener_arn = aws_lb_listener.https.arn
+  priority     = 100
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.notifications.arn
+  }
+
+  condition {
+    path_pattern {
+      values = ["/api/notifications*"]
+    }
+  }
 }

@@ -50,6 +50,23 @@ output "ssh_app_server_1" {
   value       = "ssh ubuntu@${aws_instance.app_server[0].public_ip}"
 }
 
+output "notifications_public_ip" {
+  description = "Public IP of Notifications Service"
+  value       = aws_instance.notifications.public_ip
+}
+
+output "mongodb_private_ip" {
+  description = "Private IP of MongoDB"
+  value       = aws_instance.mongodb.private_ip
+}
+
+output "notifications_url" {
+  description = "URL for Notifications Service"
+  value       = "https://${aws_lb.main.dns_name}/api/notifications"
+}
+
+}
+
 output "ssh_app_server_2" {
   description = "SSH command for application server 2"
   value       = "ssh ubuntu@${aws_instance.app_server[1].public_ip}"
