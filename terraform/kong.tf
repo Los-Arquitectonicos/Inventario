@@ -1,4 +1,4 @@
-# ==========================================
+P# ==========================================
 # KONG API GATEWAY - ÚNICO PUNTO DE ENTRADA
 # ==========================================
 # Arquitectura:
@@ -101,7 +101,7 @@ resource "aws_instance" "kong_gateway" {
               exec > >(tee /var/log/kong-install.log|logger -t kong-install -s 2>/dev/console) 2>&1
               echo "=========================================="
               echo "INSTALANDO KONG API GATEWAY"
-              echo "$(date): Iniciando instalación..."
+              echo "$$(date): Iniciando instalación..."
               echo "==========================================" 
               
               # Variable del ALB (backend interno)
@@ -110,7 +110,7 @@ resource "aws_instance" "kong_gateway" {
               # ==========================================
               # ACTUALIZAR SISTEMA
               # ==========================================
-              echo "$(date): Actualizando sistema..."
+              echo "$$(date): Actualizando sistema..."
               sudo apt-get update -y
               sudo apt-get upgrade -y
               sudo apt-get install -y curl wget gnupg lsb-release jq openssl
@@ -123,12 +123,12 @@ resource "aws_instance" "kong_gateway" {
               # ==========================================
               # INSTALAR KONG
               # ==========================================
-              echo "$(date): Instalando Kong Gateway..."
+              echo "$$(date): Instalando Kong Gateway..."
               
               curl -1sLf "https://packages.konghq.com/public/gateway-35/gpg.59266503870919B5.key" | \
                 sudo gpg --dearmor -o /usr/share/keyrings/kong-gateway-35-archive-keyring.gpg
               
-              echo "deb [signed-by=/usr/share/keyrings/kong-gateway-35-archive-keyring.gpg] https://packages.konghq.com/public/gateway-35/deb/ubuntu $(lsb_release -cs) main" | \
+              echo "deb [signed-by=/usr/share/keyrings/kong-gateway-35-archive-keyring.gpg] https://packages.konghq.com/public/gateway-35/deb/ubuntu $$(lsb_release -cs) main" | \
                 sudo tee /etc/apt/sources.list.d/kong-gateway-35.list > /dev/null
               
               sudo apt-get update -y
@@ -137,7 +137,7 @@ resource "aws_instance" "kong_gateway" {
               # ==========================================
               # GENERAR CERTIFICADO SSL
               # ==========================================
-              echo "$(date): Generando certificado SSL..."
+              echo "$$(date): Generando certificado SSL..."
               sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
                 -keyout /etc/kong/ssl/kong.key \
                 -out /etc/kong/ssl/kong.crt \
@@ -147,7 +147,7 @@ resource "aws_instance" "kong_gateway" {
               # ==========================================
               # CONFIGURACIÓN DE KONG
               # ==========================================
-              echo "$(date): Configurando Kong..."
+              echo "$$(date): Configurando Kong..."
               
               # kong.conf - Configuración del servidor
               sudo tee /etc/kong/kong.conf > /dev/null <<'KONGCONF'
@@ -337,7 +337,7 @@ KONGYML
               # ==========================================
               # SERVICIO SYSTEMD
               # ==========================================
-              echo "$(date): Configurando servicio systemd..."
+              echo "$$(date): Configurando servicio systemd..."
               
               sudo tee /etc/systemd/system/kong.service > /dev/null <<'SYSTEMD'
 [Unit]
@@ -365,26 +365,26 @@ SYSTEMD
               # ==========================================
               # ESPERAR ALB E INICIAR KONG
               # ==========================================
-              echo "$(date): Esperando que el ALB esté disponible..."
-              echo "$(date): ALB DNS: $${ALB_DNS}"
+              echo "$$(date): Esperando que el ALB esté disponible..."
+              echo "$$(date): ALB DNS: $${ALB_DNS}"
               
               # Esperar hasta 10 minutos a que el ALB responda
               for i in {1..60}; do
-                HTTP_CODE=$(curl -sk -o /dev/null -w "%%{http_code}" "https://$${ALB_DNS}/inventario/" 2>/dev/null || echo "000")
-                if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "301" ] || [ "$HTTP_CODE" = "302" ]; then
-                  echo "$(date): ✅ ALB respondiendo (HTTP $HTTP_CODE)"
+                HTTP_CODE=$$(curl -sk -o /dev/null -w "%%{http_code}" "https://$${ALB_DNS}/inventario/" 2>/dev/null || echo "000")
+                if [ "$$HTTP_CODE" = "200" ] || [ "$$HTTP_CODE" = "301" ] || [ "$$HTTP_CODE" = "302" ]; then
+                  echo "$$(date): ✅ ALB respondiendo (HTTP $$HTTP_CODE)"
                   break
                 fi
-                echo "$(date): Esperando ALB... intento $i/60 (HTTP: $HTTP_CODE)"
+                echo "$$(date): Esperando ALB... intento $$i/60 (HTTP: $$HTTP_CODE)"
                 sleep 10
               done
               
               # Verificar configuración
-              echo "$(date): Verificando configuración de Kong..."
+              echo "$$(date): Verificando configuración de Kong..."
               sudo /usr/local/bin/kong check /etc/kong/kong.conf
               
               # Iniciar Kong
-              echo "$(date): Iniciando Kong Gateway..."
+              echo "$$(date): Iniciando Kong Gateway..."
               sudo /usr/local/bin/kong start -c /etc/kong/kong.conf
               
               # Habilitar inicio automático
@@ -397,7 +397,7 @@ SYSTEMD
               # ==========================================
               # RESUMEN
               # ==========================================
-              PUBLIC_IP=$(curl -sf http://169.254.169.254/latest/meta-data/public-ipv4 || echo "unknown")
+              PUBLIC_IP=$$(curl -sf http://169.254.169.254/latest/meta-data/public-ipv4 || echo "unknown")
               
               echo ""
               echo "=========================================="

@@ -222,7 +222,7 @@ resource "aws_instance" "app_server" {
               exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
               echo "=========================================="
               echo "CONFIGURANDO SERVIDOR ${count.index + 1}"
-              echo "$(date): Iniciando configuración..."
+              echo "$$(date): Iniciando configuración..."
               echo "=========================================="
               
               # Variables de entorno para Django con configuraciones de seguridad
@@ -274,12 +274,12 @@ resource "aws_instance" "app_server" {
               cd /opt/apps
               
               if [ ! -d Inventario ]; then
-                echo "$(date): Clonando repositorio..."
+                echo "$$(date): Clonando repositorio..."
                 git clone ${local.repository}
               fi
               
               cd Inventario
-              echo "$(date): Cambiando a branch ${local.branch}..."
+              echo "$$(date): Cambiando a branch ${local.branch}..."
               git fetch origin ${local.branch}
               git checkout ${local.branch}
               
@@ -295,7 +295,7 @@ resource "aws_instance" "app_server" {
               cd ProvesiWMS
               
               # Esperar a que la base de datos esté lista
-              echo "$(date): Esperando base de datos..."
+              echo "$$(date): Esperando base de datos..."
               for i in {1..30}; do
                 pg_isready -h ${aws_instance.database.private_ip} -p ${var.database_port} -U ${var.database_user} && break
                 sleep 10
@@ -303,20 +303,20 @@ resource "aws_instance" "app_server" {
               
               # Aplicar migraciones solo en la primera instancia
               %{if count.index == 0}
-              echo "$(date): Aplicando migraciones..."
+              echo "$$(date): Aplicando migraciones..."
               python manage.py makemigrations --noinput || true
               python manage.py migrate --noinput || true
               [ -f setup_users.py ] && python setup_users.py || true
               python manage.py collectstatic --noinput || true
               %{else}
-              echo "$(date): Esperando migraciones del servidor principal..."
+              echo "$$(date): Esperando migraciones del servidor principal..."
               sleep 120
               %{endif}
               
               # ==========================================
               # INICIAR DJANGO CON GUNICORN AUTOMÁTICAMENTE
               # ==========================================
-              echo "$(date): Configurando servicio Django con Gunicorn..."
+              echo "$$(date): Configurando servicio Django con Gunicorn..."
               
               # Crear script de inicio
               sudo tee /opt/apps/start_django.sh > /dev/null <<'STARTSCRIPT'
@@ -355,15 +355,15 @@ DJANGOSERVICE
               # Verificar que Django está corriendo
               sleep 5
               if curl -sf http://localhost:8000/inventario/ > /dev/null 2>&1; then
-                echo "$(date): ✅ Django está corriendo en puerto 8000"
+                echo "$$(date): ✅ Django está corriendo en puerto 8000"
               else
-                echo "$(date): ⚠️ Django puede estar iniciando..."
+                echo "$$(date): ⚠️ Django puede estar iniciando..."
                 sudo systemctl status django || true
               fi
               
               echo ""
               echo "=========================================="
-              echo "$(date): ✅ SERVIDOR ${count.index + 1} COMPLETADO"
+              echo "$$(date): ✅ SERVIDOR ${count.index + 1} COMPLETADO"
               echo "=========================================="
               echo "Django corriendo automáticamente con Gunicorn"
               echo "Puerto: 8000"

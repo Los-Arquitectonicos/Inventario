@@ -283,7 +283,7 @@ for i in {1..30}; do
         echo "✅ MongoDB is accessible!"
         break
     fi
-    echo "Attempt $i/30: MongoDB not ready yet..."
+    echo "Attempt $$i/30: MongoDB not ready yet..."
     sleep 5
 done
 
