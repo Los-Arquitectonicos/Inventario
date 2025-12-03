@@ -313,16 +313,31 @@ resource "aws_instance" "django" {
               
               export DATABASE_HOST=${aws_instance.database.private_ip}
               echo "DATABASE_HOST=${aws_instance.database.private_ip}" | sudo tee -a /etc/environment
+              export DATABASE_NAME=provesi_wms
+              echo "DATABASE_NAME=provesi_wms" | sudo tee -a /etc/environment
+              export DATABASE_USER=provesi_user
+              echo "DATABASE_USER=provesi_user" | sudo tee -a /etc/environment
+              export DATABASE_PASSWORD='Provesi2024!'
+              echo "DATABASE_PASSWORD='Provesi2024!'" | sudo tee -a /etc/environment
+              export DATABASE_PORT=5432
+              echo "DATABASE_PORT=5432" | sudo tee -a /etc/environment
 
               sudo apt-get update -y
-              sudo apt-get install -y python3-pip git libpq-dev python3-dev
+              sudo apt-get install -y python3-pip python3-venv git libpq-dev python3-dev
 
               mkdir -p /home/ubuntu/app
               cd /home/ubuntu/app
               git clone -b ${local.branch} ${local.repository}
-              cd Inventario
+              cd Inventario/ProvesiWMS
 
-              sudo pip3 install -r requirements.txt --break-system-packages
+              # Crear virtualenv e instalar dependencias
+              python3 -m venv venv
+              source venv/bin/activate
+              pip install --upgrade pip
+              pip install -r requirements.txt
+              
+              # Cambiar ownership al usuario ubuntu
+              sudo chown -R ubuntu:ubuntu /home/ubuntu/app
               EOT
 
   tags = merge(local.common_tags, {
@@ -406,16 +421,27 @@ resource "aws_instance" "notifications" {
               
               export MONGODB_HOST=${aws_instance.mongodb.private_ip}
               echo "MONGODB_HOST=${aws_instance.mongodb.private_ip}" | sudo tee -a /etc/environment
+              export MONGODB_PORT=27017
+              echo "MONGODB_PORT=27017" | sudo tee -a /etc/environment
+              export MONGODB_DATABASE=notifications_db
+              echo "MONGODB_DATABASE=notifications_db" | sudo tee -a /etc/environment
 
               sudo apt-get update -y
-              sudo apt-get install -y python3-pip git
+              sudo apt-get install -y python3-pip python3-venv git
 
               mkdir -p /home/ubuntu/app
               cd /home/ubuntu/app
               git clone -b ${local.branch} ${local.repository}
               cd Inventario/notifications
 
-              sudo pip3 install -r requirements.txt --break-system-packages
+              # Crear virtualenv e instalar dependencias
+              python3 -m venv venv
+              source venv/bin/activate
+              pip install --upgrade pip
+              pip install -r requirements.txt
+              
+              # Cambiar ownership al usuario ubuntu
+              sudo chown -R ubuntu:ubuntu /home/ubuntu/app
               EOT
 
   tags = merge(local.common_tags, {
@@ -517,18 +543,22 @@ output "instructions" {
      
      INSTANCIA 1:
      ssh ubuntu@${aws_instance.django[0].public_ip}
-     cd /home/ubuntu/app/Inventario
+     cd /home/ubuntu/app/Inventario/ProvesiWMS
+     source venv/bin/activate
      python3 manage.py migrate  # SOLO en la primera instancia
      python3 manage.py runserver 0.0.0.0:8080
      
      INSTANCIA 2:
      ssh ubuntu@${aws_instance.django[1].public_ip}
-     cd /home/ubuntu/app/Inventario
+     cd /home/ubuntu/app/Inventario/ProvesiWMS
+     source venv/bin/activate
      python3 manage.py runserver 0.0.0.0:8080
   
   2. NOTIFICATIONS:
      ssh ubuntu@${aws_instance.notifications.public_ip}
      cd /home/ubuntu/app/Inventario/notifications
+     source venv/bin/activate
+     python3 initialize_users.py  # SOLO la primera vez
      python3 -m uvicorn main:app --host 0.0.0.0 --port 8001
   
   3. KONG API Gateway:
