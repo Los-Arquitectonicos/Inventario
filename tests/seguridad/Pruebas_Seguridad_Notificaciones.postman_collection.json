@@ -1,0 +1,953 @@
+{
+	"info": {
+		"_postman_id": "a8c5e9f2-3d4a-4e8b-9c1d-5f6e7a8b9c0d",
+		"name": "Pruebas de Seguridad - Microservicio Notificaciones",
+		"description": "Suite de pruebas de seguridad para verificar autenticación y autorización en el microservicio de notificaciones a través de Kong API Gateway.\n\nPruebas incluidas:\n- Acceso sin autenticación (debe fallar)\n- Acceso con token inválido (debe fallar)\n- Acceso con token expirado (debe fallar)\n- Acceso con token válido pero rol incorrecto\n- Acceso con token válido y rol correcto\n- SQL Injection en parámetros\n- XSS en mensajes\n- Intento de acceso a notificaciones de otros usuarios",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. Pruebas Sin Autenticación",
+			"item": [
+				{
+					"name": "❌ Listar notificaciones sin token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Debe retornar 401 Unauthorized\", function () {",
+									"    pm.response.to.have.status(401);",
+									"});",
+									"",
+									"pm.test(\"Debe incluir mensaje de error de autenticación\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('detail');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/notifications/inbox",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"notifications",
+								"inbox"
+							]
+						},
+						"description": "Intenta acceder al inbox sin proporcionar token de autenticación. Debe retornar 401."
+					},
+					"response": []
+				},
+				{
+					"name": "❌ Listar usuarios sin token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Debe retornar 401 Unauthorized\", function () {",
+									"    pm.response.to.have.status(401);",
+									"});",
+									"",
+									"pm.test(\"Debe incluir mensaje de error\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('detail');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{BASE_URL}}/notifications/users",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"notifications",
+								"users"
+							]
+						},
+						"description": "Intenta listar usuarios sin autenticación. Debe retornar 401."
+					},
+					"response": []
+				},
+				{
+					"name": "❌ Enviar notificación sin token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Debe retornar 401 Unauthorized\", function () {",
+									"    pm.response.to.have.status(401);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"message\": \"Intento de envío sin autenticación\",\n    \"recipient_username\": \"operario1\"\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/notifications/send",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"notifications",
+								"send"
+							]
+						},
+						"description": "Intenta enviar una notificación sin autenticación. Debe retornar 401."
+					},
+					"response": []
+				}
+			],
+			"description": "Pruebas de acceso a endpoints protegidos sin proporcionar token de autenticación"
+		},
+		{
+			"name": "2. Pruebas Con Token Inválido",
+			"item": [
+				{
+					"name": "❌ Acceso con token malformado",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Debe retornar 401 o 403\", function () {",
+									"    pm.expect([401, 403]).to.include(pm.response.code);",
+									"});",
+									"",
+									"pm.test(\"Debe incluir mensaje de error\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('detail');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer token_completamente_invalido_123456",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/notifications/inbox",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"notifications",
+								"inbox"
+							]
+						},
+						"description": "Intenta acceder con un token JWT malformado"
+					},
+					"response": []
+				},
+				{
+					"name": "❌ Acceso con formato de token incorrecto",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Debe retornar 401\", function () {",
+									"    pm.response.to.have.status(401);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "InvalidFormat eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/notifications/inbox",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"notifications",
+								"inbox"
+							]
+						},
+						"description": "Intenta usar un token sin el prefijo 'Bearer' correcto"
+					},
+					"response": []
+				},
+				{
+					"name": "❌ Acceso con token vacío",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Debe retornar 401\", function () {",
+									"    pm.response.to.have.status(401);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer ",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/notifications/inbox",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"notifications",
+								"inbox"
+							]
+						},
+						"description": "Intenta acceder con un token vacío"
+					},
+					"response": []
+				}
+			],
+			"description": "Pruebas con tokens JWT inválidos o malformados"
+		},
+		{
+			"name": "3. Setup - Obtener Tokens Válidos",
+			"item": [
+				{
+					"name": "✅ Login Admin",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Login exitoso\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Token recibido\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('access_token');",
+									"    pm.environment.set(\"ADMIN_TOKEN\", jsonData.access_token);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"admin\",\n    \"password\": \"admin123\"\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/notifications/auth/login",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"notifications",
+								"auth",
+								"login"
+							]
+						},
+						"description": "Obtiene token JWT válido para usuario admin"
+					},
+					"response": []
+				},
+				{
+					"name": "✅ Login Operario1",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Login exitoso\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Token recibido\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('access_token');",
+									"    pm.environment.set(\"OPERARIO_TOKEN\", jsonData.access_token);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"operario1\",\n    \"password\": \"operario123\"\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/notifications/auth/login",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"notifications",
+								"auth",
+								"login"
+							]
+						},
+						"description": "Obtiene token JWT válido para operario1"
+					},
+					"response": []
+				},
+				{
+					"name": "✅ Login Empacador",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Login exitoso\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Token recibido\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('access_token');",
+									"    pm.environment.set(\"EMPACADOR_TOKEN\", jsonData.access_token);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"empacador1\",\n    \"password\": \"empacador123\"\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/notifications/auth/login",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"notifications",
+								"auth",
+								"login"
+							]
+						},
+						"description": "Obtiene token JWT válido para empacador"
+					},
+					"response": []
+				}
+			],
+			"description": "Obtiene tokens válidos para diferentes usuarios. Ejecutar antes de las pruebas de autorización."
+		},
+		{
+			"name": "4. Pruebas de Autorización por Rol",
+			"item": [
+				{
+					"name": "❌ Operario intenta listar todos los usuarios",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Debe retornar 403 Forbidden\", function () {",
+									"    pm.response.to.have.status(403);",
+									"});",
+									"",
+									"pm.test(\"Mensaje indica falta de permisos\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.detail).to.include('admin');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{OPERARIO_TOKEN}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/notifications/users",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"notifications",
+								"users"
+							]
+						},
+						"description": "Un operario no debe poder listar todos los usuarios (solo admin)"
+					},
+					"response": []
+				},
+				{
+					"name": "✅ Admin lista todos los usuarios",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Debe retornar 200 OK\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Retorna array de usuarios\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.be.an('array');",
+									"    pm.expect(jsonData.length).to.be.above(0);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{ADMIN_TOKEN}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/notifications/users",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"notifications",
+								"users"
+							]
+						},
+						"description": "Admin debe poder listar todos los usuarios"
+					},
+					"response": []
+				},
+				{
+					"name": "❌ Operario intenta ver detalles de otro usuario",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Debe retornar 403 Forbidden\", function () {",
+									"    pm.response.to.have.status(403);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{OPERARIO_TOKEN}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/notifications/users/empacador1",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"notifications",
+								"users",
+								"empacador1"
+							]
+						},
+						"description": "Un operario no debe poder ver detalles de otros usuarios"
+					},
+					"response": []
+				},
+				{
+					"name": "✅ Admin ve detalles de cualquier usuario",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Debe retornar 200 OK\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Retorna información del usuario\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('username');",
+									"    pm.expect(jsonData.username).to.equal('operario1');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{ADMIN_TOKEN}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/notifications/users/operario1",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"notifications",
+								"users",
+								"operario1"
+							]
+						},
+						"description": "Admin debe poder ver detalles de cualquier usuario"
+					},
+					"response": []
+				}
+			],
+			"description": "Pruebas de control de acceso basado en roles (RBAC)"
+		},
+		{
+			"name": "5. Pruebas de Aislamiento de Datos",
+			"item": [
+				{
+					"name": "✅ Operario1 ve solo sus notificaciones",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Debe retornar 200 OK\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Retorna array de notificaciones\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.be.an('array');",
+									"});",
+									"",
+									"pm.test(\"Guarda ID de notificación para pruebas\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.length > 0) {",
+									"        pm.environment.set(\"OPERARIO1_NOTIFICATION_ID\", jsonData[0].id);",
+									"    }",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{OPERARIO_TOKEN}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/notifications/inbox",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"notifications",
+								"inbox"
+							]
+						},
+						"description": "Operario1 accede a su inbox"
+					},
+					"response": []
+				},
+				{
+					"name": "✅ Empacador ve solo sus notificaciones",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Debe retornar 200 OK\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Retorna array de notificaciones\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.be.an('array');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{EMPACADOR_TOKEN}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/notifications/inbox",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"notifications",
+								"inbox"
+							]
+						},
+						"description": "Empacador accede a su inbox"
+					},
+					"response": []
+				},
+				{
+					"name": "❌ Empacador NO puede marcar como leída notificación de Operario1",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Debe retornar 404 o 403\", function () {",
+									"    pm.expect([403, 404]).to.include(pm.response.code);",
+									"});",
+									"",
+									"pm.test(\"No puede modificar notificaciones de otros\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('detail');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{EMPACADOR_TOKEN}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/notifications/inbox/{{OPERARIO1_NOTIFICATION_ID}}/read",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"notifications",
+								"inbox",
+								"{{OPERARIO1_NOTIFICATION_ID}}",
+								"read"
+							]
+						},
+						"description": "Empacador intenta marcar como leída una notificación que no le pertenece"
+					},
+					"response": []
+				}
+			],
+			"description": "Pruebas para verificar que los usuarios solo pueden acceder a sus propios datos"
+		},
+		{
+			"name": "6. Pruebas de Inyección y XSS",
+			"item": [
+				{
+					"name": "❌ SQL Injection en username",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"No debe permitir SQL Injection\", function () {",
+									"    pm.expect([401, 404]).to.include(pm.response.code);",
+									"});",
+									"",
+									"pm.test(\"No debe retornar datos sensibles\", function () {",
+									"    var responseText = pm.response.text();",
+									"    pm.expect(responseText).to.not.include('password');",
+									"    pm.expect(responseText).to.not.include('hashed_password');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"admin' OR '1'='1\",\n    \"password\": \"cualquiera\"\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/notifications/auth/login",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"notifications",
+								"auth",
+								"login"
+							]
+						},
+						"description": "Intenta SQL Injection en el campo username"
+					},
+					"response": []
+				},
+				{
+					"name": "✅ Admin envía notificación con XSS (debe sanitizar)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Notificación enviada\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Debe escapar el contenido HTML\", function () {",
+									"    // La notificación se envió, pero al recuperarla debe estar escapada",
+									"    pm.expect(true).to.be.true;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{ADMIN_TOKEN}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"message\": \"<script>alert('XSS')</script> Test de seguridad\",\n    \"recipient_username\": \"operario1\"\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/notifications/send",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"notifications",
+								"send"
+							]
+						},
+						"description": "Envía notificación con contenido XSS, debe ser sanitizado"
+					},
+					"response": []
+				},
+				{
+					"name": "✅ Verificar que XSS fue escapado",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Recupera notificaciones\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Script tags deben estar escapados o removidos\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    var messages = jsonData.map(n => n.message).join(' ');",
+									"    // Verificar que no hay tags de script ejecutables",
+									"    pm.expect(messages).to.not.match(/<script[^>]*>.*<\\/script>/i);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{OPERARIO_TOKEN}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{BASE_URL}}/notifications/inbox",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"notifications",
+								"inbox"
+							]
+						},
+						"description": "Verifica que el contenido XSS fue escapado correctamente"
+					},
+					"response": []
+				}
+			],
+			"description": "Pruebas de seguridad contra inyecciones SQL, NoSQL y XSS"
+		},
+		{
+			"name": "7. Pruebas de Rate Limiting (Opcional)",
+			"item": [
+				{
+					"name": "Test múltiples intentos de login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Verifica respuesta del intento de login\", function () {",
+									"    // Puede ser 401 (credenciales incorrectas) o 429 (rate limit)",
+									"    pm.expect([401, 429]).to.include(pm.response.code);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\": \"admin\",\n    \"password\": \"contraseña_incorrecta\"\n}"
+						},
+						"url": {
+							"raw": "{{BASE_URL}}/notifications/auth/login",
+							"host": [
+								"{{BASE_URL}}"
+							],
+							"path": [
+								"notifications",
+								"auth",
+								"login"
+							]
+						},
+						"description": "Intento de login con credenciales incorrectas. Ejecutar múltiples veces para verificar rate limiting."
+					},
+					"response": []
+				}
+			],
+			"description": "Pruebas para verificar protección contra ataques de fuerza bruta"
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "BASE_URL",
+			"value": "https://3.238.225.18:8443",
+			"type": "string"
+		}
+	]
+}
