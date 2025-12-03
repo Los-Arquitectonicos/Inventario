@@ -1,11 +1,7 @@
 const express = require('express');
 const cors = require('cors');
-const connectDB = require('./config/db');
 
 const app = express();
-
-// Connect Database
-connectDB();
 
 // Init Middleware
 app.use(cors());
@@ -13,27 +9,46 @@ app.use(express.json({ extended: false }));
 
 // Health check endpoint for ALB
 app.get('/health', (req, res) => {
-  res.status(200).json({ status: 'healthy', timestamp: new Date().toISOString() });
+  res.status(200).json({ 
+    status: 'healthy', 
+    service: 'notifications-simple',
+    timestamp: new Date().toISOString(),
+    message: 'Simple notifications service for testing routing'
+  });
 });
 
 // Root endpoint
 app.get('/', (req, res) => {
-  res.json({ message: 'ProvesiWMS Notifications Service', version: '1.0.0' });
+  res.json({ 
+    message: 'ProvesiWMS Notifications Service - Simplified for Testing', 
+    version: '1.0.0-simple',
+    status: 'success',
+    endpoints: ['/health', '/', '/test']
+  });
 });
 
-// Define Routes
-app.use('/api/auth', require('./routes/authRoutes'));
-app.use('/api/notifications', require('./routes/notificationRoutes'));
-
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error('Error:', err);
-  res.status(500).json({ error: 'Internal Server Error', message: err.message });
+// Simple test endpoint
+app.get('/test', (req, res) => {
+  res.json({ 
+    status: 'success',
+    message: 'Notifications routing test successful!',
+    timestamp: new Date().toISOString(),
+    request_info: {
+      method: req.method,
+      path: req.path,
+      ip: req.ip,
+      headers: req.headers
+    }
+  });
 });
 
 // 404 handler
 app.use('*', (req, res) => {
-  res.status(404).json({ error: 'Not Found', path: req.originalUrl });
+  res.status(404).json({ 
+    error: 'Not Found', 
+    path: req.originalUrl,
+    message: 'Available endpoints: /, /health, /test'
+  });
 });
 
 module.exports = app;
