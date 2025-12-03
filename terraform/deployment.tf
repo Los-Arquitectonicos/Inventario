@@ -20,30 +20,6 @@ terraform {
   }
 }
 
-variable "region" {
-  description = "AWS region for deployment"
-  type        = string
-  default     = "us-east-1"
-}
-
-variable "project_prefix" {
-  description = "Prefix used for naming AWS resources"
-  type        = string
-  default     = "provesi"
-}
-
-variable "instance_type" {
-  description = "EC2 instance type"
-  type        = string
-  default     = "t2.micro"
-}
-
-variable "key_name" {
-  description = "SSH key pair name for EC2 instances"
-  type        = string
-  default     = "vockey"
-}
-
 provider "aws" {
   region = var.region
 }
@@ -713,5 +689,44 @@ output "instructions" {
   # Directamente al ALB HTTPS
   curl -k https://${aws_lb.main.dns_name}/inventario/
   
-  ========================================\n  ARQUITECTURA:\n  ========================================\n  \n  Internet → Kong (${aws_instance.kong.public_ip})\n           ├→ :8000 HTTP  } → /inventario, /api, /admin → ALB HTTPS (${aws_lb.main.dns_name}:443)\n           ├→ :8443 HTTPS }                                ├→ Django 1 (${aws_instance.django[0].private_ip}:8080) ✅ RUNNING\n           │                                               └→ Django 2 (${aws_instance.django[1].private_ip}:8080) ✅ RUNNING\n           └→ /notifications → FastAPI (${aws_instance.notifications.private_ip}:8001) ✅ RUNNING\n  \n  ========================================\n  LOGS (si necesitas debug):\n  ========================================\n  \n  # Django logs\n  ssh ubuntu@${aws_instance.django[0].public_ip}\n  tail -f /home/ubuntu/django.log\n  \n  # Notifications logs\n  ssh ubuntu@${aws_instance.notifications.public_ip}\n  tail -f /home/ubuntu/notifications.log\n  \n  # Kong logs\n  ssh ec2-user@${aws_instance.kong.public_ip}\n  docker logs -f kong\n  \n  ========================================\n  SCRIPTS DE REINICIO DISPONIBLES:\n  ========================================\n  \n  # Reiniciar Django\n  ssh ubuntu@<DJANGO_IP>\n  cd ~/app/Inventario/ProvesiWMS && bash restart_django.sh\n  \n  # Reiniciar Notifications\n  ssh ubuntu@${aws_instance.notifications.public_ip}\n  cd ~/Inventario/notifications && bash restart_service.sh\n  \n  ========================================\n  EOT
+  ========================================
+  ARQUITECTURA:
+  ========================================
+  
+  Internet → Kong (${aws_instance.kong.public_ip})
+           ├→ :8000 HTTP  } → /inventario, /api, /admin → ALB HTTPS (${aws_lb.main.dns_name}:443)
+           ├→ :8443 HTTPS }                                ├→ Django 1 (${aws_instance.django[0].private_ip}:8080) ✅ RUNNING
+           │                                               └→ Django 2 (${aws_instance.django[1].private_ip}:8080) ✅ RUNNING
+           └→ /notifications → FastAPI (${aws_instance.notifications.private_ip}:8001) ✅ RUNNING
+  
+  ========================================
+  LOGS (si necesitas debug):
+  ========================================
+  
+  # Django logs
+  ssh ubuntu@${aws_instance.django[0].public_ip}
+  tail -f /home/ubuntu/django.log
+  
+  # Notifications logs
+  ssh ubuntu@${aws_instance.notifications.public_ip}
+  tail -f /home/ubuntu/notifications.log
+  
+  # Kong logs
+  ssh ec2-user@${aws_instance.kong.public_ip}
+  docker logs -f kong
+  
+  ========================================
+  SCRIPTS DE REINICIO DISPONIBLES:
+  ========================================
+  
+  # Reiniciar Django
+  ssh ubuntu@<DJANGO_IP>
+  cd ~/app/Inventario/ProvesiWMS && bash restart_django.sh
+  
+  # Reiniciar Notifications
+  ssh ubuntu@${aws_instance.notifications.public_ip}
+  cd ~/Inventario/notifications && bash restart_service.sh
+  
+  ========================================
+  EOT
 }
