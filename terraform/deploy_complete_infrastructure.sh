@@ -5,7 +5,9 @@
 # ================================================================
 # ProvesiWMS - Despliegue completo de infraestructura
 #
-# Uso: ./deploy_complete_infrastructure.sh
+# Uso: 
+#   Desde la raíz del proyecto: ./terraform/deploy_complete_infrastructure.sh
+#   Desde terraform/: ./deploy_complete_infrastructure.sh
 #
 # Este script automatiza:
 # 1. Instalación de Terraform
@@ -80,11 +82,24 @@ install_terraform() {
 setup_project() {
     log "Configurando el proyecto..."
     
-    # Verificar que estamos en el directorio correcto
-    if [[ ! -f "main.tf" ]]; then
-        error "No se encontró main.tf. ¿Estás en el directorio terraform?"
+    # Buscar deployment.tf
+    if [[ ! -f "deployment.tf" ]]; then
+        if [[ -d "terraform" ]]; then
+            log "Cambiando al directorio terraform..."
+            cd terraform
+        else
+            error "No se encontró deployment.tf. Ejecuta desde terraform/ o desde la raíz del proyecto"
+            exit 1
+        fi
+    fi
+    
+    # Verificar archivo
+    if [[ ! -f "deployment.tf" ]]; then
+        error "No se encontró deployment.tf. Verifica la estructura del proyecto."
         exit 1
     fi
+    
+    log "Directorio correcto: $(pwd)"
     
     # Crear terraform.tfvars si no existe
     if [[ ! -f "terraform.tfvars" ]]; then
