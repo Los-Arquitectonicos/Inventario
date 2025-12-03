@@ -8,7 +8,7 @@ crash.log
 crash.*.log
 
 # Variable files (may contain sensitive data)
-terraform.tfvars
+#terraform.tfvars
 *.auto.tfvars
 
 # Override files
