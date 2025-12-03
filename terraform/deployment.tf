@@ -110,12 +110,20 @@ data "aws_ami" "ubuntu" {
 # Security Group: Kong (puerto 8000)
 resource "aws_security_group" "traffic_kong" {
   name        = "${var.project_prefix}-traffic-kong"
-  description = "Allow Kong traffic on port 8000"
+  description = "Allow Kong traffic on ports 8000 (HTTP) and 8443 (HTTPS)"
 
   ingress {
     description = "Kong HTTP access"
     from_port   = 8000
     to_port     = 8000
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    description = "Kong HTTPS access"
+    from_port   = 8443
+    to_port     = 8443
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
@@ -535,10 +543,10 @@ resource "aws_instance" "kong" {
               export NOTIFICATIONS_HOST=${aws_instance.notifications.private_ip}
               echo "NOTIFICATIONS_HOST=${aws_instance.notifications.private_ip}" | sudo tee -a /etc/environment
 
-              # Instalar git
-              yum install -y git
+              # Instalar git y openssl
+              yum install -y git openssl
 
-              mkdir -p /opt/kong
+              mkdir -p /opt/kong/certs
               cd /opt/kong
               git clone -b ${local.branch} ${local.repository}
               cd Inventario
@@ -547,13 +555,26 @@ resource "aws_instance" "kong" {
               sed -i "s/<DJANGO_HOST>/${aws_lb.main.dns_name}/g" kong.yaml
               sed -i "s/<NOTIFICATIONS_HOST>/${aws_instance.notifications.private_ip}/g" kong.yaml
 
-              # Crear network y ejecutar Kong
+              # Generar certificado SSL self-signed para Kong
+              cd /opt/kong/certs
+              openssl req -x509 -newkey rsa:2048 -nodes \
+                -keyout kong-key.pem \
+                -out kong-cert.pem \
+                -days 365 \
+                -subj "/CN=kong-gateway/O=Provesi WMS"
+
+              # Crear network y ejecutar Kong con HTTPS
               docker network create kong-net 2>/dev/null || true
               docker run -d --name kong --network=kong-net --restart=always \
                 -v "/opt/kong/Inventario:/kong/declarative/" \
+                -v "/opt/kong/certs:/kong/certs/" \
                 -e "KONG_DATABASE=off" \
                 -e "KONG_DECLARATIVE_CONFIG=/kong/declarative/kong.yaml" \
+                -e "KONG_SSL_CERT=/kong/certs/kong-cert.pem" \
+                -e "KONG_SSL_CERT_KEY=/kong/certs/kong-key.pem" \
+                -e "KONG_PROXY_LISTEN=0.0.0.0:8000, 0.0.0.0:8443 ssl" \
                 -p 8000:8000 \
+                -p 8443:8443 \
                 kong/kong-gateway
               
               echo "Kong setup completed at $(date)" >> /var/log/kong-setup.log
