@@ -355,6 +355,18 @@ resource "aws_instance" "django" {
               
               # Cambiar ownership al usuario ubuntu
               sudo chown -R ubuntu:ubuntu /home/ubuntu/app
+              
+              # Ejecutar migraciones (solo en la primera instancia)
+              if [ ${count.index} -eq 0 ]; then
+                source /etc/environment
+                python manage.py migrate
+              fi
+              
+              # Iniciar servidor Django en background
+              source /etc/environment
+              nohup python manage.py runserver 0.0.0.0:8080 > /home/ubuntu/django.log 2>&1 &
+              
+              echo "Django setup completed"
               EOT
 
   tags = merge(local.common_tags, {
@@ -660,58 +672,46 @@ output "instructions" {
   value       = <<-EOT
   
   ========================================
-  DEPLOYMENT COMPLETADO
+  DEPLOYMENT COMPLETADO - TOTALMENTE AUTOMATIZADO
   ========================================
   
-  Las aplicaciones están instaladas pero NO ejecutándose.
-  Debes iniciarlas manualmente:
+  ✅ Todas las aplicaciones están instaladas e iniciadas automáticamente:
   
-  1. DJANGO (conectar a ambas instancias):
-     
-     INSTANCIA 1:
-     ssh ubuntu@${aws_instance.django[0].public_ip}
-     cd /home/ubuntu/app/Inventario/ProvesiWMS
-     source venv/bin/activate
-     python3 manage.py migrate  # SOLO en la primera instancia
-     python3 manage.py runserver 0.0.0.0:8080
-     
-     INSTANCIA 2:
-     ssh ubuntu@${aws_instance.django[1].public_ip}
-     cd /home/ubuntu/app/Inventario/ProvesiWMS
-     source venv/bin/activate
-     python3 manage.py runserver 0.0.0.0:8080
+  1. DJANGO (2 instancias en ejecución):
+     - Instancia 1: ${aws_instance.django[0].public_ip}:8080
+     - Instancia 2: ${aws_instance.django[1].public_ip}:8080
+     - Migraciones aplicadas automáticamente
+     - Load Balancer: ${aws_lb.main.dns_name}
   
-  2. NOTIFICATIONS:
-     ssh ubuntu@${aws_instance.notifications.public_ip}
-     cd /home/ubuntu/app/Inventario/notifications
-     source venv/bin/activate
-     python3 initialize_users.py  # SOLO la primera vez
-     python3 -m uvicorn main:app --host 0.0.0.0 --port 8001
+  2. NOTIFICATIONS (FastAPI en ejecución):
+     - IP: ${aws_instance.notifications.public_ip}:8001
+     - Usuarios inicializados automáticamente
+     - MongoDB: ${aws_instance.mongodb.private_ip}:27017
   
-  3. KONG API Gateway:
-     Kong ya está ejecutándose con HTTP y HTTPS:
+  3. KONG API Gateway (en ejecución):
      - HTTP:  http://${aws_instance.kong.public_ip}:8000
      - HTTPS: https://${aws_instance.kong.public_ip}:8443
+     - Certificados SSL configurados
   
-  4. VERIFICAR:
-     # A través de Kong HTTP
-     curl http://${aws_instance.kong.public_ip}:8000/inventario/
-     
-     # A través de Kong HTTPS (certificado self-signed)
-     curl -k https://${aws_instance.kong.public_ip}:8443/inventario/
-     
-     # Directamente al ALB HTTPS (opcional)
-     curl -k https://${aws_lb.main.dns_name}/inventario/
+  4. BASES DE DATOS:
+     - PostgreSQL: ${aws_instance.database.private_ip}:5432
+     - MongoDB: ${aws_instance.mongodb.private_ip}:27017
   
   ========================================
-  
-  ARQUITECTURA:
-  Internet → Kong (${aws_instance.kong.public_ip})
-           ├→ :8000 HTTP  } → /inventario, /api, /admin → ALB HTTPS (${aws_lb.main.dns_name}:443)
-           ├→ :8443 HTTPS }                                ├→ Django 1 (${aws_instance.django[0].private_ip}:8080)
-           │                                               └→ Django 2 (${aws_instance.django[1].private_ip}:8080)
-           └→ /notifications → FastAPI (${aws_instance.notifications.private_ip}:8001)
-  
+  VERIFICAR SERVICIOS (esperar 2-3 minutos):
   ========================================
-  EOT
+  
+  # A través de Kong HTTP
+  curl http://${aws_instance.kong.public_ip}:8000/inventario/
+  
+  # A través de Kong HTTPS (certificado self-signed)
+  curl -k https://${aws_instance.kong.public_ip}:8443/inventario/
+  
+  # Notificaciones
+  curl -k https://${aws_instance.kong.public_ip}:8443/notifications/health
+  
+  # Directamente al ALB HTTPS
+  curl -k https://${aws_lb.main.dns_name}/inventario/
+  
+  ========================================\n  ARQUITECTURA:\n  ========================================\n  \n  Internet → Kong (${aws_instance.kong.public_ip})\n           ├→ :8000 HTTP  } → /inventario, /api, /admin → ALB HTTPS (${aws_lb.main.dns_name}:443)\n           ├→ :8443 HTTPS }                                ├→ Django 1 (${aws_instance.django[0].private_ip}:8080) ✅ RUNNING\n           │                                               └→ Django 2 (${aws_instance.django[1].private_ip}:8080) ✅ RUNNING\n           └→ /notifications → FastAPI (${aws_instance.notifications.private_ip}:8001) ✅ RUNNING\n  \n  ========================================\n  LOGS (si necesitas debug):\n  ========================================\n  \n  # Django logs\n  ssh ubuntu@${aws_instance.django[0].public_ip}\n  tail -f /home/ubuntu/django.log\n  \n  # Notifications logs\n  ssh ubuntu@${aws_instance.notifications.public_ip}\n  tail -f /home/ubuntu/notifications.log\n  \n  # Kong logs\n  ssh ec2-user@${aws_instance.kong.public_ip}\n  docker logs -f kong\n  \n  ========================================\n  SCRIPTS DE REINICIO DISPONIBLES:\n  ========================================\n  \n  # Reiniciar Django\n  ssh ubuntu@<DJANGO_IP>\n  cd ~/app/Inventario/ProvesiWMS && bash restart_django.sh\n  \n  # Reiniciar Notifications\n  ssh ubuntu@${aws_instance.notifications.public_ip}\n  cd ~/Inventario/notifications && bash restart_service.sh\n  \n  ========================================\n  EOT
 }

@@ -155,22 +155,40 @@ verify_deployment() {
     info "=== INFORMACIÓN DE LA INFRAESTRUCTURA ==="
     terraform output
     
- 
+    # Obtener IPs y DNS
+    if terraform output kong_public_ip &>/dev/null; then
+        KONG_IP=$(terraform output -raw kong_public_ip)
+        info "Kong IP: $KONG_IP"
+    fi
     
-    if terraform output application_load_balancer_dns &>/dev/null; then
-        ALB_DNS=$(terraform output -raw application_load_balancer_dns)
+    if terraform output alb_dns_name &>/dev/null; then
+        ALB_DNS=$(terraform output -raw alb_dns_name)
         info "ALB DNS: $ALB_DNS"
     fi
     
-    # Esperar a que los servicios estén listos
-    log "Esperando a que los servicios estén listos..."
-    sleep 30
+    if terraform output notifications_public_ip &>/dev/null; then
+        NOTIFICATIONS_IP=$(terraform output -raw notifications_public_ip)
+        info "Notifications IP: $NOTIFICATIONS_IP"
+    fi
     
+    # Esperar a que los servicios estén listos
+    log "Esperando a que los servicios se inicien automáticamente (esto toma ~3 minutos)..."
+    sleep 180
+    
+    # Probar Kong
+    if [[ -n "$KONG_IP" ]]; then
+        log "Probando Kong API Gateway..."
+        if curl -f -s -k "https://$KONG_IP:8443/notifications/health" >/dev/null; then
+            log "✓ Kong está respondiendo"
+        else
+            warn "Kong no está respondiendo aún (puede tomar unos minutos más)"
+        fi
+    fi
     
     # Probar ALB
     if [[ -n "$ALB_DNS" ]]; then
         log "Probando Application Load Balancer..."
-        if curl -f -s "http://$ALB_DNS" >/dev/null; then
+        if curl -f -s -k "https://$ALB_DNS/inventario/" >/dev/null; then
             log "✓ ALB está respondiendo"
         else
             warn "ALB no está respondiendo aún (esto es normal, puede tomar unos minutos más)"
@@ -182,41 +200,63 @@ verify_deployment() {
 show_post_deployment_info() {
     echo ""
     echo -e "${GREEN}========================================${NC}"
-    echo -e "${GREEN}  DESPLIEGUE COMPLETADO${NC}"
+    echo -e "${GREEN}  DESPLIEGUE COMPLETADO - TODO AUTOMÁTICO${NC}"
     echo -e "${GREEN}========================================${NC}"
     echo ""
     
-    if [[ -n "$ALB_DNS" ]]; then
-        echo -e "${BLUE}URLs principales:${NC}"
-        echo "• API Principal: http://$ALB_DNS/api/"
-        echo "• Notifications: http://$ALB_DNS/notifications/"
-        echo "• Django Admin: http://$ALB_DNS/admin/"
-        echo ""
-    fi
+    echo -e "${BLUE}✅ SERVICIOS INICIADOS AUTOMÁTICAMENTE:${NC}"
+    echo ""
     
     if [[ -n "$KONG_IP" ]]; then
-        echo -e "${BLUE}Kong API Gateway:${NC}"
-        echo "• Admin API: http://$KONG_IP:8001/"
-        echo "• Gateway: http://$KONG_IP:8000/"
+        echo -e "${BLUE}🚪 Kong API Gateway:${NC}"
+        echo "  • HTTP:  http://$KONG_IP:8000"
+        echo "  • HTTPS: https://$KONG_IP:8443"
         echo ""
     fi
     
-    echo -e "${BLUE}Próximos pasos:${NC}"
-    echo "1. Esperar 5-10 minutos para que todos los servicios estén completamente listos"
-    echo "2. Probar las APIs usando curl o Postman"
-    echo "3. Configurar SSL/TLS para producción"
-    echo "4. Configurar monitoreo y alertas"
+    if [[ -n "$ALB_DNS" ]]; then
+        echo -e "${BLUE}🔗 Endpoints principales (a través de Kong):${NC}"
+        echo "  • Django API:     https://$KONG_IP:8443/inventario/"
+        echo "  • Django Admin:   https://$KONG_IP:8443/admin/"
+        echo "  • Notifications:  https://$KONG_IP:8443/notifications/health"
+        echo ""
+        echo -e "${BLUE}📊 Load Balancer directo:${NC}"
+        echo "  • ALB HTTPS: https://$ALB_DNS/inventario/"
+        echo ""
+    fi
+    
+    if [[ -n "$NOTIFICATIONS_IP" ]]; then
+        echo -e "${BLUE}📬 Notifications Service:${NC}"
+        echo "  • Direct: http://$NOTIFICATIONS_IP:8001/health"
+        echo ""
+    fi
+    
+    echo -e "${YELLOW}🧪 COMANDOS DE PRUEBA:${NC}"
+    echo ""
+    if [[ -n "$KONG_IP" ]]; then
+        echo "# Probar Django a través de Kong"
+        echo "curl -k https://$KONG_IP:8443/inventario/"
+        echo ""
+        echo "# Probar Notifications a través de Kong"
+        echo "curl -k https://$KONG_IP:8443/notifications/health"
+        echo ""
+        echo "# Login en Notifications"
+        echo "curl -k -X POST https://$KONG_IP:8443/notifications/auth/login \\"
+        echo "  -H 'Content-Type: application/json' \\"
+        echo "  -d '{\"username\":\"admin\",\"password\":\"admin123\"}'"
+        echo ""
+    fi
+    
+    echo -e "${BLUE}📋 INFORMACIÓN ÚTIL:${NC}"
+    echo "  • Ver estado completo: terraform output"
+    echo "  • Ver logs Django: ssh ubuntu@<DJANGO_IP> 'tail -f /home/ubuntu/django.log'"
+    echo "  • Ver logs Notifications: ssh ubuntu@$NOTIFICATIONS_IP 'tail -f /home/ubuntu/notifications.log'"
     echo ""
     
-    echo -e "${YELLOW}Comandos útiles:${NC}"
-    echo "• Ver estado: terraform state list"
-    echo "• Ver outputs: terraform output"
-    echo "• Destruir todo: terraform destroy"
-    echo ""
-    
-    echo -e "${RED}IMPORTANTE:${NC}"
-    echo "• Recuerda apagar la infraestructura cuando no la uses: terraform destroy"
-    echo "• Monitorea los costos en la consola de AWS"
+    echo -e "${RED}⚠️  IMPORTANTE:${NC}"
+    echo "  • Los servicios tardan ~3 minutos en estar completamente operativos"
+    echo "  • Apaga la infraestructura cuando no la uses: terraform destroy"
+    echo "  • Monitorea los costos en AWS Console"
     echo ""
 }
 
