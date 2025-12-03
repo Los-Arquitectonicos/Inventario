@@ -3,6 +3,7 @@ _format_version: "3.0"
 services:
   - name: django-service
     url: https://<DJANGO_HOST>
+    tls_verify: false  # Deshabilitar verificación de certificado self-signed
     routes:
       - name: inventario-route
         paths:
