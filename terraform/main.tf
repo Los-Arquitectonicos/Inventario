@@ -215,55 +215,49 @@ resource "aws_instance" "app_server" {
   vpc_security_group_ids      = [aws_security_group.app.id]
   associate_public_ip_address = true
 
-  user_data = <<-EOT
+  user_data = base64encode(<<-EOT
     #!/bin/bash
+    exec > /var/log/user-data.log 2>&1
+    set -x
     
-    # Variables
-    DATABASE_HOST="${aws_instance.database.private_ip}"
+    echo "DATABASE_HOST=${aws_instance.database.private_ip}" >> /etc/environment
+    echo "DATABASE_NAME=${var.database_name}" >> /etc/environment
+    echo "DATABASE_USER=${var.database_user}" >> /etc/environment
+    echo "DATABASE_PASSWORD=${var.db_password}" >> /etc/environment
+    echo "SECRET_KEY=${var.django_secret_key}" >> /etc/environment
+    echo "DEBUG=True" >> /etc/environment
     
-    # Persistir variables de entorno
-    echo "DATABASE_HOST=${aws_instance.database.private_ip}" | sudo tee -a /etc/environment
-    echo "DATABASE_NAME=${var.database_name}" | sudo tee -a /etc/environment
-    echo "DATABASE_USER=${var.database_user}" | sudo tee -a /etc/environment
-    echo "DATABASE_PASSWORD=${var.db_password}" | sudo tee -a /etc/environment
-    echo "DATABASE_PORT=${var.database_port}" | sudo tee -a /etc/environment
-    echo "SECRET_KEY=${var.django_secret_key}" | sudo tee -a /etc/environment
-    echo "DEBUG=${var.debug_mode}" | sudo tee -a /etc/environment
+    apt-get update
+    apt-get install -y python3-pip git libpq-dev
+    pip3 install --break-system-packages django==4.2.24 psycopg2-binary djangorestframework djangorestframework-simplejwt django-cors-headers
     
-    # Instalar dependencias
-    sudo apt-get update -y
-    sudo apt-get install -y python3-pip python3-venv git libpq-dev postgresql-client
-    
-    # Instalar Django globalmente
-    sudo pip3 install --break-system-packages django==4.2.24 psycopg2-binary djangorestframework djangorestframework-simplejwt django-cors-headers gunicorn
-    
-    # Clonar repositorio
     cd /home/ubuntu
-    git clone ${local.repository}
+    git clone https://github.com/Los-Arquitectonicos/Inventario.git
     cd Inventario
-    git checkout ${local.branch}
-    chown -R ubuntu:ubuntu /home/ubuntu/Inventario
+    git checkout servicediscovery
     
-    # Esperar base de datos
-    sleep 30
-    
-    # Migraciones solo en servidor 1
     %{if count.index == 0}
+    sleep 30
+    cd ProvesiWMS
+    export DATABASE_HOST=${aws_instance.database.private_ip}
+    export DATABASE_NAME=${var.database_name}
+    export DATABASE_USER=${var.database_user}
+    export DATABASE_PASSWORD=${var.db_password}
+    python3 manage.py migrate --noinput
+    python3 setup_users.py
     cd /home/ubuntu/Inventario/ProvesiWMS
-    source /etc/environment
-    python3 manage.py migrate --noinput || true
-    python3 setup_users.py || true
-    %{else}
-    sleep 60
-    %{endif}
-    
-    # Iniciar Django en background
-    cd /home/ubuntu/Inventario/ProvesiWMS
-    source /etc/environment
     nohup python3 manage.py runserver 0.0.0.0:8000 > /home/ubuntu/django.log 2>&1 &
-    
-    echo "Django started"
+    %{else}
+    sleep 90
+    cd /home/ubuntu/Inventario/ProvesiWMS
+    export DATABASE_HOST=${aws_instance.database.private_ip}
+    export DATABASE_NAME=${var.database_name}
+    export DATABASE_USER=${var.database_user}
+    export DATABASE_PASSWORD=${var.db_password}
+    nohup python3 manage.py runserver 0.0.0.0:8000 > /home/ubuntu/django.log 2>&1 &
+    %{endif}
     EOT
+  )
 
   tags = merge(local.common_tags, {
     Name = "${var.project_prefix}-app-server-${count.index + 1}"

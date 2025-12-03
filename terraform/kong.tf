@@ -64,72 +64,49 @@ resource "aws_instance" "kong_gateway" {
   vpc_security_group_ids      = [aws_security_group.kong.id]
   associate_public_ip_address = true
 
-  user_data = <<-EOT
+  user_data = base64encode(<<-EOT
     #!/bin/bash
+    exec > /var/log/kong-install.log 2>&1
+    set -x
     
-    # Variables
-    ALB_DNS="${aws_lb.main.dns_name}"
-    NOTIFICATIONS_IP="${aws_instance.notifications.private_ip}"
+    apt-get update
+    apt-get install -y docker.io
+    systemctl start docker
+    systemctl enable docker
     
-    # Install Docker
-    sudo apt-get update -y
-    sudo apt-get install -y docker.io
-    sudo systemctl start docker
-    sudo systemctl enable docker
-    
-    # Create kong.yaml configuration
-    sudo mkdir -p /opt/kong
-    cat > /opt/kong/kong.yaml << 'KONGCONFIG'
+    mkdir -p /opt/kong
+    cat > /opt/kong/kong.yaml << 'EOF'
 _format_version: "3.0"
-_transform: true
-
 services:
   - name: django-api
-    url: https://ALB_DNS_PLACEHOLDER
+    url: https://${aws_lb.main.dns_name}
     routes:
       - name: api-route
-        paths:
-          - /api
+        paths: [/api]
         strip_path: false
       - name: inventario-route
-        paths:
-          - /inventario
+        paths: [/inventario]
         strip_path: false
       - name: admin-route
-        paths:
-          - /admin
+        paths: [/admin]
         strip_path: false
-
   - name: notifications-service
-    url: http://NOTIFICATIONS_IP_PLACEHOLDER:8001
+    url: http://${aws_instance.notifications.private_ip}:8001
     routes:
       - name: notifications-route
-        paths:
-          - /notifications
+        paths: [/notifications]
         strip_path: true
-KONGCONFIG
-
-    # Replace placeholders with actual IPs
-    sudo sed -i "s/ALB_DNS_PLACEHOLDER/$ALB_DNS/g" /opt/kong/kong.yaml
-    sudo sed -i "s/NOTIFICATIONS_IP_PLACEHOLDER/$NOTIFICATIONS_IP/g" /opt/kong/kong.yaml
+EOF
     
-    # Create Docker network
-    sudo docker network create kong-net || true
-    
-    # Run Kong container
-    sudo docker run -d --name kong --network=kong-net --restart=always \
-      -v "/opt/kong:/kong/declarative/" \
-      -e "KONG_DATABASE=off" \
-      -e "KONG_DECLARATIVE_CONFIG=/kong/declarative/kong.yaml" \
-      -e "KONG_PROXY_ACCESS_LOG=/dev/stdout" \
-      -e "KONG_ADMIN_ACCESS_LOG=/dev/stdout" \
-      -e "KONG_PROXY_ERROR_LOG=/dev/stderr" \
-      -e "KONG_ADMIN_ERROR_LOG=/dev/stderr" \
+    docker network create kong-net || true
+    docker run -d --name kong --restart=always \
+      -v /opt/kong:/kong/declarative/ \
+      -e KONG_DATABASE=off \
+      -e KONG_DECLARATIVE_CONFIG=/kong/declarative/kong.yaml \
       -p 8000:8000 \
       kong/kong-gateway
-    
-    echo "Kong started with Docker"
     EOT
+  )
 
   tags = merge(local.common_tags, {
     Name = "${var.project_prefix}-kong-gateway"

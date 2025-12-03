@@ -78,28 +78,25 @@ resource "aws_instance" "mongodb" {
   associate_public_ip_address = true
   subnet_id                   = element(tolist(data.aws_subnets.available.ids), 0)
 
-  user_data = <<-EOT
+  user_data = base64encode(<<-EOT
     #!/bin/bash
+    exec > /var/log/mongodb-install.log 2>&1
+    set -x
     
-    # Install MongoDB
-    sudo apt-get update -y
-    sudo apt-get install -y gnupg curl
+    apt-get update
+    apt-get install -y gnupg curl
     
-    curl -fsSL https://www.mongodb.org/static/pgp/server-7.0.asc | sudo gpg -o /usr/share/keyrings/mongodb-server-7.0.gpg --dearmor
+    curl -fsSL https://www.mongodb.org/static/pgp/server-7.0.asc | gpg -o /usr/share/keyrings/mongodb-server-7.0.gpg --dearmor
+    echo "deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-server-7.0.gpg ] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/7.0 multiverse" > /etc/apt/sources.list.d/mongodb-org-7.0.list
     
-    echo "deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-server-7.0.gpg ] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/7.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-7.0.list
+    apt-get update
+    apt-get install -y mongodb-org
     
-    sudo apt-get update -y
-    sudo apt-get install -y mongodb-org
-    
-    # Configure MongoDB to listen on all interfaces
-    sudo sed -i 's/bindIp: 127.0.0.1/bindIp: 0.0.0.0/g' /etc/mongod.conf
-    
-    sudo systemctl start mongod
-    sudo systemctl enable mongod
-    
-    echo "MongoDB started"
+    sed -i 's/bindIp: 127.0.0.1/bindIp: 0.0.0.0/g' /etc/mongod.conf
+    systemctl start mongod
+    systemctl enable mongod
     EOT
+  )
 
   tags = {
     Name = "${var.project_prefix}-mongodb"
@@ -116,43 +113,31 @@ resource "aws_instance" "notifications" {
 
   depends_on = [aws_instance.mongodb]
 
-  user_data = <<-EOT
+  user_data = base64encode(<<-EOT
     #!/bin/bash
+    exec > /var/log/notifications-install.log 2>&1
+    set -x
     
-    # Variables
-    MONGODB_HOST="${aws_instance.mongodb.private_ip}"
+    echo "MONGODB_HOST=${aws_instance.mongodb.private_ip}" >> /etc/environment
+    echo "MONGODB_PORT=27017" >> /etc/environment
+    echo "MONGODB_DATABASE=notifications_db" >> /etc/environment
+    echo "JWT_SECRET_KEY=notif-secret-2024" >> /etc/environment
     
-    # Set environment variables
-    echo "MONGODB_HOST=${aws_instance.mongodb.private_ip}" | sudo tee -a /etc/environment
-    echo "MONGODB_PORT=27017" | sudo tee -a /etc/environment
-    echo "MONGODB_DATABASE=notifications_db" | sudo tee -a /etc/environment
-    echo "JWT_SECRET_KEY=notifications-jwt-secret-2024" | sudo tee -a /etc/environment
-    echo "EMAIL_ENABLED=false" | sudo tee -a /etc/environment
-    echo "PORT=8001" | sudo tee -a /etc/environment
+    apt-get update
+    apt-get install -y python3-pip git
+    pip3 install --break-system-packages fastapi uvicorn motor pymongo python-jose passlib python-multipart
     
-    # Install Python
-    sudo apt-get update -y
-    sudo apt-get install -y python3-pip python3-venv git
-    
-    # Clone repository
     cd /home/ubuntu
     git clone https://github.com/Los-Arquitectonicos/Inventario.git
     cd Inventario
     git checkout servicediscovery
     
-    # Install dependencies
-    sudo pip3 install --break-system-packages -r /home/ubuntu/Inventario/notifications/requirements.txt
-    
-    # Wait for MongoDB
     sleep 30
-    
-    # Start FastAPI
     cd /home/ubuntu/Inventario/notifications
-    source /etc/environment
+    export MONGODB_HOST=${aws_instance.mongodb.private_ip}
     nohup python3 -m uvicorn main:app --host 0.0.0.0 --port 8001 > /home/ubuntu/notifications.log 2>&1 &
-    
-    echo "Notifications service started"
     EOT
+  )
 
   tags = {
     Name = "${var.project_prefix}-notifications"
