@@ -2,7 +2,7 @@ _format_version: "3.0"
 
 services:
   - name: django-service
-    url: http://<DJANGO_HOST>:8080
+    url: http://<DJANGO_HOST>:80
     routes:
       - name: inventario-route
         paths:

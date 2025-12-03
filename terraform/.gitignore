@@ -28,3 +28,5 @@ terraform.rc
 # SSH keys
 *.pem
 *.key
+
+outputs
