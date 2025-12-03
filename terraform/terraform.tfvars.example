@@ -49,6 +49,43 @@ database_port = 5432
 # Versión de PostgreSQL
 postgres_version = "15"
 
+# ===============================================
+# CONFIGURACIÓN DE NOTIFICACIONES - JWT
+# ===============================================
+
+# Secret key para generación de tokens JWT
+# IMPORTANTE: Cambiar en producción
+jwt_secret_key = "notifications-secret-key-production-CHANGE-ME-NOW"
+
+# ===============================================
+# CONFIGURACIÓN DE NOTIFICACIONES - EMAIL/SMTP
+# ===============================================
+
+# Habilitar envío de emails
+email_enabled = "true"
+
+# Configuración SMTP para Gmail
+# Para usar Gmail:
+# 1. Ir a: https://myaccount.google.com/apppasswords
+# 2. Crear un App Password
+# 3. Usar ese password de 16 caracteres aquí
+
+smtp_host     = "smtp.gmail.com"
+smtp_port     = "587"
+smtp_user     = "tu_correo@gmail.com"         # Cambiar por tu correo
+smtp_password = "xxxx xxxx xxxx xxxx"         # Cambiar por tu App Password
+sender_email  = "tu_correo@gmail.com"         # Cambiar por tu correo
+
+# Email por defecto para recibir notificaciones
+default_recipient = "p.sanin@uniandes.edu.co"
+
+# Configuración alternativa para Amazon SES:
+# smtp_host     = "email-smtp.us-east-1.amazonaws.com"
+# smtp_port     = "587"
+# smtp_user     = "TU_SES_SMTP_USERNAME"
+# smtp_password = "TU_SES_SMTP_PASSWORD"
+# sender_email  = "correo_verificado@tudominio.com"
+
 # Tamaño de almacenamiento en GB
 database_storage_gb = 100
 
