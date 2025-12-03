@@ -12,7 +12,7 @@
 project_prefix = "provesi"
 
 # Tag del propietario del proyecto  
-owner = "testing"
+owner = "development"
 
 # ===============================================
 # CONFIGURACIÓN DE INSTANCIAS EC2
@@ -102,7 +102,7 @@ ssl_policy = "ELBSecurityPolicy-TLS-1-2-2017-01"
 cors_allow_credentials = true
 
 # Dominios permitidos para CORS (abierto para testing)
-cors_allowed_origins = "*"
+cors_allowed_origins = ["*"]
 
 # ===============================================
 # CONFIGURACIÓN DE LOGGING (TESTING)

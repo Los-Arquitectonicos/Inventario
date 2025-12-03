@@ -51,7 +51,7 @@ variable "django_secret_key" {
 variable "environment" {
   description = "Deployment environment (production, staging, development)"
   type        = string
-  default     = "production"
+  default     = "development"
   
   validation {
     condition     = contains(["production", "staging", "development"], var.environment)
