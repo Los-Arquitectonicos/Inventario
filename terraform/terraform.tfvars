@@ -2,7 +2,6 @@
 # CONFIGURACIÓN DE TERRAFORM - PROVESI WMS
 # ===============================================
 # Para entorno de pruebas - Variables preconfiguradas
-# Copia este archivo como terraform.tfvars para usar los valores por defecto
 
 # ===============================================
 # CONFIGURACIÓN BÁSICA DEL PROYECTO
@@ -59,7 +58,7 @@ database_storage_gb = 100
 # Clave secreta de Django (ENTORNO DE PRUEBAS)
 django_secret_key = "django-testing-secret-key-for-provesi-wms-2025-very-long-random-string-123456789"
 
-# Entorno de despliegue (debe ser: development, staging o production)
+# Entorno de despliegue (CORREGIDO: debe ser development, staging o production)
 environment = "development"
 
 # Dominio permitido para CORS
@@ -101,7 +100,7 @@ ssl_policy = "ELBSecurityPolicy-TLS-1-2-2017-01"
 # Permitir credenciales en CORS
 cors_allow_credentials = true
 
-# Dominios permitidos para CORS (abierto para testing - debe ser lista)
+# Dominios permitidos para CORS (CORREGIDO: debe ser lista, no string)
 cors_allowed_origins = ["*"]
 
 # ===============================================
@@ -116,13 +115,3 @@ log_level = "DEBUG"
 
 # Retención de logs en CloudWatch (días)
 log_retention_days = 3
-
-# ===============================================
-# CONFIGURACIÓN DE DESARROLLO (TESTING)
-# ===============================================
-
-# Modo debug (true para testing)
-debug_mode = true
-
-# Habilitar toolbar de debug de Django
-enable_debug_toolbar = true
