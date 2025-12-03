@@ -5,7 +5,7 @@
 # - MongoDB EC2 instance
 # - Notifications (FastAPI) EC2 instance  
 # - Security Groups for both
-# - IAM Role for SES access
+# - Email via SMTP (Gmail, Outlook, etc.)
 # ============================================================
 
 # ============ SECURITY GROUPS ============
@@ -80,57 +80,6 @@ resource "aws_security_group" "notifications" {
   tags = {
     Name = "${var.project_prefix}-notifications-sg"
   }
-}
-
-
-# ============ IAM ROLE FOR SES ============
-
-# IAM Role for Notifications EC2 to send emails via SES
-resource "aws_iam_role" "notifications_ses" {
-  name = "${var.project_prefix}-notifications-ses-role"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Principal = {
-          Service = "ec2.amazonaws.com"
-        }
-      }
-    ]
-  })
-
-  tags = {
-    Name = "${var.project_prefix}-notifications-ses-role"
-  }
-}
-
-# IAM Policy for SES send email
-resource "aws_iam_role_policy" "notifications_ses_policy" {
-  name = "${var.project_prefix}-notifications-ses-policy"
-  role = aws_iam_role.notifications_ses.id
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "ses:SendEmail",
-          "ses:SendRawEmail"
-        ]
-        Resource = "*"
-      }
-    ]
-  })
-}
-
-# Instance profile for EC2
-resource "aws_iam_instance_profile" "notifications" {
-  name = "${var.project_prefix}-notifications-profile"
-  role = aws_iam_role.notifications_ses.name
 }
 
 
@@ -230,7 +179,6 @@ resource "aws_instance" "notifications" {
   ami                         = data.aws_ami.ubuntu.id
   instance_type               = var.notifications_instance_type
   vpc_security_group_ids      = [aws_security_group.notifications.id]
-  iam_instance_profile        = aws_iam_instance_profile.notifications.name
   associate_public_ip_address = true
   
   # Use first available subnet
@@ -272,15 +220,19 @@ source /opt/apps/venv/bin/activate
 pip install --upgrade pip
 pip install -r /opt/apps/Inventario/notifications/requirements.txt
 
-# Set environment variables
+# Set environment variables (SMTP disabled by default, enable with EMAIL_ENABLED=true)
 cat >> /etc/environment << 'ENV_VARS'
 MONGODB_HOST="${aws_instance.mongodb.private_ip}"
 MONGODB_PORT="27017"
 MONGODB_DATABASE="notifications_db"
 JWT_SECRET_KEY="notifications-jwt-secret-${random_string.jwt_secret.result}"
-AWS_REGION="${var.aws_region}"
 SENDER_EMAIL="pedropablost@icloud.com"
 DEFAULT_RECIPIENT="p.sanin@uniandes.edu.co"
+EMAIL_ENABLED="false"
+SMTP_HOST="smtp.gmail.com"
+SMTP_PORT="587"
+SMTP_USER=""
+SMTP_PASSWORD=""
 PORT="8001"
 ENV_VARS
 
@@ -289,9 +241,9 @@ export MONGODB_HOST="${aws_instance.mongodb.private_ip}"
 export MONGODB_PORT="27017"
 export MONGODB_DATABASE="notifications_db"
 export JWT_SECRET_KEY="notifications-jwt-secret-${random_string.jwt_secret.result}"
-export AWS_REGION="${var.aws_region}"
 export SENDER_EMAIL="pedropablost@icloud.com"
 export DEFAULT_RECIPIENT="p.sanin@uniandes.edu.co"
+export EMAIL_ENABLED="false"
 export PORT="8001"
 
 # Create startup script

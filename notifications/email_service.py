@@ -1,32 +1,33 @@
 """
-Amazon SES Email Service for sending notifications.
+Email Service for sending notifications via SMTP.
 
-# TODO: Verificar email pedropablost@icloud.com en Amazon SES antes de enviar notificaciones
-#       1. Ir a AWS Console > SES > Verified identities
-#       2. Click "Create identity" > Email address
-#       3. Ingresar: pedropablost@icloud.com
-#       4. Verificar el email haciendo click en el link enviado
+Supports Gmail, Outlook, or any SMTP server.
+
+# TODO: Configurar credenciales SMTP antes de enviar notificaciones
+#       Para Gmail:
+#       1. Habilitar "Acceso de apps menos seguras" o crear "App Password"
+#       2. Ir a https://myaccount.google.com/apppasswords
+#       3. Generar una contraseña de aplicación
+#       4. Usar esa contraseña en SMTP_PASSWORD
 """
 import os
-import boto3
-from botocore.exceptions import ClientError
-from typing import List, Optional
+import smtplib
+import ssl
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from typing import List
 
-# Configuration
-AWS_REGION = os.getenv("AWS_REGION", "us-east-1")
+# SMTP Configuration
+# Default: Gmail SMTP (can be changed to Outlook, etc.)
+SMTP_HOST = os.getenv("SMTP_HOST", "smtp.gmail.com")
+SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
+SMTP_USER = os.getenv("SMTP_USER", "")  # Your email address
+SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "")  # App password for Gmail
 SENDER_EMAIL = os.getenv("SENDER_EMAIL", "pedropablost@icloud.com")
 DEFAULT_RECIPIENT = os.getenv("DEFAULT_RECIPIENT", "p.sanin@uniandes.edu.co")
 
-# SES Client (will use IAM role credentials on EC2)
-ses_client = None
-
-
-def get_ses_client():
-    """Get or create SES client."""
-    global ses_client
-    if ses_client is None:
-        ses_client = boto3.client('ses', region_name=AWS_REGION)
-    return ses_client
+# Email sending enabled flag (disable if no SMTP configured)
+EMAIL_ENABLED = os.getenv("EMAIL_ENABLED", "false").lower() == "true"
 
 
 async def send_notification_email(
@@ -36,10 +37,10 @@ async def send_notification_email(
     sender_username: str
 ) -> bool:
     """
-    Send a notification email via Amazon SES.
+    Send a notification email via SMTP.
     
     Args:
-        recipient_email: Email address to send to (defaults to p.sanin@uniandes.edu.co)
+        recipient_email: Email address to send to
         subject: Email subject
         message: Notification message
         sender_username: Username of who sent the notification
@@ -47,25 +48,30 @@ async def send_notification_email(
     Returns:
         True if email sent successfully, False otherwise
     """
+    # Check if email is enabled
+    if not EMAIL_ENABLED:
+        print(f"📧 Email disabled. Would send to: {recipient_email}")
+        print(f"   Subject: {subject}")
+        print(f"   Message: {message}")
+        return True  # Return True to not block the notification flow
+    
+    # Check SMTP credentials
+    if not SMTP_USER or not SMTP_PASSWORD:
+        print("⚠️  SMTP credentials not configured. Email not sent.")
+        return False
+    
     # Use default recipient for testing
     actual_recipient = recipient_email or DEFAULT_RECIPIENT
     
     try:
-        client = get_ses_client()
+        # Create message
+        msg = MIMEMultipart("alternative")
+        msg["Subject"] = f"[ProvesiWMS] {subject}"
+        msg["From"] = SENDER_EMAIL
+        msg["To"] = actual_recipient
         
-        response = client.send_email(
-            Source=SENDER_EMAIL,
-            Destination={
-                'ToAddresses': [actual_recipient]
-            },
-            Message={
-                'Subject': {
-                    'Data': f"[ProvesiWMS] {subject}",
-                    'Charset': 'UTF-8'
-                },
-                'Body': {
-                    'Text': {
-                        'Data': f"""
+        # Plain text version
+        text_content = f"""
 Nueva notificación de ProvesiWMS
 ================================
 
@@ -74,11 +80,10 @@ Mensaje: {message}
 
 ---
 Este es un mensaje automático del sistema de notificaciones de ProvesiWMS.
-                        """,
-                        'Charset': 'UTF-8'
-                    },
-                    'Html': {
-                        'Data': f"""
+        """
+        
+        # HTML version
+        html_content = f"""
 <!DOCTYPE html>
 <html>
 <head>
@@ -105,26 +110,30 @@ Este es un mensaje automático del sistema de notificaciones de ProvesiWMS.
     </div>
 </body>
 </html>
-                        """,
-                        'Charset': 'UTF-8'
-                    }
-                }
-            }
-        )
+        """
         
-        print(f"✅ Email sent! Message ID: {response['MessageId']}")
+        # Attach both versions
+        msg.attach(MIMEText(text_content, "plain"))
+        msg.attach(MIMEText(html_content, "html"))
+        
+        # Create secure SSL context
+        context = ssl.create_default_context()
+        
+        # Connect and send
+        with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
+            server.starttls(context=context)
+            server.login(SMTP_USER, SMTP_PASSWORD)
+            server.sendmail(SENDER_EMAIL, actual_recipient, msg.as_string())
+        
+        print(f"✅ Email sent to {actual_recipient}!")
         return True
         
-    except ClientError as e:
-        error_code = e.response['Error']['Code']
-        error_message = e.response['Error']['Message']
-        print(f"❌ Failed to send email: {error_code} - {error_message}")
-        
-        # Common errors:
-        # - MessageRejected: Email address not verified (sandbox mode)
-        # - InvalidParameterValue: Invalid email format
-        # - Throttling: Too many requests
-        
+    except smtplib.SMTPAuthenticationError as e:
+        print(f"❌ SMTP Authentication failed: {str(e)}")
+        print("   Tip: For Gmail, use an App Password instead of your regular password")
+        return False
+    except smtplib.SMTPException as e:
+        print(f"❌ SMTP error: {str(e)}")
         return False
     except Exception as e:
         print(f"❌ Unexpected error sending email: {str(e)}")

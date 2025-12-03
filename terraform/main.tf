@@ -25,7 +25,7 @@ provider "tls" {
 locals {
   project_name = "${var.project_prefix}-wms"
   repository   = "https://github.com/Los-Arquitectonicos/Inventario.git"
-  branch       = "Sprint3V2"
+  branch       = "servicediscovery"
 
   common_tags = {
     Project     = local.project_name

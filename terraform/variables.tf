@@ -344,9 +344,3 @@ variable "mongodb_instance_type" {
   type        = string
   default     = "t2.micro"
 }
-
-variable "aws_region" {
-  description = "AWS region for SES and other services"
-  type        = string
-  default     = "us-east-1"
-}
