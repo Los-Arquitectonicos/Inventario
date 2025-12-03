@@ -108,13 +108,78 @@ output "access_summary" {
     HTTP:  http://${aws_instance.kong_gateway.public_ip}:8000
   
   RUTAS DISPONIBLES:
-    /inventario/  - Aplicación principal
-    /api/         - API REST
-    /admin/       - Panel de administración
-    /health       - Health check de Kong
+    /inventario/     - Aplicación principal
+    /api/            - API REST
+    /admin/          - Panel de administración
+    /notifications/  - Microservicio de notificaciones
+    /health          - Health check de Kong
   
   HEALTH CHECK:
     http://${aws_instance.kong_gateway.public_ip}:8100/status
+  
+  ==========================================
+  EOT
+}
+
+# ===================================
+# NOTIFICATIONS MICROSERVICE
+# ===================================
+
+output "notifications_server_ip" {
+  description = "Private IP of Notifications microservice"
+  value       = aws_instance.notifications.private_ip
+}
+
+output "notifications_server_public_ip" {
+  description = "Public IP of Notifications microservice (for SSH)"
+  value       = aws_instance.notifications.public_ip
+}
+
+output "notifications_api_url" {
+  description = "URL to access Notifications API via Kong"
+  value       = "https://${aws_instance.kong_gateway.public_ip}/notifications"
+}
+
+output "ssh_notifications" {
+  description = "SSH command for Notifications server"
+  value       = "ssh ubuntu@${aws_instance.notifications.public_ip}"
+}
+
+# ===================================
+# MONGODB
+# ===================================
+
+output "mongodb_private_ip" {
+  description = "Private IP of MongoDB server"
+  value       = aws_instance.mongodb.private_ip
+}
+
+output "mongodb_public_ip" {
+  description = "Public IP of MongoDB server (for SSH)"
+  value       = aws_instance.mongodb.public_ip
+}
+
+output "ssh_mongodb" {
+  description = "SSH command for MongoDB server"
+  value       = "ssh ubuntu@${aws_instance.mongodb.public_ip}"
+}
+
+output "notifications_users" {
+  description = "Default users for Notifications microservice"
+  value       = <<-EOT
+  
+  ==========================================
+  👤 USUARIOS DE NOTIFICACIONES
+  ==========================================
+  
+  Los siguientes usuarios se crean automáticamente:
+  
+  | Usuario     | Contraseña     | Rol                       |
+  |-------------|----------------|---------------------------|
+  | admin       | admin123       | admin                     |
+  | operario1   | operario123    | operario_bodega           |
+  | empacador1  | empacador123   | empacador                 |
+  | calidad1    | calidad123     | operario_control_calidad  |
   
   ==========================================
   EOT

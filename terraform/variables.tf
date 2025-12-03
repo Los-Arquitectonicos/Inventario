@@ -328,3 +328,25 @@ variable "key_pair_name" {
   type        = string
   default     = ""
 }
+
+# ===================================
+# NOTIFICATIONS MICROSERVICE VARIABLES
+# ===================================
+
+variable "notifications_instance_type" {
+  description = "EC2 instance type for Notifications microservice"
+  type        = string
+  default     = "t2.micro"
+}
+
+variable "mongodb_instance_type" {
+  description = "EC2 instance type for MongoDB server"
+  type        = string
+  default     = "t2.micro"
+}
+
+variable "aws_region" {
+  description = "AWS region for SES and other services"
+  type        = string
+  default     = "us-east-1"
+}

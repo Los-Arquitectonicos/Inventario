@@ -261,6 +261,51 @@ services:
           max_age: 3600
 
   # -----------------------------------------
+  # Notifications Microservice
+  # -----------------------------------------
+  - name: notifications-service
+    url: http://${aws_instance.notifications.private_ip}:8001
+    protocol: http
+    port: 8001
+    retries: 3
+    connect_timeout: 10000
+    write_timeout: 60000
+    read_timeout: 60000
+    
+    routes:
+      - name: notifications-route
+        paths:
+          - /notifications
+        strip_path: true
+        preserve_host: false
+    
+    plugins:
+      - name: rate-limiting
+        config:
+          minute: 100
+          policy: local
+          fault_tolerant: true
+          
+      - name: cors
+        config:
+          origins:
+            - "*"
+          methods:
+            - GET
+            - POST
+            - PUT
+            - PATCH
+            - DELETE
+            - OPTIONS
+          headers:
+            - Accept
+            - Authorization
+            - Content-Type
+            - X-Requested-With
+          credentials: true
+          max_age: 3600
+
+  # -----------------------------------------
   # Health Check interno
   # -----------------------------------------
   - name: kong-health-service
@@ -371,10 +416,11 @@ SYSTEMD
               echo "   $${ALB_DNS}"
               echo ""
               echo "📝 Rutas disponibles:"
-              echo "   /api/*        → Django API"
-              echo "   /inventario/* → Django Inventario"
-              echo "   /admin/*      → Django Admin"
-              echo "   /health       → Kong Health"
+              echo "   /api/*           → Django API"
+              echo "   /inventario/*    → Django Inventario"
+              echo "   /admin/*         → Django Admin"
+              echo "   /notifications/* → Notifications Microservice"
+              echo "   /health          → Kong Health"
               echo ""
               echo "🔧 Comandos útiles:"
               echo "   sudo kong health"
@@ -390,5 +436,5 @@ SYSTEMD
     Role = "api-gateway"
   })
 
-  depends_on = [aws_lb.main, aws_lb_listener.https, aws_instance.app_server]
+  depends_on = [aws_lb.main, aws_lb_listener.https, aws_instance.app_server, aws_instance.notifications]
 }
