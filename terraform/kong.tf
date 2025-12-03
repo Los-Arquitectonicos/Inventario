@@ -1,7 +1,84 @@
 # ==========================================
-# KONG API GATEWAY - EC2 INSTANCE
+# KONG API GATEWAY - SERVICE DISCOVERY
 # ==========================================
-# ProvesiWMS Service Discovery
+# ProvesiWMS - Microservicio de Service Discovery
+# ==========================================
+
+# ==========================================
+# SECURITY GROUP
+# ==========================================
+
+# Security Group para Kong Gateway
+resource "aws_security_group" "kong" {
+  name        = "${var.project_prefix}-kong-sg"
+  description = "Security group for Kong API Gateway"
+  vpc_id      = data.aws_vpc.default.id
+
+  # Proxy HTTP desde ALB (puerto principal)
+  ingress {
+    description     = "Kong proxy from ALB"
+    from_port       = 8000
+    to_port         = 8000
+    protocol        = "tcp"
+    security_groups = [aws_security_group.alb.id]
+  }
+
+  # Status/Health check desde ALB
+  ingress {
+    description     = "Kong status from ALB"
+    from_port       = 8100
+    to_port         = 8100
+    protocol        = "tcp"
+    security_groups = [aws_security_group.alb.id]
+  }
+
+  # SSH para administración
+  ingress {
+    description = "SSH for management"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  # Permitir todo el tráfico saliente
+  egress {
+    description = "Allow all outbound traffic"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = merge(local.common_tags, {
+    Name = "${var.project_prefix}-kong-sg"
+  })
+}
+
+# Regla: Permitir que Kong acceda a los servidores Django
+resource "aws_security_group_rule" "django_from_kong" {
+  security_group_id        = aws_security_group.app.id
+  type                     = "ingress"
+  from_port                = 8000
+  to_port                  = 8000
+  protocol                 = "tcp"
+  source_security_group_id = aws_security_group.kong.id
+  description              = "Allow Kong to access Django servers"
+}
+
+# Regla: Permitir que Kong acceda a la base de datos (para futuras integraciones)
+resource "aws_security_group_rule" "db_from_kong" {
+  security_group_id        = aws_security_group.db.id
+  type                     = "ingress"
+  from_port                = 5432
+  to_port                  = 5432
+  protocol                 = "tcp"
+  source_security_group_id = aws_security_group.kong.id
+  description              = "Allow Kong to access database (for plugins)"
+}
+
+# ==========================================
+# EC2 INSTANCE
 # ==========================================
 
 # Instancia EC2 para Kong Gateway
@@ -9,7 +86,7 @@ resource "aws_instance" "kong_gateway" {
   ami                         = data.aws_ami.ubuntu.id
   instance_type               = var.kong_instance_type
   vpc_security_group_ids      = [aws_security_group.kong.id]
-  associate_public_ip_address = true # Para SSH de administración
+  associate_public_ip_address = true
   key_name                    = var.key_pair_name != "" ? var.key_pair_name : null
 
   user_data = <<-EOT
@@ -20,7 +97,6 @@ resource "aws_instance" "kong_gateway" {
               # KONG GATEWAY INSTALLATION SCRIPT
               # ==========================================
               
-              # Log de instalación
               exec > >(tee /var/log/kong-install.log|logger -t kong-install -s 2>/dev/console) 2>&1
               echo "=========================================="
               echo "INSTALANDO KONG API GATEWAY"
@@ -49,7 +125,6 @@ resource "aws_instance" "kong_gateway" {
               # ==========================================
               echo "$(date): Instalando Kong Gateway OSS $${KONG_VERSION}..."
               
-              # Agregar repositorio de Kong
               curl -1sLf "https://packages.konghq.com/public/gateway-35/gpg.59266503870919B5.key" | \
                 sudo gpg --dearmor -o /usr/share/keyrings/kong-gateway-35-archive-keyring.gpg
               
@@ -64,49 +139,37 @@ resource "aws_instance" "kong_gateway" {
               # ==========================================
               echo "$(date): Configurando Kong..."
               
-              # Crear directorio de configuración
               sudo mkdir -p /etc/kong
               
-              # Crear archivo de configuración principal
+              # Archivo de configuración principal
               sudo tee /etc/kong/kong.conf > /dev/null <<'KONGCONF'
-# Kong Configuration - ProvesiWMS
 database = off
 declarative_config = /etc/kong/kong.yml
-
 proxy_listen = 0.0.0.0:8000
 admin_listen = 127.0.0.1:8001
 status_listen = 0.0.0.0:8100
-
 log_level = ${var.kong_log_level}
 proxy_access_log = /var/log/kong/access.log
 proxy_error_log = /var/log/kong/error.log
 admin_access_log = /var/log/kong/admin_access.log
 admin_error_log = /var/log/kong/admin_error.log
-
 nginx_worker_processes = auto
 upstream_keepalive_pool_size = 60
 upstream_keepalive_max_requests = 100
 upstream_keepalive_idle_timeout = 60
-
 headers = off
 trusted_ips = 0.0.0.0/0,::/0
 real_ip_header = X-Forwarded-For
 real_ip_recursive = on
-
 plugins = bundled
 KONGCONF
 
-              # Crear configuración declarativa con IPs reales de Django
+              # Configuración declarativa con IPs reales de Django
               sudo tee /etc/kong/kong.yml > /dev/null <<KONGYML
 _format_version: "3.0"
 _transform: true
 
-# ==========================================
-# SERVICES & ROUTES
-# ==========================================
-
 services:
-  # Django Backend API
   - name: django-api
     host: django-upstream
     port: 8000
@@ -161,10 +224,6 @@ services:
           credentials: true
           max_age: 3600
 
-# ==========================================
-# UPSTREAMS
-# ==========================================
-
 upstreams:
   - name: django-upstream
     algorithm: round-robin
@@ -190,10 +249,6 @@ upstreams:
         weight: 100
       - target: $${DJANGO_SERVER_2}:8000
         weight: 100
-
-# ==========================================
-# GLOBAL PLUGINS
-# ==========================================
 
 plugins:
   - name: correlation-id
@@ -232,7 +287,6 @@ RestartSec=5
 WantedBy=multi-user.target
 SYSTEMD
 
-              # Recargar systemd
               sudo systemctl daemon-reload
               
               # ==========================================
@@ -240,7 +294,6 @@ SYSTEMD
               # ==========================================
               echo "$(date): Iniciando Kong..."
               
-              # Esperar a que los servidores Django estén listos
               echo "$(date): Esperando a servidores Django..."
               for i in {1..30}; do
                 if curl -sf "http://$${DJANGO_SERVER_1}:8000/inventario/" > /dev/null 2>&1; then
@@ -251,32 +304,26 @@ SYSTEMD
                 sleep 10
               done
               
-              # Iniciar Kong
               sudo kong start -c /etc/kong/kong.conf || {
                 echo "$(date): Error iniciando Kong, verificando configuración..."
                 sudo kong check /etc/kong/kong.conf
                 exit 1
               }
               
-              # Habilitar inicio automático
               sudo systemctl enable kong
               
               # ==========================================
               # VERIFICACIÓN
               # ==========================================
               echo "$(date): Verificando instalación..."
-              
-              # Esperar a que Kong esté listo
               sleep 5
               
-              # Health check
               if curl -sf http://localhost:8100/status > /dev/null; then
                 echo "$(date): ✅ Kong está funcionando correctamente"
               else
                 echo "$(date): ⚠️ Kong puede no estar completamente listo"
               fi
               
-              # Mostrar información
               echo ""
               echo "=========================================="
               echo "$(date): ✅ INSTALACIÓN COMPLETADA"
@@ -304,4 +351,93 @@ SYSTEMD
   })
 
   depends_on = [aws_instance.app_server]
+}
+
+# ==========================================
+# ALB INTEGRATION
+# ==========================================
+
+# Target Group para Kong Gateway
+resource "aws_lb_target_group" "kong" {
+  name     = "${var.project_prefix}-kong-tg"
+  port     = 8000
+  protocol = "HTTP"
+  vpc_id   = data.aws_vpc.default.id
+
+  health_check {
+    enabled             = true
+    path                = "/status"
+    port                = "8100"
+    healthy_threshold   = 2
+    unhealthy_threshold = 3
+    timeout             = 5
+    interval            = 30
+    matcher             = "200"
+  }
+
+  tags = merge(local.common_tags, {
+    Name = "${var.project_prefix}-kong-tg"
+  })
+}
+
+# Registrar instancia Kong en Target Group
+resource "aws_lb_target_group_attachment" "kong" {
+  target_group_arn = aws_lb_target_group.kong.arn
+  target_id        = aws_instance.kong_gateway.id
+  port             = 8000
+}
+
+# ==========================================
+# LISTENER RULES - Enrutamiento a través de Kong
+# ==========================================
+
+# Regla: Rutas de API van a Kong (máxima prioridad)
+resource "aws_lb_listener_rule" "kong_api_routes" {
+  listener_arn = aws_lb_listener.https.arn
+  priority     = 10
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.kong.arn
+  }
+
+  condition {
+    path_pattern {
+      values = ["/api/*", "/inventario/*"]
+    }
+  }
+}
+
+# Regla: Ruta de admin de Django va a Kong
+resource "aws_lb_listener_rule" "kong_admin_routes" {
+  listener_arn = aws_lb_listener.https.arn
+  priority     = 20
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.kong.arn
+  }
+
+  condition {
+    path_pattern {
+      values = ["/admin/*"]
+    }
+  }
+}
+
+# Regla: Health check de Kong
+resource "aws_lb_listener_rule" "kong_health" {
+  listener_arn = aws_lb_listener.https.arn
+  priority     = 5
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.kong.arn
+  }
+
+  condition {
+    path_pattern {
+      values = ["/kong-health"]
+    }
+  }
 }
