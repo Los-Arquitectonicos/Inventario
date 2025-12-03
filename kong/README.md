@@ -12,6 +12,151 @@ Internet → ALB (HTTPS:443) → Kong Gateway (EC2:8000) → Servicios Backend
                                     └→ Config Service (:3003) - /config, /features
 ```
 
+---
+
+## 🚀 Guía Rápida: Acceder a la Aplicación vía Kong
+
+### Paso 1: Obtener las IPs después del despliegue
+
+Después de ejecutar `terraform apply`, obtén las IPs necesarias:
+
+```bash
+cd ~/Inventario/terraform
+
+# Ver todos los outputs
+terraform output
+
+# O específicamente:
+terraform output kong_gateway_public_ip
+terraform output alb_dns_name
+terraform output app_server_1_private_ip
+terraform output app_server_2_private_ip
+```
+
+### Paso 2: Verificar que Kong está funcionando
+
+```bash
+# Conectar por SSH a Kong
+ssh ubuntu@$(terraform output -raw kong_gateway_public_ip)
+
+# Verificar estado de Kong
+sudo kong health
+
+# Ver logs de instalación (si hay problemas)
+sudo cat /var/log/kong-install.log
+```
+
+### Paso 3: Verificar que los servidores Django están configurados en Kong
+
+```bash
+# En el servidor Kong, verificar la configuración
+cat /etc/kong/kong.yml | grep -A5 "targets:"
+
+# Verificar que Kong puede alcanzar Django
+curl -s http://localhost:8000/inventario/
+```
+
+### Paso 4: Acceder a la aplicación
+
+Una vez todo está funcionando, accede a través del ALB:
+
+```bash
+# Obtener URL del ALB
+ALB_DNS=$(terraform output -raw alb_dns_name)
+
+# Acceder a la API (a través de Kong)
+curl -k "https://$ALB_DNS/inventario/"
+curl -k "https://$ALB_DNS/api/"
+curl -k "https://$ALB_DNS/admin/"
+
+# Health check de Kong
+curl -k "https://$ALB_DNS/kong-health"
+```
+
+> **Nota:** Usa `-k` porque el certificado SSL es autofirmado.
+
+### Paso 5: Probar desde el navegador
+
+Abre en tu navegador:
+- `https://<alb-dns-name>/inventario/` - Aplicación principal
+- `https://<alb-dns-name>/api/` - API REST
+- `https://<alb-dns-name>/admin/` - Panel de administración Django
+
+---
+
+## 🔧 Troubleshooting Post-Despliegue
+
+### Kong no responde (502 Bad Gateway)
+
+1. **Verificar que Kong está corriendo:**
+   ```bash
+   ssh ubuntu@<kong-ip>
+   sudo kong health
+   sudo systemctl status kong
+   ```
+
+2. **Verificar que Django está corriendo:**
+   ```bash
+   # Desde Kong, probar conectividad a Django
+   curl http://<django-private-ip>:8000/inventario/
+   ```
+
+3. **Ver logs de Kong:**
+   ```bash
+   sudo tail -f /var/log/kong/error.log
+   ```
+
+### Los servidores Django no están en el upstream
+
+Si los targets de Django no se configuraron correctamente durante el despliegue:
+
+```bash
+# SSH a Kong
+ssh ubuntu@<kong-ip>
+
+# Editar la configuración
+sudo nano /etc/kong/kong.yml
+
+# Buscar la sección 'targets' y verificar/corregir las IPs:
+#     targets:
+#       - target: <django-private-ip-1>:8000
+#         weight: 100
+#       - target: <django-private-ip-2>:8000
+#         weight: 100
+
+# Recargar Kong
+sudo kong reload
+```
+
+### Verificar que el ALB está enrutando a Kong
+
+```bash
+# Ver el target group de Kong en AWS Console
+# O verificar desde la terminal:
+aws elbv2 describe-target-health \
+  --target-group-arn $(aws elbv2 describe-target-groups \
+    --names provesi-kong-tg \
+    --query 'TargetGroups[0].TargetGroupArn' \
+    --output text)
+```
+
+### Django no está iniciado
+
+```bash
+# SSH a uno de los servidores Django
+ssh ubuntu@<django-public-ip>
+
+# Iniciar Django manualmente
+cd ~/Inventario/ProvesiWMS
+source /opt/apps/Inventario/venv/bin/activate
+python manage.py runserver 0.0.0.0:8000
+
+# O con gunicorn para producción:
+gunicorn --bind 0.0.0.0:8000 wms.wsgi:application
+```
+
+---
+
 ## Archivos de Configuración
 
 | Archivo | Descripción |
@@ -209,3 +354,51 @@ Para actualizar la configuración:
    ```bash
    sudo kong reload
    ```
+
+---
+
+## 📋 Resumen de Comandos Post-Despliegue
+
+```bash
+# === DESDE TU MÁQUINA LOCAL ===
+
+# 1. Ir al directorio terraform
+cd ~/Inventario/terraform
+
+# 2. Obtener información del despliegue
+terraform output
+
+# 3. Guardar variables útiles
+export ALB_DNS=$(terraform output -raw alb_dns_name)
+export KONG_IP=$(terraform output -raw kong_gateway_public_ip)
+
+# 4. Probar acceso a la aplicación
+curl -k "https://$ALB_DNS/inventario/"
+
+# === DESDE EL SERVIDOR KONG (vía SSH) ===
+
+# Conectar a Kong
+ssh ubuntu@$KONG_IP
+
+# Verificar estado
+sudo kong health
+
+# Ver configuración actual
+cat /etc/kong/kong.yml
+
+# Ver logs en tiempo real
+sudo tail -f /var/log/kong/access.log
+
+# Recargar configuración después de cambios
+sudo kong reload
+```
+
+## 🔗 URLs de la Aplicación
+
+| Endpoint | URL | Descripción |
+|----------|-----|-------------|
+| Inventario | `https://<alb-dns>/inventario/` | Página principal |
+| API REST | `https://<alb-dns>/api/` | Endpoints de la API |
+| Admin Django | `https://<alb-dns>/admin/` | Panel de administración |
+| Kong Health | `https://<alb-dns>/kong-health` | Health check de Kong |
+
