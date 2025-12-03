@@ -1,0 +1,22 @@
+_format_version: "3.0"
+
+services:
+  - name: django-service
+    url: http://<DJANGO_HOST>:8080
+    routes:
+      - name: inventario-route
+        paths:
+          - /inventario
+      - name: api-route
+        paths:
+          - /api
+      - name: admin-route
+        paths:
+          - /admin
+
+  - name: notifications-service
+    url: http://<NOTIFICATIONS_HOST>:8001
+    routes:
+      - name: notifications-route
+        paths:
+          - /notifications
