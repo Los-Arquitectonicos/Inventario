@@ -1,0 +1,138 @@
+_format_version: "3.0"
+
+# ==========================================
+# CONSUMERS (Usuarios/Apps que consumen API)
+# ==========================================
+consumers:
+  - username: django-backend
+    jwt_secrets:
+      - key: django-jwt-key
+        secret: "${DJANGO_SECRET_KEY}"
+        algorithm: HS256
+  - username: mobile-app
+    jwt_secrets:
+      - key: mobile-app-key
+        secret: "${DJANGO_SECRET_KEY}"
+        algorithm: HS256
+
+# ==========================================
+# SERVICES & ROUTES - CONFIGURACION INICIAL
+# ==========================================
+
+services:
+  # Service 1: Django Backend API
+  - name: django-api
+    url: http://${DJANGO_PRIVATE_IP_1}:8000
+    retries: 3
+    connect_timeout: 5000
+    read_timeout: 60000
+    write_timeout: 60000
+    routes:
+      - name: django-api-routes
+        paths:
+          - /api
+          - /inventario
+        strip_path: false
+        preserve_host: true
+      - name: django-admin-routes  
+        paths:
+          - /admin
+        strip_path: false
+        preserve_host: true
+    plugins:
+      # JWT Authentication (disabled initially for testing)
+      # - name: jwt
+      #   config:
+      #     claims_to_verify: ["exp"]
+      #     header_names: ["Authorization"]
+      #     uri_param_names: ["jwt"]
+      - name: rate-limiting
+        config:
+          minute: 200
+          hour: 10000
+          policy: local
+      - name: cors
+        config:
+          origins: ["*"]
+          methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+          headers: ["Accept", "Authorization", "Content-Type", "X-Requested-With"]
+          credentials: true
+          max_age: 3600
+
+  # Service 2: Notifications Microservice
+  - name: notifications
+    url: http://${NOTIFICATIONS_PRIVATE_IP}:3001
+    retries: 2
+    connect_timeout: 3000
+    read_timeout: 30000
+    write_timeout: 30000
+    routes:
+      - name: notifications-routes
+        paths:
+          - /notifications
+          - /api/notifications
+        strip_path: false
+        preserve_host: false
+    plugins:
+      # JWT Authentication (disabled initially)
+      # - name: jwt
+      - name: rate-limiting
+        config:
+          minute: 100
+          hour: 5000
+          policy: local
+      - name: cors
+        config:
+          origins: ["*"]
+          methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+          headers: ["Accept", "Authorization", "Content-Type"]
+          credentials: true
+
+# ==========================================
+# GLOBAL PLUGINS
+# ==========================================
+plugins:
+  # Correlation ID for request tracing
+  - name: correlation-id
+    config:
+      header_name: X-Kong-Request-ID
+      generator: uuid
+      echo_downstream: true
+  
+  # Request ID plugin
+  - name: request-id
+    config:
+      header_name: X-Request-ID
+      echo_downstream: true
+  
+  # File logging for all requests
+  - name: file-log
+    config:
+      path: /var/log/kong/access.log
+      reopen: true
+
+# ==========================================
+# UPSTREAMS (Load Balancing - Para futuro uso)
+# ==========================================
+upstreams:
+  - name: django-backend-upstream
+    algorithm: round-robin
+    hash_on: none
+    healthchecks:
+      active:
+        type: http
+        http_path: /health/
+        timeout: 1
+        concurrency: 10
+        healthy:
+          interval: 0
+          http_statuses: [200, 302]
+          successes: 0
+        unhealthy:
+          interval: 0
+          http_statuses: [429, 404, 500, 501, 502, 503, 504, 505]
+          http_failures: 0
+          timeouts: 0
+    targets:
+      - target: ${DJANGO_PRIVATE_IP_1}:8000
+        weight: 100

@@ -61,8 +61,8 @@ output "mongodb_private_ip" {
 }
 
 output "notifications_url" {
-  description = "Direct URL for Notifications Service (Standalone)"
-  value       = "http://${aws_instance.notifications.public_ip}:3001"
+  description = "Notifications Service URL (via Kong Gateway)"
+  value       = "https://${aws_lb.main.dns_name}/notifications"
 }
 
 output "ssh_app_server_2" {
@@ -74,4 +74,33 @@ output "database_connection_string" {
   description = "PostgreSQL connection details"
   value       = "postgresql://inventario_user:${var.db_password}@${aws_instance.database.private_ip}:5432/inventario_db"
   sensitive   = true
+}
+
+# ===================================
+# KONG API GATEWAY OUTPUTS
+# ===================================
+
+output "kong_gateway_public_ip" {
+  description = "Public IP of Kong Gateway"
+  value       = aws_instance.kong_gateway.public_ip
+}
+
+output "kong_gateway_private_ip" {
+  description = "Private IP of Kong Gateway"
+  value       = aws_instance.kong_gateway.private_ip
+}
+
+output "kong_admin_ssh" {
+  description = "SSH command to access Kong Gateway for administration"
+  value       = "ssh ubuntu@${aws_instance.kong_gateway.public_ip}"
+}
+
+output "kong_direct_url" {
+  description = "Direct Kong Gateway URL (for testing)"
+  value       = "http://${aws_instance.kong_gateway.public_ip}:8000"
+}
+
+output "api_gateway_url" {
+  description = "Main API Gateway URL (via ALB)"
+  value       = "https://${aws_lb.main.dns_name}"
 }

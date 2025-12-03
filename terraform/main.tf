@@ -464,7 +464,7 @@ resource "aws_lb_listener" "http" {
   }
 }
 
-# Listener HTTPS (puerto 443) - Endpoint principal
+# Listener HTTPS (puerto 443) - Todo el tráfico va a Kong
 resource "aws_lb_listener" "https" {
   load_balancer_arn = aws_lb.main.arn
   port              = "443"
@@ -474,10 +474,10 @@ resource "aws_lb_listener" "https" {
 
   default_action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.app.arn
+    target_group_arn = aws_lb_target_group.kong.arn
   }
 
-  depends_on = [aws_acm_certificate.alb_cert]
+  depends_on = [aws_acm_certificate.alb_cert, aws_lb_target_group.kong]
 }
 
 # ==========================================
@@ -670,9 +670,161 @@ EOF
 }
 
 # ======================================================
-# NOTIFICATIONS SERVICE - STANDALONE (NO ALB INTEGRATION)
+# KONG API GATEWAY
 # ======================================================
-# The notifications service now runs independently on port 3001
-# and can be accessed directly via: http://<public-ip>:3001
-# This removes the complexity of ALB routing and provides
-# direct access for testing and development.
+
+# Security Group para Kong
+resource "aws_security_group" "kong" {
+  name        = "${var.project_prefix}-kong-sg"
+  description = "Security group for Kong API Gateway"
+  vpc_id      = data.aws_vpc.default.id
+  
+  # Proxy HTTP desde ALB
+  ingress {
+    description     = "Kong proxy from ALB"
+    from_port       = 8000
+    to_port         = 8000
+    protocol        = "tcp"
+    security_groups = [aws_security_group.alb.id]
+  }
+  
+  # SSH para administración
+  ingress {
+    description = "SSH for management"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  
+  # Acceso directo para pruebas iniciales
+  ingress {
+    description = "Direct Kong proxy access for testing"
+    from_port   = 8000
+    to_port     = 8000
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  
+  egress {
+    description = "Allow all outbound"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  
+  tags = merge(local.common_tags, {
+    Name = "${var.project_prefix}-kong-sg"
+  })
+}
+
+# Kong EC2 Instance
+resource "aws_instance" "kong_gateway" {
+  ami                         = data.aws_ami.ubuntu.id
+  instance_type               = var.kong_instance_type
+  vpc_security_group_ids      = [aws_security_group.kong.id]
+  associate_public_ip_address = true
+  
+  user_data = <<-EOT
+    #!/bin/bash
+    exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
+    echo "🦍 Configurando Kong API Gateway..."
+    
+    # Actualizar sistema
+    sudo apt-get update -y
+    sudo apt-get upgrade -y
+    sudo apt-get install -y curl wget
+    
+    # Instalar Kong OSS
+    wget -O kong.deb "https://download.konghq.com/gateway-3.x-ubuntu-noble/pool/all/k/kong/kong_${var.kong_version}_amd64.deb"
+    sudo dpkg -i kong.deb || sudo apt-get install -f -y
+    
+    # Configuración Kong
+    sudo mkdir -p /etc/kong /var/log/kong
+    
+    sudo tee /etc/kong/kong.conf > /dev/null <<'CONF'
+database = off
+declarative_config = /etc/kong/kong.yml
+proxy_listen = 0.0.0.0:8000
+admin_listen = 127.0.0.1:8001
+log_level = ${var.kong_log_level}
+CONF
+    
+    # Configuración inicial de servicios
+    sudo tee /etc/kong/kong.yml > /dev/null <<'YML'
+_format_version: "3.0"
+services:
+  - name: django-api
+    url: http://${aws_instance.app_server[0].private_ip}:8000
+    routes:
+      - name: django-routes
+        paths: ["/api", "/inventario", "/admin"]
+  - name: notifications
+    url: http://${aws_instance.notifications.private_ip}:3001
+    routes:
+      - name: notification-routes
+        paths: ["/notifications"]
+YML
+    
+    # Iniciar Kong
+    sudo kong start -c /etc/kong/kong.conf
+    
+    echo "✅ Kong Gateway configurado"
+  EOT
+
+  tags = merge(local.common_tags, {
+    Name = "${var.project_prefix}-kong-gateway"
+    Role = "api-gateway"
+  })
+  
+  depends_on = [aws_instance.app_server, aws_instance.notifications]
+}
+
+# Target Group para Kong
+resource "aws_lb_target_group" "kong" {
+  name     = "${var.project_prefix}-kong-tg"
+  port     = 8000
+  protocol = "HTTP"
+  vpc_id   = data.aws_vpc.default.id
+  
+  health_check {
+    enabled           = true
+    path              = "/"
+    healthy_threshold = 2
+    interval          = 30
+    matcher           = "200,404"  # 404 es normal si no hay rutas configuradas
+  }
+  
+  tags = merge(local.common_tags, {
+    Name = "${var.project_prefix}-kong-tg"
+  })
+}
+
+# Attachment Kong al Target Group
+resource "aws_lb_target_group_attachment" "kong" {
+  target_group_arn = aws_lb_target_group.kong.arn
+  target_id        = aws_instance.kong_gateway.id
+  port             = 8000
+}
+
+# Security Group Rules: Permitir Kong acceder a backends
+resource "aws_security_group_rule" "django_from_kong" {
+  security_group_id        = aws_security_group.app.id
+  type                     = "ingress"
+  from_port                = 8000
+  to_port                  = 8000
+  protocol                 = "tcp"
+  source_security_group_id = aws_security_group.kong.id
+  description              = "Allow Kong to access Django servers"
+}
+
+resource "aws_security_group_rule" "notifications_from_kong" {
+  security_group_id        = aws_security_group.notifications_sg.id
+  type                     = "ingress"
+  from_port                = 3001
+  to_port                  = 3001
+  protocol                 = "tcp"
+  source_security_group_id = aws_security_group.kong.id
+  description              = "Allow Kong to access Notifications service"
+}

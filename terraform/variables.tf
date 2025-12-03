@@ -223,3 +223,36 @@ variable "backup_retention_days" {
   type        = number
   default     = 7
 }
+
+# ===================================
+# KONG API GATEWAY VARIABLES
+# ===================================
+
+variable "kong_instance_type" {
+  description = "EC2 instance type for Kong Gateway"
+  type        = string
+  default     = "t3.small"
+}
+
+variable "kong_version" {
+  description = "Kong Gateway version to install"
+  type        = string
+  default     = "3.5.0"
+}
+
+variable "kong_log_level" {
+  description = "Kong logging level (debug, info, notice, warn, error, crit)"
+  type        = string
+  default     = "info"
+  
+  validation {
+    condition     = contains(["debug", "info", "notice", "warn", "error", "crit"], var.kong_log_level)
+    error_message = "Kong log level must be one of: debug, info, notice, warn, error, crit."
+  }
+}
+
+variable "enable_kong_admin_api" {
+  description = "Enable Kong Admin API on public interface (not recommended for production)"
+  type        = bool
+  default     = false
+}
