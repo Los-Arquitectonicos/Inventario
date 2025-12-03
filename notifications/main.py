@@ -61,7 +61,7 @@ app = FastAPI(
     description="API for managing users and notifications with email support via Amazon SES",
     version="1.0.0",
     lifespan=lifespan,
-    root_path="/notifications",
+    # root_path="/notifications",  # Comentado para acceso directo, Kong usa strip_path=true
 )
 
 # CORS middleware
