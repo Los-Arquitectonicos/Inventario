@@ -35,22 +35,5 @@ python3 manage.py migrate --noinput
 echo "6. Iniciando servidor Django..."
 nohup python3 manage.py runserver 0.0.0.0:8080 > /tmp/django.log 2>&1 &
 
-# Esperar que el servidor inicie
-echo "7. Esperando inicio del servidor..."
-sleep 5
-
-# Verificar que el proceso está corriendo
-if pgrep -f "python.*manage.py.*runserver" > /dev/null; then
-    echo "Servidor Django iniciado correctamente en puerto 8080"
-    echo "Proceso:"
-    ps aux | grep "python.*manage.py.*runserver" | grep -v grep | head -1
-    echo ""
-    echo "Ver logs: tail -f /tmp/django.log"
-else
-    echo "Error: El servidor no está corriendo"
-    echo "Últimas líneas del log:"
-    tail -30 /tmp/django.log
-    exit 1
-fi
 
 echo "=== Reinicio completado ==="
