@@ -60,7 +60,7 @@ database_storage_gb = 100
 django_secret_key = "django-testing-secret-key-for-provesi-wms-2025-very-long-random-string-123456789"
 
 # Entorno de despliegue
-environment = "testing"
+environment = "development"
 
 # Dominio permitido para CORS
 allowed_host = "*.amazonaws.com"
