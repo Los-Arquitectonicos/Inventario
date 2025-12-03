@@ -166,8 +166,7 @@ SIMPLE_JWT = {
 # =========================
 
 # HTTPS Security (habilitado para cumplir requerimientos de seguridad)
-# NOTA: Desactivado temporalmente para pruebas con Kong sin SSL
-SECURE_SSL_REDIRECT = False  # TODO: Habilitar cuando se configure SSL en ALB
+SECURE_SSL_REDIRECT = not DEBUG
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 # Cookie Security 
