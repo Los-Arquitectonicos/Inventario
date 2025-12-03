@@ -36,6 +36,8 @@ class Database:
     @classmethod
     def get_database(cls):
         """Get the database instance."""
+        if cls.client is None:
+            raise RuntimeError("Database client is not connected. Call Database.connect() before using the database.")
         return cls.client[MONGODB_DATABASE]
     
     @classmethod

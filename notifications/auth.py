@@ -5,7 +5,7 @@ import os
 from datetime import datetime, timedelta
 from typing import Optional
 from jose import JWTError, jwt
-from passlib.context import CryptContext
+from passlib.context import CryptContext # pyright: ignore[reportMissingModuleSource]
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
@@ -50,8 +50,8 @@ def decode_token(token: str) -> TokenData:
     """Decode and validate a JWT token."""
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        username: str = payload.get("sub")
-        role: str = payload.get("role")
+        username: Optional[str] = payload.get("sub")
+        role: Optional[str] = payload.get("role")
         
         if username is None:
             raise HTTPException(
