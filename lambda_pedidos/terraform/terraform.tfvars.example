@@ -1,0 +1,24 @@
+# Ejemplo de archivo de variables para Terraform
+
+# Región de AWS donde desplegar
+aws_region = "us-east-1"
+
+# URL del API de ProvesiWMS Django para validaciones
+# Debe ser accesible desde Lambda (puede ser IP pública o VPC peering)
+provesi_api_url = "http://54.123.45.67:8000"
+
+# Nombre del Key Pair de EC2 para SSH a MongoDB
+key_name = "mi-keypair"
+
+# ID de la VPC donde desplegar
+vpc_id = "vpc-0123456789abcdef0"
+
+# ID de la Subnet donde desplegar MongoDB y Lambda
+# Debe ser una subnet pública o privada con NAT Gateway
+subnet_id = "subnet-0123456789abcdef0"
+
+# OPCIONAL: Tipo de instancia para MongoDB (default: t3.small)
+# mongodb_instance_type = "t3.medium"
+
+# OPCIONAL: Tamaño del volumen EBS para MongoDB en GB (default: 20)
+# mongodb_volume_size = 50

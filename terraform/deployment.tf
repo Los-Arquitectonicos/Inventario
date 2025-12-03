@@ -610,6 +610,348 @@ resource "aws_instance" "kong" {
 }
 
 # ====================================================================================
+# LAMBDA PEDIDOS - SERVERLESS
+# ====================================================================================
+
+# Lambda Layer para código compartido
+resource "null_resource" "lambda_layer_package" {
+  provisioner "local-exec" {
+    command = <<-EOT
+      cd ${path.module}/../lambda_pedidos/layer
+      pip3 install -r requirements.txt -t python/ --upgrade --quiet
+      cd ${path.module}/../lambda_pedidos
+      zip -r layer.zip python/ -x "*.pyc" -x "*__pycache__*"
+    EOT
+  }
+
+  triggers = {
+    requirements = filemd5("${path.module}/../lambda_pedidos/layer/requirements.txt")
+  }
+}
+
+resource "aws_lambda_layer_version" "pedidos_layer" {
+  filename            = "${path.module}/../lambda_pedidos/layer.zip"
+  layer_name          = "${var.project_prefix}-pedidos-layer"
+  compatible_runtimes = ["python3.11", "python3.12"]
+  description         = "Shared code for pedidos Lambda functions"
+
+  depends_on = [null_resource.lambda_layer_package]
+}
+
+# IAM Role para Lambda Functions
+resource "aws_iam_role" "lambda_pedidos_role" {
+  name = "${var.project_prefix}-lambda-pedidos-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        Service = "lambda.amazonaws.com"
+      }
+    }]
+  })
+
+  tags = merge(local.common_tags, {
+    Name = "${var.project_prefix}-lambda-pedidos-role"
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "lambda_pedidos_logs" {
+  role       = aws_iam_role.lambda_pedidos_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}
+
+# Security Group para Lambda
+resource "aws_security_group" "lambda_pedidos" {
+  name        = "${var.project_prefix}-lambda-pedidos"
+  description = "Security group for Lambda pedidos functions"
+  vpc_id      = data.aws_vpc.default.id
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = merge(local.common_tags, {
+    Name = "${var.project_prefix}-lambda-pedidos"
+  })
+}
+
+# Permitir Lambda acceso a MongoDB
+resource "aws_security_group_rule" "mongodb_from_lambda" {
+  type                     = "ingress"
+  from_port                = 27017
+  to_port                  = 27017
+  protocol                 = "tcp"
+  source_security_group_id = aws_security_group.lambda_pedidos.id
+  security_group_id        = aws_security_group.traffic_mongodb.id
+}
+
+# Lambda Functions con empaquetado automático
+resource "null_resource" "lambda_functions_package" {
+  for_each = toset(["crear_pedido", "consultar_pedido", "seguir_pedido"])
+
+  provisioner "local-exec" {
+    command = <<-EOT
+      cd ${path.module}/../lambda_pedidos/functions
+      zip ${each.key}.zip ${each.key}.py
+    EOT
+  }
+
+  triggers = {
+    code_hash = filemd5("${path.module}/../lambda_pedidos/functions/${each.key}.py")
+  }
+}
+
+# Lambda: Crear Pedido
+resource "aws_lambda_function" "crear_pedido" {
+  filename      = "${path.module}/../lambda_pedidos/functions/crear_pedido.zip"
+  function_name = "${var.project_prefix}-pedidos-crear"
+  role          = aws_iam_role.lambda_pedidos_role.arn
+  handler       = "crear_pedido.lambda_handler"
+  runtime       = "python3.11"
+  timeout       = 30
+  memory_size   = 256
+
+  layers = [aws_lambda_layer_version.pedidos_layer.arn]
+
+  environment {
+    variables = {
+      MONGODB_URI     = "mongodb://${aws_instance.mongodb.private_ip}:27017/pedidos_db"
+      PROVESI_API_URL = "https://${aws_lb.main.dns_name}"
+    }
+  }
+
+  depends_on = [
+    null_resource.lambda_functions_package["crear_pedido"],
+    aws_instance.mongodb,
+    aws_lb.main
+  ]
+
+  tags = merge(local.common_tags, {
+    Name = "${var.project_prefix}-pedidos-crear"
+  })
+}
+
+# Lambda: Consultar Pedido
+resource "aws_lambda_function" "consultar_pedido" {
+  filename      = "${path.module}/../lambda_pedidos/functions/consultar_pedido.zip"
+  function_name = "${var.project_prefix}-pedidos-consultar"
+  role          = aws_iam_role.lambda_pedidos_role.arn
+  handler       = "consultar_pedido.lambda_handler"
+  runtime       = "python3.11"
+  timeout       = 30
+  memory_size   = 256
+
+  layers = [aws_lambda_layer_version.pedidos_layer.arn]
+
+  environment {
+    variables = {
+      MONGODB_URI     = "mongodb://${aws_instance.mongodb.private_ip}:27017/pedidos_db"
+      PROVESI_API_URL = "https://${aws_lb.main.dns_name}"
+    }
+  }
+
+  depends_on = [
+    null_resource.lambda_functions_package["consultar_pedido"],
+    aws_instance.mongodb,
+    aws_lb.main
+  ]
+
+  tags = merge(local.common_tags, {
+    Name = "${var.project_prefix}-pedidos-consultar"
+  })
+}
+
+# Lambda: Seguir Pedido
+resource "aws_lambda_function" "seguir_pedido" {
+  filename      = "${path.module}/../lambda_pedidos/functions/seguir_pedido.zip"
+  function_name = "${var.project_prefix}-pedidos-seguir"
+  role          = aws_iam_role.lambda_pedidos_role.arn
+  handler       = "seguir_pedido.lambda_handler"
+  runtime       = "python3.11"
+  timeout       = 30
+  memory_size   = 256
+
+  layers = [aws_lambda_layer_version.pedidos_layer.arn]
+
+  environment {
+    variables = {
+      MONGODB_URI     = "mongodb://${aws_instance.mongodb.private_ip}:27017/pedidos_db"
+      PROVESI_API_URL = "https://${aws_lb.main.dns_name}"
+    }
+  }
+
+  depends_on = [
+    null_resource.lambda_functions_package["seguir_pedido"],
+    aws_instance.mongodb,
+    aws_lb.main
+  ]
+
+  tags = merge(local.common_tags, {
+    Name = "${var.project_prefix}-pedidos-seguir"
+  })
+}
+
+# API Gateway REST API
+resource "aws_api_gateway_rest_api" "pedidos_api" {
+  name        = "${var.project_prefix}-pedidos-api"
+  description = "API Gateway para gestión de pedidos serverless"
+
+  endpoint_configuration {
+    types = ["REGIONAL"]
+  }
+
+  tags = merge(local.common_tags, {
+    Name = "${var.project_prefix}-pedidos-api"
+  })
+}
+
+# Resource: /pedidos
+resource "aws_api_gateway_resource" "pedidos" {
+  rest_api_id = aws_api_gateway_rest_api.pedidos_api.id
+  parent_id   = aws_api_gateway_rest_api.pedidos_api.root_resource_id
+  path_part   = "pedidos"
+}
+
+# POST /pedidos
+resource "aws_api_gateway_method" "post_pedidos" {
+  rest_api_id   = aws_api_gateway_rest_api.pedidos_api.id
+  resource_id   = aws_api_gateway_resource.pedidos.id
+  http_method   = "POST"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "post_pedidos" {
+  rest_api_id             = aws_api_gateway_rest_api.pedidos_api.id
+  resource_id             = aws_api_gateway_resource.pedidos.id
+  http_method             = aws_api_gateway_method.post_pedidos.http_method
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = aws_lambda_function.crear_pedido.invoke_arn
+}
+
+# GET /pedidos
+resource "aws_api_gateway_method" "get_pedidos" {
+  rest_api_id   = aws_api_gateway_rest_api.pedidos_api.id
+  resource_id   = aws_api_gateway_resource.pedidos.id
+  http_method   = "GET"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "get_pedidos" {
+  rest_api_id             = aws_api_gateway_rest_api.pedidos_api.id
+  resource_id             = aws_api_gateway_resource.pedidos.id
+  http_method             = aws_api_gateway_method.get_pedidos.http_method
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = aws_lambda_function.consultar_pedido.invoke_arn
+}
+
+# Resource: /pedidos/{numero_pedido}
+resource "aws_api_gateway_resource" "pedido_by_numero" {
+  rest_api_id = aws_api_gateway_rest_api.pedidos_api.id
+  parent_id   = aws_api_gateway_resource.pedidos.id
+  path_part   = "{numero_pedido}"
+}
+
+# GET /pedidos/{numero_pedido}
+resource "aws_api_gateway_method" "get_pedido" {
+  rest_api_id   = aws_api_gateway_rest_api.pedidos_api.id
+  resource_id   = aws_api_gateway_resource.pedido_by_numero.id
+  http_method   = "GET"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "get_pedido" {
+  rest_api_id             = aws_api_gateway_rest_api.pedidos_api.id
+  resource_id             = aws_api_gateway_resource.pedido_by_numero.id
+  http_method             = aws_api_gateway_method.get_pedido.http_method
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = aws_lambda_function.consultar_pedido.invoke_arn
+}
+
+# Resource: /pedidos/{numero_pedido}/seguimiento
+resource "aws_api_gateway_resource" "seguimiento" {
+  rest_api_id = aws_api_gateway_rest_api.pedidos_api.id
+  parent_id   = aws_api_gateway_resource.pedido_by_numero.id
+  path_part   = "seguimiento"
+}
+
+# PUT /pedidos/{numero_pedido}/seguimiento
+resource "aws_api_gateway_method" "put_seguimiento" {
+  rest_api_id   = aws_api_gateway_rest_api.pedidos_api.id
+  resource_id   = aws_api_gateway_resource.seguimiento.id
+  http_method   = "PUT"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "put_seguimiento" {
+  rest_api_id             = aws_api_gateway_rest_api.pedidos_api.id
+  resource_id             = aws_api_gateway_resource.seguimiento.id
+  http_method             = aws_api_gateway_method.put_seguimiento.http_method
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = aws_lambda_function.seguir_pedido.invoke_arn
+}
+
+# Lambda permissions para API Gateway
+resource "aws_lambda_permission" "apigw_crear_pedido" {
+  statement_id  = "AllowAPIGatewayInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.crear_pedido.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_api_gateway_rest_api.pedidos_api.execution_arn}/*/*"
+}
+
+resource "aws_lambda_permission" "apigw_consultar_pedido" {
+  statement_id  = "AllowAPIGatewayInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.consultar_pedido.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_api_gateway_rest_api.pedidos_api.execution_arn}/*/*"
+}
+
+resource "aws_lambda_permission" "apigw_seguir_pedido" {
+  statement_id  = "AllowAPIGatewayInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.seguir_pedido.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_api_gateway_rest_api.pedidos_api.execution_arn}/*/*"
+}
+
+# API Gateway Deployment
+resource "aws_api_gateway_deployment" "pedidos" {
+  rest_api_id = aws_api_gateway_rest_api.pedidos_api.id
+
+  depends_on = [
+    aws_api_gateway_integration.post_pedidos,
+    aws_api_gateway_integration.get_pedidos,
+    aws_api_gateway_integration.get_pedido,
+    aws_api_gateway_integration.put_seguimiento
+  ]
+
+  lifecycle {
+    create_before_destroy = true
+  }
+}
+
+resource "aws_api_gateway_stage" "prod" {
+  deployment_id = aws_api_gateway_deployment.pedidos.id
+  rest_api_id   = aws_api_gateway_rest_api.pedidos_api.id
+  stage_name    = "prod"
+
+  tags = merge(local.common_tags, {
+    Name = "${var.project_prefix}-pedidos-stage-prod"
+  })
+}
+
+# ====================================================================================
 # OUTPUTS
 # ====================================================================================
 
@@ -643,6 +985,21 @@ output "mongodb_private_ip" {
   value       = aws_instance.mongodb.private_ip
 }
 
+output "lambda_api_gateway_url" {
+  description = "Lambda Pedidos API Gateway URL"
+  value       = "${aws_api_gateway_stage.prod.invoke_url}/pedidos"
+}
+
+output "lambda_endpoints" {
+  description = "Lambda Pedidos endpoints"
+  value = {
+    crear_pedido     = "POST ${aws_api_gateway_stage.prod.invoke_url}/pedidos"
+    listar_pedidos   = "GET  ${aws_api_gateway_stage.prod.invoke_url}/pedidos"
+    obtener_pedido   = "GET  ${aws_api_gateway_stage.prod.invoke_url}/pedidos/{numero_pedido}"
+    seguir_pedido    = "PUT  ${aws_api_gateway_stage.prod.invoke_url}/pedidos/{numero_pedido}/seguimiento"
+  }
+}
+
 output "instructions" {
   description = "Next steps to run the applications"
   value       = <<-EOT
@@ -669,7 +1026,13 @@ output "instructions" {
      - HTTPS: https://${aws_instance.kong.public_ip}:8443
      - Certificados SSL configurados
   
-  4. BASES DE DATOS:
+  4. LAMBDA PEDIDOS (serverless en ejecución):
+     - API Gateway: ${aws_api_gateway_stage.prod.invoke_url}/pedidos
+     - Crear pedido:     POST ${aws_api_gateway_stage.prod.invoke_url}/pedidos
+     - Consultar pedido: GET  ${aws_api_gateway_stage.prod.invoke_url}/pedidos/{numero}
+     - Seguir pedido:    PUT  ${aws_api_gateway_stage.prod.invoke_url}/pedidos/{numero}/seguimiento
+  
+  5. BASES DE DATOS:
      - PostgreSQL: ${aws_instance.database.private_ip}:5432
      - MongoDB: ${aws_instance.mongodb.private_ip}:27017
   
@@ -686,6 +1049,14 @@ output "instructions" {
   # Notificaciones
   curl -k https://${aws_instance.kong.public_ip}:8443/notifications/health
   
+  # Lambda Pedidos - Crear pedido
+  curl -X POST ${aws_api_gateway_stage.prod.invoke_url}/pedidos \
+    -H 'Content-Type: application/json' \
+    -d '{"cliente_id": 1, "productos": [{"producto_id": 1, "cantidad": 10}]}'
+  
+  # Lambda Pedidos - Listar pedidos
+  curl ${aws_api_gateway_stage.prod.invoke_url}/pedidos
+  
   # Directamente al ALB HTTPS
   curl -k https://${aws_lb.main.dns_name}/inventario/
   
@@ -698,6 +1069,11 @@ output "instructions" {
            ├→ :8443 HTTPS }                                ├→ Django 1 (${aws_instance.django[0].private_ip}:8080) ✅ RUNNING
            │                                               └→ Django 2 (${aws_instance.django[1].private_ip}:8080) ✅ RUNNING
            └→ /notifications → FastAPI (${aws_instance.notifications.private_ip}:8001) ✅ RUNNING
+  
+  Internet → API Gateway (${aws_api_gateway_stage.prod.invoke_url})
+           ├→ POST /pedidos → Lambda crear_pedido → MongoDB (${aws_instance.mongodb.private_ip}:27017) ✅ SERVERLESS
+           ├→ GET /pedidos → Lambda consultar_pedido → MongoDB ✅ SERVERLESS
+           └→ PUT /pedidos/{id}/seguimiento → Lambda seguir_pedido → MongoDB ✅ SERVERLESS
   
   ========================================
   LOGS (si necesitas debug):
