@@ -34,6 +34,7 @@ sudo docker rm kong || true
 # 4. Recrear Kong con HTTPS habilitado
 echo "4. Iniciando Kong con HTTPS..."
 sudo docker run -d --name kong --network=kong-net --restart=always \
+  --user root \
   -v "/opt/kong/Inventario:/kong/declarative/" \
   -v "/opt/kong/certs:/kong/certs/" \
   -e "KONG_DATABASE=off" \

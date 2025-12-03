@@ -563,9 +563,14 @@ resource "aws_instance" "kong" {
                 -days 365 \
                 -subj "/CN=kong-gateway/O=Provesi WMS"
 
+              # Ajustar permisos de certificados
+              chmod 644 /opt/kong/certs/kong-cert.pem
+              chmod 644 /opt/kong/certs/kong-key.pem
+
               # Crear network y ejecutar Kong con HTTPS
               docker network create kong-net 2>/dev/null || true
               docker run -d --name kong --network=kong-net --restart=always \
+                --user root \
                 -v "/opt/kong/Inventario:/kong/declarative/" \
                 -v "/opt/kong/certs:/kong/certs/" \
                 -e "KONG_DATABASE=off" \
@@ -656,22 +661,27 @@ output "instructions" {
      python3 -m uvicorn main:app --host 0.0.0.0 --port 8001
   
   3. KONG API Gateway:
-     Kong ya está ejecutándose en: http://${aws_instance.kong.public_ip}:8000
+     Kong ya está ejecutándose con HTTP y HTTPS:
+     - HTTP:  http://${aws_instance.kong.public_ip}:8000
+     - HTTPS: https://${aws_instance.kong.public_ip}:8443
   
   4. VERIFICAR:
-     # A través de Kong
+     # A través de Kong HTTP
      curl http://${aws_instance.kong.public_ip}:8000/inventario/
      
-     # Directamente al ALB (opcional)
-     curl http://${aws_lb.main.dns_name}/inventario/
+     # A través de Kong HTTPS (certificado self-signed)
+     curl -k https://${aws_instance.kong.public_ip}:8443/inventario/
+     
+     # Directamente al ALB HTTPS (opcional)
+     curl -k https://${aws_lb.main.dns_name}/inventario/
   
   ========================================
   
   ARQUITECTURA:
-  Internet → Kong (${aws_instance.kong.public_ip}:8000)
-           ├→ /inventario, /api, /admin → ALB (${aws_lb.main.dns_name})
-           │                               ├→ Django 1 (${aws_instance.django[0].private_ip}:8080)
-           │                               └→ Django 2 (${aws_instance.django[1].private_ip}:8080)
+  Internet → Kong (${aws_instance.kong.public_ip})
+           ├→ :8000 HTTP  } → /inventario, /api, /admin → ALB HTTPS (${aws_lb.main.dns_name}:443)
+           ├→ :8443 HTTPS }                                ├→ Django 1 (${aws_instance.django[0].private_ip}:8080)
+           │                                               └→ Django 2 (${aws_instance.django[1].private_ip}:8080)
            └→ /notifications → FastAPI (${aws_instance.notifications.private_ip}:8001)
   
   ========================================
