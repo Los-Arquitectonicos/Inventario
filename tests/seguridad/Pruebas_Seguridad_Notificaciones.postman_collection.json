@@ -7,10 +7,10 @@
 	},
 	"item": [
 		{
-			"name": "1. Pruebas Sin Autenticación",
+            "name": "1. Pruebas Sin Autenticación",
 			"item": [
 				{
-					"name": "❌ Listar notificaciones sin token",
+					"name": "Listar notificaciones sin token",
 					"event": [
 						{
 							"listen": "test",
@@ -47,7 +47,7 @@
 					"response": []
 				},
 				{
-					"name": "❌ Listar usuarios sin token",
+					"name": "Listar usuarios sin token",
 					"event": [
 						{
 							"listen": "test",
@@ -84,7 +84,7 @@
 					"response": []
 				},
 				{
-					"name": "❌ Enviar notificación sin token",
+					"name": "Enviar notificación sin token",
 					"event": [
 						{
 							"listen": "test",
@@ -131,7 +131,7 @@
 			"name": "2. Pruebas Con Token Inválido",
 			"item": [
 				{
-					"name": "❌ Acceso con token malformado",
+					"name": "Acceso con token malformado",
 					"event": [
 						{
 							"listen": "test",
@@ -174,7 +174,7 @@
 					"response": []
 				},
 				{
-					"name": "❌ Acceso con formato de token incorrecto",
+					"name": "Acceso con formato de token incorrecto",
 					"event": [
 						{
 							"listen": "test",
@@ -212,7 +212,7 @@
 					"response": []
 				},
 				{
-					"name": "❌ Acceso con token vacío",
+					"name": "Acceso con token vacío",
 					"event": [
 						{
 							"listen": "test",
@@ -256,7 +256,7 @@
 			"name": "3. Setup - Obtener Tokens Válidos",
 			"item": [
 				{
-					"name": "✅ Login Admin",
+					"name": " Login Admin",
 					"event": [
 						{
 							"listen": "test",
@@ -304,7 +304,7 @@
 					"response": []
 				},
 				{
-					"name": "✅ Login Operario1",
+					"name": " Login Operario1",
 					"event": [
 						{
 							"listen": "test",
@@ -352,7 +352,7 @@
 					"response": []
 				},
 				{
-					"name": "✅ Login Empacador",
+					"name": " Login Empacador",
 					"event": [
 						{
 							"listen": "test",
@@ -406,7 +406,7 @@
 			"name": "4. Pruebas de Autorización por Rol",
 			"item": [
 				{
-					"name": "❌ Operario intenta listar todos los usuarios",
+					"name": " Operario intenta listar todos los usuarios",
 					"event": [
 						{
 							"listen": "test",
@@ -449,7 +449,7 @@
 					"response": []
 				},
 				{
-					"name": "✅ Admin lista todos los usuarios",
+					"name": " Admin lista todos los usuarios",
 					"event": [
 						{
 							"listen": "test",
@@ -493,7 +493,7 @@
 					"response": []
 				},
 				{
-					"name": "❌ Operario intenta ver detalles de otro usuario",
+					"name": " Operario intenta ver detalles de otro usuario",
 					"event": [
 						{
 							"listen": "test",
@@ -532,7 +532,7 @@
 					"response": []
 				},
 				{
-					"name": "✅ Admin ve detalles de cualquier usuario",
+					"name": " Admin ve detalles de cualquier usuario",
 					"event": [
 						{
 							"listen": "test",
@@ -583,7 +583,7 @@
 			"name": "5. Pruebas de Aislamiento de Datos",
 			"item": [
 				{
-					"name": "✅ Operario1 ve solo sus notificaciones",
+					"name": " Operario1 ve solo sus notificaciones",
 					"event": [
 						{
 							"listen": "test",
@@ -633,7 +633,7 @@
 					"response": []
 				},
 				{
-					"name": "✅ Empacador ve solo sus notificaciones",
+					"name": " Empacador ve solo sus notificaciones",
 					"event": [
 						{
 							"listen": "test",
@@ -676,7 +676,7 @@
 					"response": []
 				},
 				{
-					"name": "❌ Empacador NO puede marcar como leída notificación de Operario1",
+					"name": " Empacador NO puede marcar como leída notificación de Operario1",
 					"event": [
 						{
 							"listen": "test",
@@ -727,7 +727,7 @@
 			"name": "6. Pruebas de Inyección y XSS",
 			"item": [
 				{
-					"name": "❌ SQL Injection en username",
+					"name": " SQL Injection en username",
 					"event": [
 						{
 							"listen": "test",
@@ -777,7 +777,7 @@
 					"response": []
 				},
 				{
-					"name": "✅ Admin envía notificación con XSS (debe sanitizar)",
+					"name": " Admin envía notificación con XSS (debe sanitizar)",
 					"event": [
 						{
 							"listen": "test",
@@ -828,7 +828,7 @@
 					"response": []
 				},
 				{
-					"name": "✅ Verificar que XSS fue escapado",
+					"name": " Verificar que XSS fue escapado",
 					"event": [
 						{
 							"listen": "test",
@@ -943,13 +943,6 @@
 					""
 				]
 			}
-		}
-	],
-	"variable": [
-		{
-			"key": "BASE_URL",
-			"value": "https://3.238.225.18:8443",
-			"type": "string"
 		}
 	]
 }
