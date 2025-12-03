@@ -256,3 +256,72 @@ variable "enable_kong_admin_api" {
   type        = bool
   default     = false
 }
+
+# ===================================
+# VARIABLES ADICIONALES PARA TERRAFORM.TFVARS
+# ===================================
+
+variable "owner" {
+  description = "Owner tag for AWS resources"
+  type        = string
+  default     = "devops"
+}
+
+variable "database_instance_type" {
+  description = "Database instance type (alias for db_instance_type)"
+  type        = string
+  default     = "t3.small"
+}
+
+variable "database_password" {
+  description = "Database password (alias for db_password)"
+  type        = string
+  default     = "InventarioSecure2024!"
+  sensitive   = true
+}
+
+variable "postgres_version" {
+  description = "PostgreSQL version"
+  type        = string
+  default     = "15"
+}
+
+variable "database_storage_gb" {
+  description = "Database storage size in GB"
+  type        = number
+  default     = 100
+
+  validation {
+    condition     = var.database_storage_gb >= 20 && var.database_storage_gb <= 1000
+    error_message = "Database storage must be between 20 and 1000 GB."
+  }
+}
+
+variable "force_https" {
+  description = "Force HTTPS redirects"
+  type        = bool
+  default     = true
+}
+
+variable "cors_allow_credentials" {
+  description = "Allow credentials in CORS requests"
+  type        = bool
+  default     = false
+}
+
+variable "ssl_policy" {
+  description = "SSL policy for ALB"
+  type        = string
+  default     = "ELBSecurityPolicy-TLS-1-2-2017-01"
+}
+
+variable "log_level" {
+  description = "Application logging level"
+  type        = string
+  default     = "INFO"
+  
+  validation {
+    condition     = contains(["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"], var.log_level)
+    error_message = "Log level must be one of: DEBUG, INFO, WARNING, ERROR, CRITICAL."
+  }
+}
