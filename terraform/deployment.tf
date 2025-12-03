@@ -53,6 +53,22 @@ locals {
   }
 }
 
+# Data Source: VPC por defecto
+data "aws_vpc" "default" {
+  filter {
+    name   = "isDefault"
+    values = ["true"]
+  }
+}
+
+# Data Source: Subnets disponibles
+data "aws_subnets" "available" {
+  filter {
+    name   = "vpc-id"
+    values = [data.aws_vpc.default.id]
+  }
+}
+
 # AMI de Amazon Linux 2023 (viene con Docker preinstalado)
 data "aws_ami" "amazon_linux" {
   most_recent = true
@@ -103,17 +119,51 @@ resource "aws_security_group" "traffic_kong" {
   })
 }
 
-# Security Group: Django (puerto 8080)
-resource "aws_security_group" "traffic_django" {
-  name        = "${var.project_prefix}-traffic-django"
-  description = "Allow Django traffic on port 8080"
+# Security Group: ALB (puerto 443 desde Kong)
+resource "aws_security_group" "traffic_alb" {
+  name        = "${var.project_prefix}-traffic-alb"
+  description = "Allow ALB traffic from Kong"
 
   ingress {
-    description = "Django HTTP access"
-    from_port   = 8080
-    to_port     = 8080
+    description = "HTTPS from Kong"
+    from_port   = 443
+    to_port     = 443
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    description = "HTTP from Kong"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    description = "Allow all outbound"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = merge(local.common_tags, {
+    Name = "${var.project_prefix}-traffic-alb"
+  })
+}
+
+# Security Group: Django (puerto 8080 desde ALB)
+resource "aws_security_group" "traffic_django" {
+  name        = "${var.project_prefix}-traffic-django"
+  description = "Allow Django traffic from ALB"
+
+  ingress {
+    description     = "HTTP from ALB"
+    from_port       = 8080
+    to_port         = 8080
+    protocol        = "tcp"
+    security_groups = [aws_security_group.traffic_alb.id]
   }
 
   tags = merge(local.common_tags, {
@@ -250,8 +300,9 @@ resource "aws_instance" "mongodb" {
   })
 }
 
-# Instancia: Django (solo descarga, NO ejecuta)
+# Instancias: Django x2 (solo descarga, NO ejecuta)
 resource "aws_instance" "django" {
+  count                       = 2
   ami                         = data.aws_ami.ubuntu.id
   instance_type               = var.instance_type
   associate_public_ip_address = true
@@ -275,11 +326,72 @@ resource "aws_instance" "django" {
               EOT
 
   tags = merge(local.common_tags, {
-    Name = "${var.project_prefix}-django"
+    Name = "${var.project_prefix}-django-${count.index + 1}"
     Role = "django-app"
   })
 
   depends_on = [aws_instance.database]
+}
+
+# Application Load Balancer
+resource "aws_lb" "main" {
+  name               = "${var.project_prefix}-alb"
+  internal           = false
+  load_balancer_type = "application"
+  security_groups    = [aws_security_group.traffic_alb.id]
+  subnets            = data.aws_subnets.available.ids
+
+  tags = merge(local.common_tags, {
+    Name = "${var.project_prefix}-alb"
+  })
+}
+
+# Target Group para Django
+resource "aws_lb_target_group" "django" {
+  name     = "${var.project_prefix}-django-tg"
+  port     = 8080
+  protocol = "HTTP"
+  vpc_id   = data.aws_vpc.default.id
+
+  health_check {
+    enabled             = true
+    healthy_threshold   = 2
+    interval            = 30
+    matcher             = "200,301,302"
+    path                = "/inventario/"
+    port                = "traffic-port"
+    protocol            = "HTTP"
+    timeout             = 5
+    unhealthy_threshold = 2
+  }
+
+  tags = merge(local.common_tags, {
+    Name = "${var.project_prefix}-django-tg"
+  })
+}
+
+# Registrar instancias Django en el Target Group
+resource "aws_lb_target_group_attachment" "django" {
+  count            = 2
+  target_group_arn = aws_lb_target_group.django.arn
+  target_id        = aws_instance.django[count.index].id
+  port             = 8080
+}
+
+# Listener HTTP para el ALB
+resource "aws_lb_listener" "http" {
+  load_balancer_arn = aws_lb.main.arn
+  port              = "80"
+  protocol          = "HTTP"
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.django.arn
+  }
+
+  tags = merge(local.common_tags, {
+    Name = "${var.project_prefix}-listener-http"
+  })
 }
 
 # Instancia: FastAPI Notifications (solo descarga, NO ejecuta)
@@ -324,8 +436,8 @@ resource "aws_instance" "kong" {
   user_data = <<-EOT
               #!/bin/bash
               
-              export DJANGO_HOST=${aws_instance.django.private_ip}
-              echo "DJANGO_HOST=${aws_instance.django.private_ip}" | sudo tee -a /etc/environment
+              export ALB_DNS=${aws_lb.main.dns_name}
+              echo "ALB_DNS=${aws_lb.main.dns_name}" | sudo tee -a /etc/environment
               
               export NOTIFICATIONS_HOST=${aws_instance.notifications.private_ip}
               echo "NOTIFICATIONS_HOST=${aws_instance.notifications.private_ip}" | sudo tee -a /etc/environment
@@ -335,8 +447,8 @@ resource "aws_instance" "kong" {
               git clone -b ${local.branch} ${local.repository}
               cd Inventario
 
-              # Configurar kong.yaml con las IPs reales
-              sed -i "s/<DJANGO_HOST>/${aws_instance.django.private_ip}/g" kong.yaml
+              # Configurar kong.yaml con el DNS del ALB y la IP de notifications
+              sed -i "s/<DJANGO_HOST>/${aws_lb.main.dns_name}/g" kong.yaml
               sed -i "s/<NOTIFICATIONS_HOST>/${aws_instance.notifications.private_ip}/g" kong.yaml
 
               docker network create kong-net
@@ -365,9 +477,14 @@ output "kong_public_ip" {
   value       = aws_instance.kong.public_ip
 }
 
-output "django_public_ip" {
-  description = "Django app public IP"
-  value       = aws_instance.django.public_ip
+output "django_public_ips" {
+  description = "Django instances public IPs"
+  value       = aws_instance.django[*].public_ip
+}
+
+output "alb_dns_name" {
+  description = "Application Load Balancer DNS name"
+  value       = aws_lb.main.dns_name
 }
 
 output "notifications_public_ip" {
@@ -396,10 +513,17 @@ output "instructions" {
   Las aplicaciones están instaladas pero NO ejecutándose.
   Debes iniciarlas manualmente:
   
-  1. DJANGO:
-     ssh ubuntu@${aws_instance.django.public_ip}
+  1. DJANGO (conectar a ambas instancias):
+     
+     INSTANCIA 1:
+     ssh ubuntu@${aws_instance.django[0].public_ip}
      cd /home/ubuntu/app/Inventario
-     python3 manage.py migrate
+     python3 manage.py migrate  # SOLO en la primera instancia
+     python3 manage.py runserver 0.0.0.0:8080
+     
+     INSTANCIA 2:
+     ssh ubuntu@${aws_instance.django[1].public_ip}
+     cd /home/ubuntu/app/Inventario
      python3 manage.py runserver 0.0.0.0:8080
   
   2. NOTIFICATIONS:
@@ -411,7 +535,20 @@ output "instructions" {
      Kong ya está ejecutándose en: http://${aws_instance.kong.public_ip}:8000
   
   4. VERIFICAR:
+     # A través de Kong
      curl http://${aws_instance.kong.public_ip}:8000/inventario/
+     
+     # Directamente al ALB (opcional)
+     curl http://${aws_lb.main.dns_name}/inventario/
+  
+  ========================================
+  
+  ARQUITECTURA:
+  Internet → Kong (${aws_instance.kong.public_ip}:8000)
+           ├→ /inventario, /api, /admin → ALB (${aws_lb.main.dns_name})
+           │                               ├→ Django 1 (${aws_instance.django[0].private_ip}:8080)
+           │                               └→ Django 2 (${aws_instance.django[1].private_ip}:8080)
+           └→ /notifications → FastAPI (${aws_instance.notifications.private_ip}:8001)
   
   ========================================
   EOT
