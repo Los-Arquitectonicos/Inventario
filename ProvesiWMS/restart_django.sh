@@ -24,14 +24,14 @@ pip install -r requirements.txt
 
 # Aplicar migraciones
 echo "5. Aplicando migraciones..."
-python3 manage.py migrate
+~/app/Inventario/ProvesiWMS/venv/bin/python3 manage.py migrate
 
 # Esperar un momento
 sleep 2
 
 # Iniciar servidor Django
 echo "6. Iniciando servidor Django..."
-nohup python3 manage.py runserver 0.0.0.0:8080 > /tmp/django.log 2>&1 &
+nohup ~/app/Inventario/ProvesiWMS/venv/bin/python3 manage.py runserver 0.0.0.0:8080 > /tmp/django.log 2>&1 &
 
 # Esperar que el servidor inicie
 sleep 3

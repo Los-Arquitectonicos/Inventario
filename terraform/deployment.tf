@@ -335,12 +335,12 @@ resource "aws_instance" "django" {
               # Ejecutar migraciones (solo en la primera instancia)
               if [ ${count.index} -eq 0 ]; then
                 source /etc/environment
-                python3 manage.py migrate
+                /home/ubuntu/app/Inventario/ProvesiWMS/venv/bin/python3 manage.py migrate
               fi
               
-              # Iniciar servidor Django en background
+              # Iniciar servidor Django en background usando el Python del virtualenv
               source /etc/environment
-              nohup python3 manage.py runserver 0.0.0.0:8080 > /home/ubuntu/django.log 2>&1 &
+              nohup /home/ubuntu/app/Inventario/ProvesiWMS/venv/bin/python3 manage.py runserver 0.0.0.0:8080 > /home/ubuntu/django.log 2>&1 &
               
               echo "Django setup completed"
               EOT
