@@ -18,8 +18,10 @@ git pull origin servicediscovery
 echo "3. Instalando dependencias..."
 ~/Inventario/notifications/venv/bin/pip install -r requirements.txt
 
-# Cargar variables de entorno
-source /etc/environment
+# Cargar variables de entorno desde .env si existe
+if [ -f .env ]; then
+    export $(cat .env | grep -v '^#' | xargs)
+fi
 
 # Esperar un momento
 sleep 2
