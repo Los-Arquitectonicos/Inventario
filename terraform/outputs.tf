@@ -1,13 +1,41 @@
 # Outputs principales de la infraestructura
 
-output "alb_dns_name" {
-  description = "DNS name of the Application Load Balancer"
-  value       = aws_lb.main.dns_name
+# ===================================
+# KONG API GATEWAY - PUNTO DE ENTRADA ÚNICO
+# ===================================
+
+output "kong_public_ip" {
+  description = "⭐ PUBLIC IP of Kong Gateway - USE THIS TO ACCESS THE APP"
+  value       = aws_instance.kong_gateway.public_ip
 }
 
-output "alb_url" {
-  description = "HTTPS URL to access the application"
-  value       = "https://${aws_lb.main.dns_name}/inventario/"
+output "kong_https_url" {
+  description = "⭐ HTTPS URL to access the application via Kong"
+  value       = "https://${aws_instance.kong_gateway.public_ip}"
+}
+
+output "kong_http_url" {
+  description = "HTTP URL to access the application via Kong"
+  value       = "http://${aws_instance.kong_gateway.public_ip}:8000"
+}
+
+output "kong_health_url" {
+  description = "Kong health check endpoint"
+  value       = "http://${aws_instance.kong_gateway.public_ip}:8100/status"
+}
+
+output "kong_ssh" {
+  description = "SSH command to access Kong Gateway"
+  value       = "ssh ubuntu@${aws_instance.kong_gateway.public_ip}"
+}
+
+# ===================================
+# ALB (INTERNO - usado por Kong)
+# ===================================
+
+output "alb_dns_name" {
+  description = "DNS name of the ALB (internal, used by Kong)"
+  value       = aws_lb.main.dns_name
 }
 
 output "ssl_certificate_arn" {
@@ -15,34 +43,18 @@ output "ssl_certificate_arn" {
   value       = aws_acm_certificate.alb_cert.arn
 }
 
-output "app_server_1_public_ip" {
-  description = "Public IP address of application server 1"
-  value       = aws_instance.app_server[0].public_ip
+# ===================================
+# DJANGO SERVERS (INTERNO)
+# ===================================
+
+output "app_server_public_ips" {
+  description = "Public IPs of Django servers (for SSH only)"
+  value       = aws_instance.app_server[*].public_ip
 }
 
-output "app_server_2_public_ip" {
-  description = "Public IP address of application server 2"
-  value       = aws_instance.app_server[1].public_ip
-}
-
-output "app_server_1_private_ip" {
-  description = "Private IP address of application server 1"
-  value       = aws_instance.app_server[0].private_ip
-}
-
-output "app_server_2_private_ip" {
-  description = "Private IP address of application server 2"
-  value       = aws_instance.app_server[1].private_ip
-}
-
-output "database_private_ip" {
-  description = "Private IP address of the PostgreSQL database"
-  value       = aws_instance.database.private_ip
-}
-
-output "vpc_id" {
-  description = "ID of the default VPC being used"
-  value       = data.aws_vpc.default.id
+output "app_server_private_ips" {
+  description = "Private IPs of Django servers"
+  value       = aws_instance.app_server[*].private_ip
 }
 
 output "ssh_app_server_1" {
@@ -52,7 +64,16 @@ output "ssh_app_server_1" {
 
 output "ssh_app_server_2" {
   description = "SSH command for application server 2"
-  value       = "ssh ubuntu@${aws_instance.app_server[1].public_ip}"
+  value       = length(aws_instance.app_server) > 1 ? "ssh ubuntu@${aws_instance.app_server[1].public_ip}" : "N/A"
+}
+
+# ===================================
+# DATABASE (INTERNO)
+# ===================================
+
+output "database_private_ip" {
+  description = "Private IP address of the PostgreSQL database"
+  value       = aws_instance.database.private_ip
 }
 
 output "database_connection_string" {
@@ -62,35 +83,39 @@ output "database_connection_string" {
 }
 
 # ===================================
-# KONG API GATEWAY OUTPUTS
+# VPC INFO
 # ===================================
 
-output "kong_gateway_public_ip" {
-  description = "Public IP of Kong Gateway instance (for SSH access)"
-  value       = aws_instance.kong_gateway.public_ip
+output "vpc_id" {
+  description = "ID of the default VPC being used"
+  value       = data.aws_vpc.default.id
 }
 
-output "kong_gateway_private_ip" {
-  description = "Private IP of Kong Gateway instance"
-  value       = aws_instance.kong_gateway.private_ip
-}
+# ===================================
+# RESUMEN DE ACCESO
+# ===================================
 
-output "kong_admin_ssh" {
-  description = "SSH command to access Kong Gateway for administration"
-  value       = "ssh ubuntu@${aws_instance.kong_gateway.public_ip}"
-}
-
-output "kong_admin_tunnel" {
-  description = "SSH tunnel command to access Kong Admin API"
-  value       = "ssh -L 8001:localhost:8001 ubuntu@${aws_instance.kong_gateway.public_ip}"
-}
-
-output "kong_proxy_url" {
-  description = "Kong proxy URL (via ALB)"
-  value       = "https://${aws_lb.main.dns_name}/api/"
-}
-
-output "kong_health_check_url" {
-  description = "Kong health check endpoint (direct)"
-  value       = "http://${aws_instance.kong_gateway.public_ip}:8100/status"
+output "access_summary" {
+  description = "Summary of how to access the application"
+  value       = <<-EOT
+  
+  ==========================================
+  🌐 ACCESO A LA APLICACIÓN
+  ==========================================
+  
+  PUNTO DE ENTRADA ÚNICO (Kong):
+    HTTPS: https://${aws_instance.kong_gateway.public_ip}
+    HTTP:  http://${aws_instance.kong_gateway.public_ip}:8000
+  
+  RUTAS DISPONIBLES:
+    /inventario/  - Aplicación principal
+    /api/         - API REST
+    /admin/       - Panel de administración
+    /health       - Health check de Kong
+  
+  HEALTH CHECK:
+    http://${aws_instance.kong_gateway.public_ip}:8100/status
+  
+  ==========================================
+  EOT
 }

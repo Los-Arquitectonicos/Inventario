@@ -66,27 +66,14 @@ data "aws_subnets" "available" {
   }
 }
 
-# Security Group: ALB (Application Load Balancer)
+# Security Group: ALB (Application Load Balancer) - INTERNO
+# Solo Kong puede acceder al ALB
 resource "aws_security_group" "alb" {
   name        = "${var.project_prefix}-alb-sg"
-  description = "Security group for Application Load Balancer"
+  description = "Security group for ALB - Internal use by Kong only"
   vpc_id      = data.aws_vpc.default.id
 
-  ingress {
-    description = "HTTP from anywhere"
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    description = "HTTPS from anywhere"
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
+  # NOTA: El acceso desde Kong se agrega en kong.tf via aws_security_group_rule
 
   egress {
     description = "Allow all outbound traffic"
@@ -326,10 +313,65 @@ resource "aws_instance" "app_server" {
               sleep 120
               %{endif}
               
-              echo "$(date): ✅ CONFIGURACIÓN COMPLETADA - Servidor ${count.index + 1}"
-              echo "$(date): 🚀 Django listo para ejecutar"
-              echo "$(date): 📌 Para iniciar servidor: cd ~/Inventario/ProvesiWMS && python3 manage.py runserver 0.0.0.0:8000"
-              echo "$(date): 🌐 Variables de entorno configuradas automáticamente"
+              # ==========================================
+              # INICIAR DJANGO CON GUNICORN AUTOMÁTICAMENTE
+              # ==========================================
+              echo "$(date): Configurando servicio Django con Gunicorn..."
+              
+              # Crear script de inicio
+              sudo tee /opt/apps/start_django.sh > /dev/null <<'STARTSCRIPT'
+#!/bin/bash
+cd /opt/apps/Inventario/ProvesiWMS
+source /opt/apps/Inventario/venv/bin/activate
+source /etc/environment
+exec gunicorn --bind 0.0.0.0:8000 --workers 3 --timeout 120 wms.wsgi:application
+STARTSCRIPT
+              
+              sudo chmod +x /opt/apps/start_django.sh
+              
+              # Crear servicio systemd para Django
+              sudo tee /etc/systemd/system/django.service > /dev/null <<'DJANGOSERVICE'
+[Unit]
+Description=Django Application (Gunicorn)
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/apps/Inventario/ProvesiWMS
+EnvironmentFile=/etc/environment
+ExecStart=/opt/apps/start_django.sh
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+DJANGOSERVICE
+
+              sudo systemctl daemon-reload
+              sudo systemctl enable django
+              sudo systemctl start django
+              
+              # Verificar que Django está corriendo
+              sleep 5
+              if curl -sf http://localhost:8000/inventario/ > /dev/null 2>&1; then
+                echo "$(date): ✅ Django está corriendo en puerto 8000"
+              else
+                echo "$(date): ⚠️ Django puede estar iniciando..."
+                sudo systemctl status django || true
+              fi
+              
+              echo ""
+              echo "=========================================="
+              echo "$(date): ✅ SERVIDOR ${count.index + 1} COMPLETADO"
+              echo "=========================================="
+              echo "Django corriendo automáticamente con Gunicorn"
+              echo "Puerto: 8000"
+              echo "Comandos útiles:"
+              echo "  sudo systemctl status django"
+              echo "  sudo systemctl restart django"
+              echo "  sudo journalctl -u django -f"
+              echo "=========================================="
               
               EOT
 
