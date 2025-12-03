@@ -2,17 +2,23 @@ _format_version: "3.0"
 
 services:
   - name: django-service
-    url: http://<DJANGO_HOST>:80
+    url: http://<DJANGO_HOST>
     routes:
       - name: inventario-route
         paths:
           - /inventario
+        strip_path: false
+        preserve_host: false
       - name: api-route
         paths:
           - /api
+        strip_path: false
+        preserve_host: false
       - name: admin-route
         paths:
           - /admin
+        strip_path: false
+        preserve_host: false
 
   - name: notifications-service
     url: http://<NOTIFICATIONS_HOST>:8001
@@ -20,3 +26,5 @@ services:
       - name: notifications-route
         paths:
           - /notifications
+        strip_path: false
+        preserve_host: false
