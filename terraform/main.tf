@@ -216,164 +216,54 @@ resource "aws_instance" "app_server" {
   associate_public_ip_address = true
 
   user_data = <<-EOT
-              #!/bin/bash
-              
-              # Log de instalación
-              exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
-              echo "=========================================="
-              echo "CONFIGURANDO SERVIDOR ${count.index + 1}"
-              echo "$$(date): Iniciando configuración..."
-              echo "=========================================="
-              
-              # Variables de entorno para Django con configuraciones de seguridad
-              export DATABASE_HOST=${aws_instance.database.private_ip}
-              export DATABASE_NAME=${var.database_name}
-              export DATABASE_USER=${var.database_user}
-              export DATABASE_PASSWORD=${var.db_password}
-              export DATABASE_PORT=${var.database_port}
-              export SECRET_KEY=${var.django_secret_key}
-              export DEBUG=${var.debug_mode}
-              export ENVIRONMENT=${var.environment}
-              export JWT_ACCESS_TOKEN_LIFETIME_HOURS=${var.jwt_access_token_lifetime_hours}
-              export JWT_REFRESH_TOKEN_LIFETIME_DAYS=${var.jwt_refresh_token_lifetime_days}
-              
-              # Persistir variables de entorno
-              echo "DATABASE_HOST=${aws_instance.database.private_ip}" | sudo tee -a /etc/environment
-              echo "DATABASE_NAME=${var.database_name}" | sudo tee -a /etc/environment
-              echo "DATABASE_USER=${var.database_user}" | sudo tee -a /etc/environment
-              echo "DATABASE_PASSWORD=${var.db_password}" | sudo tee -a /etc/environment
-              echo "DATABASE_PORT=${var.database_port}" | sudo tee -a /etc/environment
-              echo "SECRET_KEY=${var.django_secret_key}" | sudo tee -a /etc/environment
-              echo "DEBUG=${var.debug_mode}" | sudo tee -a /etc/environment
-              echo "ENVIRONMENT=${var.environment}" | sudo tee -a /etc/environment
-              echo "JWT_ACCESS_TOKEN_LIFETIME_HOURS=${var.jwt_access_token_lifetime_hours}" | sudo tee -a /etc/environment
-              echo "JWT_REFRESH_TOKEN_LIFETIME_DAYS=${var.jwt_refresh_token_lifetime_days}" | sudo tee -a /etc/environment
-              
-              # Actualizar sistema e instalar dependencias
-              sudo apt-get update -y
-              sudo apt-get upgrade -y
-              sudo apt-get install -y python3-pip python3-venv git build-essential libpq-dev python3-dev postgresql-client
-              
-              # Instalar Django y dependencias globalmente para evitar problemas de entorno virtual
-              sudo pip3 install --break-system-packages django==4.2.24 psycopg2-binary djangorestframework djangorestframework-simplejwt django-cors-headers gunicorn
-              
-              # Clonar repositorio en directorio del usuario también
-              sudo -u ubuntu mkdir -p /home/ubuntu
-              cd /home/ubuntu
-              
-              sudo -u ubuntu git clone ${local.repository}
-              cd Inventario
-              sudo -u ubuntu git fetch origin ${local.branch}
-              sudo -u ubuntu git checkout ${local.branch}
-              
-              # Cambiar ownership del directorio al usuario ubuntu
-              chown -R ubuntu:ubuntu /home/ubuntu/Inventario
-              
-              # También mantener copia en /opt/apps para compatibilidad
-              mkdir -p /opt/apps
-              cd /opt/apps
-              
-              if [ ! -d Inventario ]; then
-                echo "$$(date): Clonando repositorio..."
-                git clone ${local.repository}
-              fi
-              
-              cd Inventario
-              echo "$$(date): Cambiando a branch ${local.branch}..."
-              git fetch origin ${local.branch}
-              git checkout ${local.branch}
-              
-              # Crear entorno virtual
-              python3 -m venv venv
-              source venv/bin/activate
-              
-              # Instalar dependencias Python
-              pip install --upgrade pip
-              pip install django psycopg2-binary gunicorn djangorestframework djangorestframework-simplejwt django-cors-headers
-              
-              # Navegar al proyecto Django
-              cd ProvesiWMS
-              
-              # Esperar a que la base de datos esté lista
-              echo "$$(date): Esperando base de datos..."
-              for i in {1..30}; do
-                pg_isready -h ${aws_instance.database.private_ip} -p ${var.database_port} -U ${var.database_user} && break
-                sleep 10
-              done
-              
-              # Aplicar migraciones solo en la primera instancia
-              %{if count.index == 0}
-              echo "$$(date): Aplicando migraciones..."
-              python manage.py makemigrations --noinput || true
-              python manage.py migrate --noinput || true
-              [ -f setup_users.py ] && python setup_users.py || true
-              python manage.py collectstatic --noinput || true
-              %{else}
-              echo "$$(date): Esperando migraciones del servidor principal..."
-              sleep 120
-              %{endif}
-              
-              # ==========================================
-              # INICIAR DJANGO CON GUNICORN AUTOMÁTICAMENTE
-              # ==========================================
-              echo "$$(date): Configurando servicio Django con Gunicorn..."
-              
-              # Crear script de inicio
-              sudo tee /opt/apps/start_django.sh > /dev/null <<'STARTSCRIPT'
-#!/bin/bash
-cd /opt/apps/Inventario/ProvesiWMS
-source /opt/apps/Inventario/venv/bin/activate
-source /etc/environment
-exec gunicorn --bind 0.0.0.0:8000 --workers 3 --timeout 120 wms.wsgi:application
-STARTSCRIPT
-              
-              sudo chmod +x /opt/apps/start_django.sh
-              
-              # Crear servicio systemd para Django
-              sudo tee /etc/systemd/system/django.service > /dev/null <<'DJANGOSERVICE'
-[Unit]
-Description=Django Application (Gunicorn)
-After=network.target
-
-[Service]
-Type=simple
-User=root
-WorkingDirectory=/opt/apps/Inventario/ProvesiWMS
-EnvironmentFile=/etc/environment
-ExecStart=/opt/apps/start_django.sh
-Restart=always
-RestartSec=5
-
-[Install]
-WantedBy=multi-user.target
-DJANGOSERVICE
-
-              sudo systemctl daemon-reload
-              sudo systemctl enable django
-              sudo systemctl start django
-              
-              # Verificar que Django está corriendo
-              sleep 5
-              if curl -sf http://localhost:8000/inventario/ > /dev/null 2>&1; then
-                echo "$$(date): ✅ Django está corriendo en puerto 8000"
-              else
-                echo "$$(date): ⚠️ Django puede estar iniciando..."
-                sudo systemctl status django || true
-              fi
-              
-              echo ""
-              echo "=========================================="
-              echo "$$(date): ✅ SERVIDOR ${count.index + 1} COMPLETADO"
-              echo "=========================================="
-              echo "Django corriendo automáticamente con Gunicorn"
-              echo "Puerto: 8000"
-              echo "Comandos útiles:"
-              echo "  sudo systemctl status django"
-              echo "  sudo systemctl restart django"
-              echo "  sudo journalctl -u django -f"
-              echo "=========================================="
-              
-              EOT
+    #!/bin/bash
+    
+    # Variables
+    DATABASE_HOST="${aws_instance.database.private_ip}"
+    
+    # Persistir variables de entorno
+    echo "DATABASE_HOST=${aws_instance.database.private_ip}" | sudo tee -a /etc/environment
+    echo "DATABASE_NAME=${var.database_name}" | sudo tee -a /etc/environment
+    echo "DATABASE_USER=${var.database_user}" | sudo tee -a /etc/environment
+    echo "DATABASE_PASSWORD=${var.db_password}" | sudo tee -a /etc/environment
+    echo "DATABASE_PORT=${var.database_port}" | sudo tee -a /etc/environment
+    echo "SECRET_KEY=${var.django_secret_key}" | sudo tee -a /etc/environment
+    echo "DEBUG=${var.debug_mode}" | sudo tee -a /etc/environment
+    
+    # Instalar dependencias
+    sudo apt-get update -y
+    sudo apt-get install -y python3-pip python3-venv git libpq-dev postgresql-client
+    
+    # Instalar Django globalmente
+    sudo pip3 install --break-system-packages django==4.2.24 psycopg2-binary djangorestframework djangorestframework-simplejwt django-cors-headers gunicorn
+    
+    # Clonar repositorio
+    cd /home/ubuntu
+    git clone ${local.repository}
+    cd Inventario
+    git checkout ${local.branch}
+    chown -R ubuntu:ubuntu /home/ubuntu/Inventario
+    
+    # Esperar base de datos
+    sleep 30
+    
+    # Migraciones solo en servidor 1
+    %{if count.index == 0}
+    cd /home/ubuntu/Inventario/ProvesiWMS
+    source /etc/environment
+    python3 manage.py migrate --noinput || true
+    python3 setup_users.py || true
+    %{else}
+    sleep 60
+    %{endif}
+    
+    # Iniciar Django en background
+    cd /home/ubuntu/Inventario/ProvesiWMS
+    source /etc/environment
+    nohup python3 manage.py runserver 0.0.0.0:8000 > /home/ubuntu/django.log 2>&1 &
+    
+    echo "Django started"
+    EOT
 
   tags = merge(local.common_tags, {
     Name = "${var.project_prefix}-app-server-${count.index + 1}"
