@@ -461,12 +461,17 @@ resource "aws_instance" "kong" {
 
   user_data = <<-EOT
               #!/bin/bash
+              exec > /var/log/kong-setup.log 2>&1
+              set -x
               
               export ALB_DNS=${aws_lb.main.dns_name}
               echo "ALB_DNS=${aws_lb.main.dns_name}" | sudo tee -a /etc/environment
               
               export NOTIFICATIONS_HOST=${aws_instance.notifications.private_ip}
               echo "NOTIFICATIONS_HOST=${aws_instance.notifications.private_ip}" | sudo tee -a /etc/environment
+
+              # Instalar git
+              yum install -y git
 
               mkdir -p /opt/kong
               cd /opt/kong
@@ -477,13 +482,16 @@ resource "aws_instance" "kong" {
               sed -i "s/<DJANGO_HOST>/${aws_lb.main.dns_name}/g" kong.yaml
               sed -i "s/<NOTIFICATIONS_HOST>/${aws_instance.notifications.private_ip}/g" kong.yaml
 
-              docker network create kong-net
+              # Crear network y ejecutar Kong
+              docker network create kong-net 2>/dev/null || true
               docker run -d --name kong --network=kong-net --restart=always \
-                -v "$(pwd):/kong/declarative/" \
+                -v "/opt/kong/Inventario:/kong/declarative/" \
                 -e "KONG_DATABASE=off" \
                 -e "KONG_DECLARATIVE_CONFIG=/kong/declarative/kong.yaml" \
                 -p 8000:8000 \
                 kong/kong-gateway
+              
+              echo "Kong setup completed at $(date)" >> /var/log/kong-setup.log
               EOT
 
   tags = merge(local.common_tags, {
