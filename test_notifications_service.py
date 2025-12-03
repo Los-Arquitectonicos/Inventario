@@ -83,12 +83,17 @@ def check_health():
         print_result("Health Check", False, f"Error: {e}")
         return False
 
-def create_user(user_data):
+def create_user(user_data, admin_token=None):
     """Crea un usuario en el sistema."""
     try:
+        headers = {}
+        if admin_token:
+            headers["Authorization"] = f"Bearer {admin_token}"
+        
         response = requests.post(
-            f"{NOTIFICATIONS_BASE_URL}/users/register",
+            f"{NOTIFICATIONS_BASE_URL}/users",
             json=user_data,
+            headers=headers,
             verify=False,
             timeout=10
         )
@@ -114,8 +119,8 @@ def login_user(username, password):
     """Obtiene token de autenticación para un usuario."""
     try:
         response = requests.post(
-            f"{NOTIFICATIONS_BASE_URL}/users/login",
-            data={
+            f"{NOTIFICATIONS_BASE_URL}/auth/login",
+            json={
                 "username": username,
                 "password": password
             },
@@ -243,7 +248,7 @@ def get_my_notifications(token):
     try:
         headers = {"Authorization": f"Bearer {token}"}
         response = requests.get(
-            f"{NOTIFICATIONS_BASE_URL}/notifications",
+            f"{NOTIFICATIONS_BASE_URL}/inbox",
             headers=headers,
             verify=False,
             timeout=10
@@ -277,8 +282,8 @@ def mark_notification_as_read(token, notification_id):
     """Marca una notificación como leída."""
     try:
         headers = {"Authorization": f"Bearer {token}"}
-        response = requests.patch(
-            f"{NOTIFICATIONS_BASE_URL}/notifications/{notification_id}/read",
+        response = requests.put(
+            f"{NOTIFICATIONS_BASE_URL}/inbox/{notification_id}/read",
             headers=headers,
             verify=False,
             timeout=10
@@ -306,14 +311,16 @@ def main():
         print("\n❌ El servicio de notificaciones no está disponible")
         return
     
-    # 2. Crear usuarios
-    print_section("2. Crear Usuarios")
-    for user_data in USERS_TO_CREATE:
-        create_user(user_data)
+    # 2. Crear primer usuario admin manualmente (si no existe)
+    print_section("2. Crear Usuario Admin Inicial")
+    # Como no tenemos token aún, usaremos los usuarios que se crean automáticamente
+    # en initialize_users.py al iniciar el servicio
+    print("ℹ️  Los usuarios se crean automáticamente al iniciar el servicio")
+    print("   Si necesitas crear más usuarios, hazlo después del login como admin")
     
-    # 3. Login como admin
+    # 3. Login como admin (usando credenciales por defecto de initialize_users.py)
     print_section("3. Autenticación de Administrador")
-    admin_token = login_user("admin", "Admin123!")
+    admin_token = login_user("admin", "admin123")
     
     if not admin_token:
         print("\n❌ No se pudo autenticar como admin")
@@ -336,9 +343,9 @@ def main():
     
     send_notification_to_user(admin_token, message2, "operario1")
     
-    # 7. Login como operario1 y ver notificaciones
+    # 7. Login como operario1 y ver notificaciones (credenciales por defecto)
     print_section("7. Operario1 Verifica sus Notificaciones")
-    operario_token = login_user("operario1", "Operario123!")
+    operario_token = login_user("operario1", "operario123")
     
     if operario_token:
         success, notifications = get_my_notifications(operario_token)
@@ -354,9 +361,9 @@ def main():
                 print("\n   Verificando estado después de marcar como leída...")
                 get_my_notifications(operario_token)
     
-    # 8. Login como operario2 y ver notificaciones
-    print_section("8. Operario2 Verifica sus Notificaciones")
-    operario2_token = login_user("operario2", "Operario123!")
+    # 8. Login como empacador y ver notificaciones
+    print_section("8. Empacador Verifica sus Notificaciones")
+    operario2_token = login_user("empacador1", "empacador123")
     
     if operario2_token:
         get_my_notifications(operario2_token)
@@ -368,18 +375,20 @@ def main():
     send_notification_to_role(admin_token, message3, 
                              ["operario_bodega", "empacador", "operario_control_calidad"])
     
-    # 10. Verificar que todos recibieron la notificación
+    # 10. Verificar que todos recibieron la notificación (usando usuarios por defecto)
     print_section("10. Verificar Recepción de Notificaciones")
     
-    for user_data in USERS_TO_CREATE:
-        if user_data['role'] != 'admin':  # Skip admin
-            username = user_data['username']
-            password = user_data['password']
-            
-            print(f"\n   Verificando usuario: {username}")
-            token = login_user(username, password)
-            if token:
-                get_my_notifications(token)
+    default_users = [
+        ("operario1", "operario123"),
+        ("empacador1", "empacador123"),
+        ("calidad1", "calidad123")
+    ]
+    
+    for username, password in default_users:
+        print(f"\n   Verificando usuario: {username}")
+        token = login_user(username, password)
+        if token:
+            get_my_notifications(token)
     
     print_section("✨ PRUEBAS COMPLETADAS")
     print("\nResumen de funcionalidades probadas:")
