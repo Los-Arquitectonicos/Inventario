@@ -325,3 +325,32 @@ variable "log_level" {
     error_message = "Log level must be one of: DEBUG, INFO, WARNING, ERROR, CRITICAL."
   }
 }
+
+variable "jwt_algorithm" {
+  description = "JWT signing algorithm"
+  type        = string
+  default     = "HS256"
+  
+  validation {
+    condition     = contains(["HS256", "HS384", "HS512", "RS256", "RS384", "RS512"], var.jwt_algorithm)
+    error_message = "JWT algorithm must be one of: HS256, HS384, HS512, RS256, RS384, RS512."
+  }
+}
+
+variable "jwt_rotate_refresh_tokens" {
+  description = "Rotate refresh tokens on use"
+  type        = bool
+  default     = true
+}
+
+variable "allowed_host" {
+  description = "Allowed host for Django (alias for allowed_hosts for backward compatibility)"
+  type        = string
+  default     = "*"
+}
+
+variable "enable_debug_toolbar" {
+  description = "Enable Django debug toolbar"
+  type        = bool
+  default     = false
+}
