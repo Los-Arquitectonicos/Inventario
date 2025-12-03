@@ -19,6 +19,12 @@ variable "owner" {
   default     = "development"
 }
 
+variable "key_name" {
+  description = "SSH key pair name for EC2 instances"
+  type        = string
+  default     = "vockey"
+}
+
 variable "instance_type" {
   description = "EC2 instance type for application servers"
   type        = string
