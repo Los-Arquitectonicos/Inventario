@@ -47,10 +47,7 @@ echo "3. Agregando regla para puerto 8443 (HTTPS)..."
 aws ec2 authorize-security-group-ingress \
   --region $REGION \
   --group-id $SG_ID \
-  --protocol tcp \
-  --port 8443 \
-  --cidr 0.0.0.0/0 \
-  --group-description "Kong HTTPS access"
+  --ip-permissions IpProtocol=tcp,FromPort=8443,ToPort=8443,IpRanges='[{CidrIp=0.0.0.0/0,Description="Kong HTTPS access"}]'
 
 echo "✅ Regla agregada exitosamente"
 
