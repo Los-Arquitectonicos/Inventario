@@ -10,6 +10,7 @@ import uuid
 from datetime import datetime
 from typing import List, Optional
 from contextlib import asynccontextmanager
+import bleach
 
 from fastapi import FastAPI, HTTPException, status, Depends, Query
 from fastapi.middleware.cors import CORSMiddleware
@@ -163,10 +164,11 @@ async def create_user(user: UserCreate, admin: TokenData = Depends(require_admin
 @app.get("/users", response_model=List[UserResponse], tags=["Users"])
 async def list_users(
     role: Optional[UserRole] = Query(None, description="Filter by role"),
-    current_user: TokenData = Depends(get_current_user),
+    admin: TokenData = Depends(require_admin),
 ):
     """
     List all users. Optionally filter by role.
+    Requires admin role.
     """
     users = get_users_collection()
 
@@ -226,9 +228,10 @@ async def get_current_user_info(current_user: TokenData = Depends(get_current_us
 
 
 @app.get("/users/{username}", response_model=UserResponse, tags=["Users"])
-async def get_user(username: str, current_user: TokenData = Depends(get_current_user)):
+async def get_user(username: str, admin: TokenData = Depends(require_admin)):
     """
     Get a specific user by username.
+    Requires admin role.
     """
     users = get_users_collection()
 
@@ -331,11 +334,18 @@ async def send_notification(
             status_code=status.HTTP_404_NOT_FOUND, detail="No recipients found"
         )
 
+    # Sanitize message to prevent XSS
+    sanitized_message = bleach.clean(
+        notification.message,
+        tags=[],  # No HTML tags allowed
+        strip=True
+    )
+
     # Create notification document
     notification_id = str(uuid.uuid4())
     notification_doc = {
         "_id": notification_id,
-        "message": notification.message,
+        "message": sanitized_message,
         "sent_at": datetime.utcnow(),
         "read": False,
         "sender_username": current_user.username,
