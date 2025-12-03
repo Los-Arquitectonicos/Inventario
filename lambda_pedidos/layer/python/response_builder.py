@@ -8,12 +8,12 @@ from bson import ObjectId
 
 class DateTimeEncoder(json.JSONEncoder):
     """Encoder personalizado para datetime y ObjectId"""
-    def default(self, obj):
-        if isinstance(obj, datetime):
-            return obj.isoformat()
-        if isinstance(obj, ObjectId):
-            return str(obj)
-        return super().default(obj)
+    def default(self, o):
+        if isinstance(o, datetime):
+            return o.isoformat()
+        if isinstance(o, ObjectId):
+            return str(o)
+        return super().default(o)
 
 
 def success_response(data, status_code=200):

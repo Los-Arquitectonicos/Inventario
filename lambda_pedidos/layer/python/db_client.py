@@ -48,6 +48,8 @@ def get_mongodb_client():
 def get_orders_collection():
     """Obtener colección de pedidos"""
     db = get_mongodb_client()
+    if db is None:
+        raise ConnectionFailure("Failed to connect to MongoDB")
     return db.orders
 
 
