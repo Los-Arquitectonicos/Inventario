@@ -13,6 +13,12 @@ variable "project_prefix" {
   default     = "provesi"
 }
 
+variable "owner" {
+  description = "Owner tag for AWS resources"
+  type        = string
+  default     = "development"
+}
+
 variable "instance_type" {
   description = "EC2 instance type for application servers"
   type        = string
@@ -23,6 +29,12 @@ variable "db_instance_type" {
   description = "EC2 instance type for database server"
   type        = string
   default     = "t2.micro"
+}
+
+variable "database_instance_type" {
+  description = "RDS instance type for PostgreSQL database"
+  type        = string
+  default     = "db.t3.micro"
 }
 
 variable "db_password" {
@@ -49,13 +61,13 @@ variable "django_secret_key" {
 }
 
 variable "environment" {
-  description = "Deployment environment (production, staging, development)"
+  description = "Deployment environment (production, staging, development, testing)"
   type        = string
   default     = "development"
   
   validation {
-    condition     = contains(["production", "staging", "development"], var.environment)
-    error_message = "Environment must be one of: production, staging, development."
+    condition     = contains(["production", "staging", "development", "testing"], var.environment)
+    error_message = "Environment must be one of: production, staging, development, testing."
   }
 }
 
@@ -74,7 +86,13 @@ variable "allowed_hosts" {
 variable "cors_allowed_origins" {
   description = "List of allowed origins for CORS"
   type        = list(string)
-  default     = []
+  default     = ["*"]
+}
+
+variable "cors_allow_credentials" {
+  description = "Allow credentials in CORS requests"
+  type        = bool
+  default     = false
 }
 
 # ===================================
@@ -97,6 +115,18 @@ variable "database_port" {
   description = "PostgreSQL database port"
   type        = number
   default     = 5432
+}
+
+variable "postgres_version" {
+  description = "PostgreSQL version"
+  type        = string
+  default     = "15"
+}
+
+variable "database_storage_gb" {
+  description = "Database storage size in GB"
+  type        = number
+  default     = 100
 }
 
 # ===================================
@@ -125,6 +155,18 @@ variable "jwt_refresh_token_lifetime_days" {
   }
 }
 
+variable "jwt_algorithm" {
+  description = "JWT algorithm for token signing"
+  type        = string
+  default     = "HS256"
+}
+
+variable "jwt_rotate_refresh_tokens" {
+  description = "Rotate refresh tokens on use"
+  type        = bool
+  default     = true
+}
+
 # ===================================
 # VARIABLES DE CERTIFICADO SSL
 # ===================================
@@ -147,6 +189,24 @@ variable "domain_name" {
   default     = ""
 }
 
+variable "ssl_policy" {
+  description = "SSL policy for ALB"
+  type        = string
+  default     = "ELBSecurityPolicy-TLS-1-2-2017-01"
+}
+
+variable "force_https" {
+  description = "Force HTTPS redirect"
+  type        = bool
+  default     = false
+}
+
+variable "allowed_host" {
+  description = "Allowed host for Django applications"
+  type        = string
+  default     = "*.amazonaws.com"
+}
+
 # ===================================
 # VARIABLES DE LOGGING Y MONITOREO
 # ===================================
@@ -166,6 +226,12 @@ variable "log_retention_days" {
     condition     = contains([1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1096, 1827, 2192, 2557, 2922, 3288, 3653], var.log_retention_days)
     error_message = "Log retention days must be a valid CloudWatch retention period."
   }
+}
+
+variable "log_level" {
+  description = "Django logging level"
+  type        = string
+  default     = "INFO"
 }
 
 # ===================================
