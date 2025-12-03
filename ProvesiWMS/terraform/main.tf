@@ -484,18 +484,18 @@ resource "aws_lb_listener" "https" {
 # MICROSERVICIO DE NOTIFICACIONES & MONGODB
 # ==========================================
 
-# Security Group: Microservicio Notificaciones
+# Security Group: Microservicio Notificaciones (Standalone)
 resource "aws_security_group" "notifications_sg" {
   name        = "${var.project_prefix}-notifications-sg"
-  description = "Security group for Notifications Microservice"
+  description = "Security group for Notifications Microservice - Standalone"
   vpc_id      = data.aws_vpc.default.id
 
   ingress {
-    description     = "HTTP from ALB"
-    from_port       = 3001
-    to_port         = 3001
-    protocol        = "tcp"
-    security_groups = [aws_security_group.alb.id]
+    description = "Notifications API from anywhere"
+    from_port   = 3001
+    to_port     = 3001
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   ingress {
@@ -595,7 +595,7 @@ resource "aws_instance" "mongodb" {
   })
 }
 
-# Instancia EC2: Microservicio Notificaciones
+# Instancia EC2: Microservicio Notificaciones (Standalone)
 resource "aws_instance" "notifications" {
   ami                         = data.aws_ami.ubuntu.id
   instance_type               = "t3.small"
@@ -605,86 +605,74 @@ resource "aws_instance" "notifications" {
   user_data = <<-EOT
               #!/bin/bash
               exec > >(tee /var/log/user-data.log|logger -t user-data -s 2>/dev/console) 2>&1
-              echo "Iniciando configuración de Notifications Service..."
+              echo "========================================"
+              echo "CONFIGURANDO NOTIFICATIONS SERVICE"
+              echo "$(date): Iniciando configuración..."
+              echo "========================================"
               
-              # Instalar Node.js 20
+              # Actualizar sistema
+              sudo apt-get update -y
+              sudo apt-get upgrade -y
+              
+              # Instalar Node.js 20 LTS
               curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
               sudo apt-get install -y nodejs git
               
-              # Clonar repositorio y cambiar a la rama correcta
+              # Verificar instalación
+              echo "Node.js version: $(node --version)"
+              echo "NPM version: $(npm --version)"
+              
+              # Crear directorio y clonar repositorio
               cd /home/ubuntu
               sudo -u ubuntu git clone ${local.repository}
               cd Inventario
-              sudo -u ubuntu git fetch origin ${local.branch}
-              sudo -u ubuntu git checkout ${local.branch}
+              sudo -u ubuntu git fetch origin notificaciones
+              sudo -u ubuntu git checkout notificaciones
               
-              # Instalar PM2 globalmente
-              sudo npm install -g pm2
+              # Configurar el servicio de notificaciones
+              cd notifications
+              chown -R ubuntu:ubuntu /home/ubuntu/Inventario
               
-              # Instalar dependencias del microservicio
-              cd /home/ubuntu/Inventario/notifications
+              # Crear archivo .env con configuración
+              sudo -u ubuntu cat > .env << 'EOF'
+PORT=3001
+HOST=0.0.0.0
+MONGO_URI=mongodb://${aws_instance.mongodb.private_ip}:27017/provesi_notifications
+JWT_SECRET=${var.django_secret_key}
+EOF
+              
+              # Instalar dependencias
               sudo -u ubuntu npm install
               
-              # Configurar PM2 para inicio automático (Systemd)
-              # Esto genera y configura el servicio systemd para el usuario ubuntu
+              # Instalar PM2 globalmente para manejo de procesos
+              sudo npm install -g pm2
+              
+              # Iniciar la aplicación con PM2
+              sudo -u ubuntu pm2 start server.js --name notifications
+              
+              # Configurar PM2 para inicio automático
               sudo env PATH=$PATH:/usr/bin /usr/lib/node_modules/pm2/bin/pm2 startup systemd -u ubuntu --hp /home/ubuntu
-              
-              # Iniciar aplicación con PM2 pasando variables de entorno
-              sudo -u ubuntu PORT=3001 MONGO_URI=mongodb://${aws_instance.mongodb.private_ip}:27017/provesi_notifications JWT_SECRET=${var.django_secret_key} pm2 start server.js --name notifications
-              
-              # Guardar la lista de procesos para que revivan al reinicio
               sudo -u ubuntu pm2 save
               
-              echo "Notifications Service iniciado y configurado para arranque automático."
+              echo "========================================"
+              echo "NOTIFICATIONS SERVICE CONFIGURADO"
+              echo "Servicio corriendo en puerto 3001"
+              echo "$(date): Configuración completada"
+              echo "========================================"
               EOT
 
   tags = merge(local.common_tags, {
     Name = "${var.project_prefix}-notifications"
-    Role = "microservice"
+    Role = "microservice-standalone"
   })
   
   depends_on = [aws_instance.mongodb]
 }
 
-# Target Group para Notificaciones
-resource "aws_lb_target_group" "notifications" {
-  name     = "${var.project_prefix}-notif-tg"
-  port     = 3001
-  protocol = "HTTP"
-  vpc_id   = data.aws_vpc.default.id
-
-  health_check {
-    enabled             = true
-    path                = "/health" # Use the health endpoint we added
-    matcher             = "200" # Only 200 for health checks
-    interval            = 30
-  }
-
-  tags = merge(local.common_tags, {
-    Name = "${var.project_prefix}-notif-tg"
-  })
-}
-
-# Attachment para Notificaciones
-resource "aws_lb_target_group_attachment" "notifications" {
-  target_group_arn = aws_lb_target_group.notifications.arn
-  target_id        = aws_instance.notifications.id
-  port             = 3001
-}
-
-# Regla de Listener para enrutar /api/notifications*
-resource "aws_lb_listener_rule" "notifications" {
-  listener_arn = aws_lb_listener.https.arn
-  priority     = 100
-
-  action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.notifications.arn
-  }
-
-  condition {
-    path_pattern {
-      values = ["/api/notifications*"]
-    }
-  }
-}
+# ======================================================
+# NOTIFICATIONS SERVICE - STANDALONE (NO ALB INTEGRATION)
+# ======================================================
+# The notifications service now runs independently on port 3001
+# and can be accessed directly via: http://<public-ip>:3001
+# This removes the complexity of ALB routing and provides
+# direct access for testing and development.

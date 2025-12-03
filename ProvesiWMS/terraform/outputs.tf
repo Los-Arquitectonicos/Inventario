@@ -61,8 +61,8 @@ output "mongodb_private_ip" {
 }
 
 output "notifications_url" {
-  description = "URL for Notifications Service"
-  value       = "https://${aws_lb.main.dns_name}/api/notifications"
+  description = "Direct URL for Notifications Service (Standalone)"
+  value       = "http://${aws_instance.notifications.public_ip}:3001"
 }
 
 output "ssh_app_server_2" {
