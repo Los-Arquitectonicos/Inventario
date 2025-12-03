@@ -19,6 +19,10 @@ sudo openssl req -x509 -newkey rsa:2048 -nodes \
   -days 365 \
   -subj "/CN=kong-gateway/O=Provesi WMS"
 
+# Cambiar permisos para que Kong pueda leer los certificados
+sudo chmod 644 kong-cert.pem
+sudo chmod 644 kong-key.pem
+
 echo "✅ Certificado generado"
 ls -lh /opt/kong/certs/
 
