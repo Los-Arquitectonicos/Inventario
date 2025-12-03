@@ -53,7 +53,7 @@ variable "django_secret_key" {
   type        = string
   default     = "django-insecure-CHANGE-THIS-IN-PRODUCTION-xyz789abc123def456ghi"
   sensitive   = true
-  
+
   validation {
     condition     = length(var.django_secret_key) >= 50
     error_message = "Django SECRET_KEY must be at least 50 characters long for security."
@@ -64,7 +64,7 @@ variable "environment" {
   description = "Deployment environment (production, staging, development, testing)"
   type        = string
   default     = "development"
-  
+
   validation {
     condition     = contains(["production", "staging", "development", "testing"], var.environment)
     error_message = "Environment must be one of: production, staging, development, testing."
@@ -137,7 +137,7 @@ variable "jwt_access_token_lifetime_hours" {
   description = "JWT access token lifetime in hours"
   type        = number
   default     = 1
-  
+
   validation {
     condition     = var.jwt_access_token_lifetime_hours > 0 && var.jwt_access_token_lifetime_hours <= 24
     error_message = "JWT access token lifetime must be between 1 and 24 hours."
@@ -148,7 +148,7 @@ variable "jwt_refresh_token_lifetime_days" {
   description = "JWT refresh token lifetime in days"
   type        = number
   default     = 7
-  
+
   validation {
     condition     = var.jwt_refresh_token_lifetime_days > 0 && var.jwt_refresh_token_lifetime_days <= 30
     error_message = "JWT refresh token lifetime must be between 1 and 30 days."
@@ -221,7 +221,7 @@ variable "log_retention_days" {
   description = "CloudWatch log retention period in days"
   type        = number
   default     = 14
-  
+
   validation {
     condition     = contains([1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1096, 1827, 2192, 2557, 2922, 3288, 3653], var.log_retention_days)
     error_message = "Log retention days must be a valid CloudWatch retention period."
@@ -242,7 +242,7 @@ variable "app_server_count" {
   description = "Number of application servers to deploy"
   type        = number
   default     = 2
-  
+
   validation {
     condition     = var.app_server_count >= 1 && var.app_server_count <= 10
     error_message = "Application server count must be between 1 and 10."
@@ -253,7 +253,7 @@ variable "gunicorn_workers" {
   description = "Number of Gunicorn worker processes per server"
   type        = number
   default     = 4
-  
+
   validation {
     condition     = var.gunicorn_workers >= 1 && var.gunicorn_workers <= 16
     error_message = "Gunicorn workers must be between 1 and 16."
@@ -288,4 +288,43 @@ variable "backup_retention_days" {
   description = "Database backup retention period in days"
   type        = number
   default     = 7
+}
+
+# ===================================
+# KONG API GATEWAY VARIABLES
+# ===================================
+
+variable "kong_instance_type" {
+  description = "EC2 instance type for Kong Gateway"
+  type        = string
+  default     = "t3.small"
+}
+
+variable "kong_version" {
+  description = "Kong Gateway version to install"
+  type        = string
+  default     = "3.5.0"
+}
+
+variable "kong_log_level" {
+  description = "Kong logging level (debug, info, notice, warn, error, crit)"
+  type        = string
+  default     = "info"
+
+  validation {
+    condition     = contains(["debug", "info", "notice", "warn", "error", "crit"], var.kong_log_level)
+    error_message = "Kong log level must be one of: debug, info, notice, warn, error, crit."
+  }
+}
+
+variable "enable_kong_admin_api" {
+  description = "Enable Kong Admin API on public interface (not recommended for production)"
+  type        = bool
+  default     = false
+}
+
+variable "key_pair_name" {
+  description = "Name of existing EC2 key pair for SSH access (optional)"
+  type        = string
+  default     = ""
 }

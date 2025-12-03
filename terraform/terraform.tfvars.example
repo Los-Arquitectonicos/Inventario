@@ -126,3 +126,22 @@ debug_mode = true
 
 # Habilitar toolbar de debug de Django
 enable_debug_toolbar = true
+
+# ===============================================
+# KONG API GATEWAY (SERVICE DISCOVERY)
+# ===============================================
+
+# Tipo de instancia para Kong Gateway
+kong_instance_type = "t3.small"
+
+# Versión de Kong a instalar
+kong_version = "3.5.0"
+
+# Nivel de logging de Kong
+kong_log_level = "info"
+
+# Habilitar Admin API público (NO recomendado en producción)
+enable_kong_admin_api = false
+
+# Nombre del key pair para SSH (opcional, dejar vacío si no se usa)
+key_pair_name = ""

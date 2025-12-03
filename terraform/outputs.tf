@@ -60,3 +60,37 @@ output "database_connection_string" {
   value       = "postgresql://inventario_user:${var.db_password}@${aws_instance.database.private_ip}:5432/inventario_db"
   sensitive   = true
 }
+
+# ===================================
+# KONG API GATEWAY OUTPUTS
+# ===================================
+
+output "kong_gateway_public_ip" {
+  description = "Public IP of Kong Gateway instance (for SSH access)"
+  value       = aws_instance.kong_gateway.public_ip
+}
+
+output "kong_gateway_private_ip" {
+  description = "Private IP of Kong Gateway instance"
+  value       = aws_instance.kong_gateway.private_ip
+}
+
+output "kong_admin_ssh" {
+  description = "SSH command to access Kong Gateway for administration"
+  value       = "ssh ubuntu@${aws_instance.kong_gateway.public_ip}"
+}
+
+output "kong_admin_tunnel" {
+  description = "SSH tunnel command to access Kong Admin API"
+  value       = "ssh -L 8001:localhost:8001 ubuntu@${aws_instance.kong_gateway.public_ip}"
+}
+
+output "kong_proxy_url" {
+  description = "Kong proxy URL (via ALB)"
+  value       = "https://${aws_lb.main.dns_name}/api/"
+}
+
+output "kong_health_check_url" {
+  description = "Kong health check endpoint (direct)"
+  value       = "http://${aws_instance.kong_gateway.public_ip}:8100/status"
+}

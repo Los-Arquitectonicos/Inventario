@@ -4,7 +4,7 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 5.0"  # Versión estable para AWS Academy
+      version = "~> 5.0" # Versión estable para AWS Academy
     }
     tls = {
       source  = "hashicorp/tls"

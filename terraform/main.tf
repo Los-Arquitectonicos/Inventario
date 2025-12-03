@@ -479,3 +479,10 @@ resource "aws_lb_listener" "https" {
 
   depends_on = [aws_acm_certificate.alb_cert]
 }
+
+# ==========================================
+# KONG API GATEWAY - SERVICE DISCOVERY
+# ==========================================
+# Los archivos de Kong están en terraform/kong/
+# y se incluyen automáticamente por Terraform
+# ==========================================
