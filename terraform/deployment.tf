@@ -490,19 +490,41 @@ resource "aws_instance" "notifications" {
 
   user_data = <<-EOT
               #!/bin/bash
+              set -e
+              exec > /var/log/notifications-setup.log 2>&1
               
+              # Variables de entorno - MongoDB
               export MONGODB_HOST=${aws_instance.mongodb.private_ip}
               echo "MONGODB_HOST=${aws_instance.mongodb.private_ip}" | sudo tee -a /etc/environment
               export MONGODB_PORT=27017
               echo "MONGODB_PORT=27017" | sudo tee -a /etc/environment
               export MONGODB_DATABASE=notifications_db
               echo "MONGODB_DATABASE=notifications_db" | sudo tee -a /etc/environment
+              
+              # Variables de entorno - JWT y Email
+              export JWT_SECRET_KEY="${var.jwt_secret_key}"
+              echo "JWT_SECRET_KEY=${var.jwt_secret_key}" | sudo tee -a /etc/environment
+              export EMAIL_ENABLED="${var.email_enabled}"
+              echo "EMAIL_ENABLED=${var.email_enabled}" | sudo tee -a /etc/environment
+              export SMTP_HOST="${var.smtp_host}"
+              echo "SMTP_HOST=${var.smtp_host}" | sudo tee -a /etc/environment
+              export SMTP_PORT="${var.smtp_port}"
+              echo "SMTP_PORT=${var.smtp_port}" | sudo tee -a /etc/environment
+              export SMTP_USER="${var.smtp_user}"
+              echo "SMTP_USER=${var.smtp_user}" | sudo tee -a /etc/environment
+              export SMTP_PASSWORD="${var.smtp_password}"
+              echo "SMTP_PASSWORD=${var.smtp_password}" | sudo tee -a /etc/environment
+              export SENDER_EMAIL="${var.sender_email}"
+              echo "SENDER_EMAIL=${var.sender_email}" | sudo tee -a /etc/environment
+              export DEFAULT_RECIPIENT="${var.default_recipient}"
+              echo "DEFAULT_RECIPIENT=${var.default_recipient}" | sudo tee -a /etc/environment
 
+              # Instalar dependencias del sistema
               sudo apt-get update -y
               sudo apt-get install -y python3-pip python3-venv git
 
-              mkdir -p /home/ubuntu/app
-              cd /home/ubuntu/app
+              # Clonar repositorio
+              cd /home/ubuntu
               git clone -b ${local.branch} ${local.repository}
               cd Inventario/notifications
 
@@ -513,7 +535,13 @@ resource "aws_instance" "notifications" {
               pip install -r requirements.txt
               
               # Cambiar ownership al usuario ubuntu
-              sudo chown -R ubuntu:ubuntu /home/ubuntu/app
+              sudo chown -R ubuntu:ubuntu /home/ubuntu/Inventario
+              
+              # Iniciar el servicio
+              source /etc/environment
+              nohup python3 -m uvicorn main:app --host 0.0.0.0 --port 8001 > /home/ubuntu/notifications.log 2>&1 &
+              
+              echo "Notifications service setup completed"
               EOT
 
   tags = merge(local.common_tags, {
