@@ -27,5 +27,5 @@ services:
       - name: notifications-route
         paths:
           - /notifications
-        strip_path: false
+        strip_path: true
         preserve_host: false
