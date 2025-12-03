@@ -38,6 +38,12 @@ variable "instance_type" {
   default     = "t2.micro"
 }
 
+variable "key_name" {
+  description = "SSH key pair name for EC2 instances"
+  type        = string
+  default     = "vockey"
+}
+
 provider "aws" {
   region = var.region
 }
@@ -259,6 +265,7 @@ resource "aws_security_group" "traffic_ssh" {
 resource "aws_instance" "database" {
   ami                         = data.aws_ami.amazon_linux.id
   instance_type               = var.instance_type
+  key_name                    = var.key_name
   associate_public_ip_address = true
   vpc_security_group_ids      = [aws_security_group.traffic_db.id, aws_security_group.traffic_ssh.id]
 
@@ -283,6 +290,7 @@ resource "aws_instance" "database" {
 resource "aws_instance" "mongodb" {
   ami                         = data.aws_ami.amazon_linux.id
   instance_type               = var.instance_type
+  key_name                    = var.key_name
   associate_public_ip_address = true
   vpc_security_group_ids      = [aws_security_group.traffic_mongodb.id, aws_security_group.traffic_ssh.id]
 
@@ -305,6 +313,7 @@ resource "aws_instance" "django" {
   count                       = 2
   ami                         = data.aws_ami.ubuntu.id
   instance_type               = var.instance_type
+  key_name                    = var.key_name
   associate_public_ip_address = true
   vpc_security_group_ids      = [aws_security_group.traffic_django.id, aws_security_group.traffic_ssh.id]
 
@@ -413,6 +422,7 @@ resource "aws_lb_listener" "http" {
 resource "aws_instance" "notifications" {
   ami                         = data.aws_ami.ubuntu.id
   instance_type               = var.instance_type
+  key_name                    = var.key_name
   associate_public_ip_address = true
   vpc_security_group_ids      = [aws_security_group.traffic_notifications.id, aws_security_group.traffic_ssh.id]
 
@@ -456,6 +466,7 @@ resource "aws_instance" "notifications" {
 resource "aws_instance" "kong" {
   ami                         = data.aws_ami.amazon_linux.id
   instance_type               = var.instance_type
+  key_name                    = var.key_name
   associate_public_ip_address = true
   vpc_security_group_ids      = [aws_security_group.traffic_kong.id, aws_security_group.traffic_ssh.id]
 
