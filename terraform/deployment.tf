@@ -402,11 +402,65 @@ resource "aws_lb_target_group_attachment" "django" {
   port             = 8080
 }
 
-# Listener HTTP para el ALB
+# Certificado SSL Self-Signed para HTTPS
+resource "tls_private_key" "alb_cert" {
+  algorithm = "RSA"
+  rsa_bits  = 2048
+}
+
+resource "tls_self_signed_cert" "alb_cert" {
+  private_key_pem = tls_private_key.alb_cert.private_key_pem
+
+  subject {
+    common_name  = aws_lb.main.dns_name
+    organization = "Provesi WMS"
+  }
+
+  validity_period_hours = 8760 # 1 año
+
+  allowed_uses = [
+    "key_encipherment",
+    "digital_signature",
+    "server_auth",
+  ]
+}
+
+resource "aws_acm_certificate" "alb_cert" {
+  private_key      = tls_private_key.alb_cert.private_key_pem
+  certificate_body = tls_self_signed_cert.alb_cert.cert_pem
+
+  tags = merge(local.common_tags, {
+    Name = "${var.project_prefix}-alb-cert"
+  })
+}
+
+# Listener HTTP para el ALB (redirect a HTTPS)
 resource "aws_lb_listener" "http" {
   load_balancer_arn = aws_lb.main.arn
   port              = "80"
   protocol          = "HTTP"
+
+  default_action {
+    type = "redirect"
+    redirect {
+      port        = "443"
+      protocol    = "HTTPS"
+      status_code = "HTTP_301"
+    }
+  }
+
+  tags = merge(local.common_tags, {
+    Name = "${var.project_prefix}-listener-http"
+  })
+}
+
+# Listener HTTPS para el ALB
+resource "aws_lb_listener" "https" {
+  load_balancer_arn = aws_lb.main.arn
+  port              = "443"
+  protocol          = "HTTPS"
+  ssl_policy        = "ELBSecurityPolicy-2016-08"
+  certificate_arn   = aws_acm_certificate.alb_cert.arn
 
   default_action {
     type             = "forward"
@@ -414,7 +468,7 @@ resource "aws_lb_listener" "http" {
   }
 
   tags = merge(local.common_tags, {
-    Name = "${var.project_prefix}-listener-http"
+    Name = "${var.project_prefix}-listener-https"
   })
 }
 
