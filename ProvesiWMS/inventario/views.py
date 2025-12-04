@@ -86,6 +86,7 @@ def productos_sin_stock(request):
         'productos': productos
     })
 
+@csrf_exempt
 @jwt_required
 @require_permission('can_manage_inventory')
 def crear_producto(request):
@@ -276,6 +277,7 @@ class BodegaDetailView(DetailView):
         context['capacidad_total'] = self.object.obtener_capacidad_total() # type: ignore
         return context
 
+@csrf_exempt
 def crear_bodega(request):
     """
     Vista para crear una nueva bodega.
@@ -369,6 +371,7 @@ def eliminar_bodega(request, bodega_id):
 # CRUD UBICACIONES DE BODEGA
 # =========================
 
+@csrf_exempt
 def crear_ubicacion_bodega(request):
     """
     Vista para crear una nueva ubicación de bodega.
@@ -2422,4 +2425,86 @@ def eliminar_todos_productos(request):
         return JsonResponse({
             'error': 'Método no permitido. Use DELETE'
         }, status=405)
+
+
+# =========================
+# APIs PARA LAMBDA/VALIDACIÓN
+# =========================
+
+@csrf_exempt
+@jwt_required
+def api_cliente_detalle(request, pk):
+    """
+    API endpoint para obtener los detalles de un cliente específico.
+    Usado por Lambda para validar clientes en pedidos.
+    
+    GET /api/clientes/<id>/ - Retorna datos del cliente
+    """
+    if request.method == 'GET':
+        try:
+            cliente = Cliente.objects.filter(pk=pk).first()
+            
+            if not cliente:
+                return JsonResponse({
+                    'error': 'Cliente no encontrado'
+                }, status=404)
+            
+            return JsonResponse({
+                'id': cliente.id,
+                'nombre': cliente.nombre,
+                'email': cliente.email,
+                'telefono': cliente.telefono,
+                'direccion': cliente.direccion,
+                'ciudad': cliente.ciudad
+            })
+            
+        except Exception as e:
+            return JsonResponse({
+                'error': f'Error obteniendo cliente: {str(e)}'
+            }, status=500)
+    else:
+        return JsonResponse({
+            'error': 'Método no permitido. Use GET'
+        }, status=405)
+
+
+@csrf_exempt
+@jwt_required
+def api_producto_detalle(request, pk):
+    """
+    API endpoint para obtener los detalles de un producto específico.
+    Usado por Lambda para validar productos en pedidos.
+    
+    GET /api/productos/<id>/ - Retorna datos del producto
+    """
+    if request.method == 'GET':
+        try:
+            producto = Producto.objects.filter(pk=pk).first()
+            
+            if not producto:
+                return JsonResponse({
+                    'error': 'Producto no encontrado'
+                }, status=404)
+            
+            # Calcular stock total
+            stock_total = Articulo.objects.filter(producto=producto).count()
+            
+            return JsonResponse({
+                'id': producto.id,
+                'nombre': producto.nombre,
+                'descripcion': producto.descripcion,
+                'precio': float(producto.precio),
+                'stock': stock_total,
+                'categoria': producto.categoria
+            })
+            
+        except Exception as e:
+            return JsonResponse({
+                'error': f'Error obteniendo producto: {str(e)}'
+            }, status=500)
+    else:
+        return JsonResponse({
+            'error': 'Método no permitido. Use GET'
+        }, status=405)
+
 

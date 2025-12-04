@@ -1,0 +1,31 @@
+_format_version: "3.0"
+
+services:
+  - name: django-service
+    url: https://<DJANGO_HOST>
+    tls_verify: false  # Deshabilitar verificación de certificado self-signed
+    routes:
+      - name: inventario-route
+        paths:
+          - /inventario
+        strip_path: false
+        preserve_host: false
+      - name: api-route
+        paths:
+          - /api
+        strip_path: false
+        preserve_host: false
+      - name: admin-route
+        paths:
+          - /admin
+        strip_path: false
+        preserve_host: false
+
+  - name: notifications-service
+    url: http://<NOTIFICATIONS_HOST>:8001
+    routes:
+      - name: notifications-route
+        paths:
+          - /notifications
+        strip_path: true
+        preserve_host: false

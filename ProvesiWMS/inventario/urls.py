@@ -85,9 +85,11 @@ urlpatterns = [
     
     # APIs para listar todos los modelos
     path("api/productos/", views.api_listar_productos, name="api_listar_productos"),
+    path("api/productos/<int:pk>/", views.api_producto_detalle, name="api_producto_detalle"),
     path("api/bodegas/", views.api_listar_bodegas, name="api_listar_bodegas"),
     path("api/ubicaciones/", views.api_listar_ubicaciones, name="api_listar_ubicaciones"),
     path("api/clientes/", views.api_listar_clientes, name="api_listar_clientes"),
+    path("api/clientes/<int:pk>/", views.api_cliente_detalle, name="api_cliente_detalle"),
     path("api/usuarios/", views.api_listar_usuarios, name="api_listar_usuarios"),
     path("api/pedidos/", views.api_listar_pedidos, name="api_listar_pedidos"),
     path("api/pedidos/<int:pedido_id>/", views.api_actualizar_pedido, name="api_actualizar_pedido"),

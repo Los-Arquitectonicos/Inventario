@@ -1,0 +1,184 @@
+# ===============================================
+# CONFIGURACIÓN DE TERRAFORM - PROVESI WMS
+# ===============================================
+# Para entorno de pruebas - Variables preconfiguradas
+# Copia este archivo como terraform.tfvars para usar los valores por defecto
+
+# ===============================================
+# CONFIGURACIÓN BÁSICA DEL PROYECTO
+# ===============================================
+
+# Prefijo para nombrar recursos
+project_prefix = "provesi"
+
+# Tag del propietario del proyecto  
+owner = "development"
+
+# ===============================================
+# CONFIGURACIÓN DE INSTANCIAS EC2
+# ===============================================
+
+# Tipo de instancia para servidores de aplicación
+instance_type = "t3.medium"
+
+# Número de servidores de aplicación
+app_server_count = 2
+
+# Número de workers de Gunicorn por instancia
+gunicorn_workers = 4
+
+# ===============================================
+# CONFIGURACIÓN DE BASE DE DATOS
+# ===============================================
+
+# Tipo de instancia para PostgreSQL
+database_instance_type = "t3.small"
+
+# Nombre de la base de datos
+database_name = "inventario_db"
+
+# Usuario de la base de datos
+database_user = "inventario_user"
+
+# Contraseña de la base de datos (ENTORNO DE PRUEBAS)
+database_password = "ProvesiDB2025!Testing"
+
+# Puerto de PostgreSQL
+database_port = 5432
+
+# Versión de PostgreSQL
+postgres_version = "15"
+
+# ===============================================
+# CONFIGURACIÓN DE NOTIFICACIONES - JWT
+# ===============================================
+
+# Secret key para generación de tokens JWT
+# IMPORTANTE: Cambiar en producción
+jwt_secret_key = "notifications-secret-key-production-CHANGE-ME-NOW"
+
+# ===============================================
+# CONFIGURACIÓN DE NOTIFICACIONES - EMAIL/SMTP
+# ===============================================
+
+# Habilitar envío de emails
+email_enabled = "true"
+
+# Configuración SMTP para Gmail
+# Para usar Gmail:
+# 1. Ir a: https://myaccount.google.com/apppasswords
+# 2. Crear un App Password
+# 3. Usar ese password de 16 caracteres aquí
+
+smtp_host     = "smtp.gmail.com"
+smtp_port     = "587"
+smtp_user     = "tu_correo@gmail.com"         # Cambiar por tu correo
+smtp_password = "xxxx xxxx xxxx xxxx"         # Cambiar por tu App Password
+sender_email  = "tu_correo@gmail.com"         # Cambiar por tu correo
+
+# Email por defecto para recibir notificaciones
+default_recipient = "p.sanin@uniandes.edu.co"
+
+# Configuración alternativa para Amazon SES:
+# smtp_host     = "email-smtp.us-east-1.amazonaws.com"
+# smtp_port     = "587"
+# smtp_user     = "TU_SES_SMTP_USERNAME"
+# smtp_password = "TU_SES_SMTP_PASSWORD"
+# sender_email  = "correo_verificado@tudominio.com"
+
+# Tamaño de almacenamiento en GB
+database_storage_gb = 100
+
+# ===============================================
+# CONFIGURACIÓN DE SEGURIDAD DJANGO (TESTING)
+# ===============================================
+
+# Clave secreta de Django (ENTORNO DE PRUEBAS)
+django_secret_key = "django-testing-secret-key-for-provesi-wms-2025-very-long-random-string-123456789"
+
+# Entorno de despliegue (debe ser: development, staging o production)
+environment = "development"
+
+# Dominio permitido para CORS
+allowed_host = "*.amazonaws.com"
+
+# ===============================================
+# CONFIGURACIÓN JWT (TESTING)
+# ===============================================
+
+# Tiempo de vida del token de acceso en horas
+jwt_access_token_lifetime_hours = 24
+
+# Tiempo de vida del token de refresh en días
+jwt_refresh_token_lifetime_days = 30
+
+# Algoritmo de firma JWT
+jwt_algorithm = "HS256"
+
+# Rotar tokens de refresh al usarlos
+jwt_rotate_refresh_tokens = true
+
+# ===============================================
+# CONFIGURACIÓN HTTPS/SSL (TESTING)
+# ===============================================
+
+# Forzar HTTPS (false para testing)
+force_https = false
+
+# ARN del certificado SSL (no necesario para testing)
+# ssl_certificate_arn = ""
+
+# Política de seguridad SSL
+ssl_policy = "ELBSecurityPolicy-TLS-1-2-2017-01"
+
+# ===============================================
+# CONFIGURACIÓN DE CORS (TESTING)
+# ===============================================
+
+# Permitir credenciales en CORS
+cors_allow_credentials = true
+
+# Dominios permitidos para CORS (abierto para testing - debe ser lista)
+cors_allowed_origins = ["*"]
+
+# ===============================================
+# CONFIGURACIÓN DE LOGGING (TESTING)
+# ===============================================
+
+# Habilitar CloudWatch Logs (opcional para testing)
+enable_cloudwatch_logs = false
+
+# Nivel de logging Django
+log_level = "DEBUG"
+
+# Retención de logs en CloudWatch (días)
+log_retention_days = 3
+
+# ===============================================
+# CONFIGURACIÓN DE DESARROLLO (TESTING)
+# ===============================================
+
+# Modo debug (true para testing)
+debug_mode = true
+
+# Habilitar toolbar de debug de Django
+enable_debug_toolbar = true
+
+# ===============================================
+# KONG API GATEWAY (SERVICE DISCOVERY)
+# ===============================================
+
+# Tipo de instancia para Kong Gateway
+kong_instance_type = "t3.small"
+
+# Versión de Kong a instalar
+kong_version = "3.5.0"
+
+# Nivel de logging de Kong
+kong_log_level = "info"
+
+# Habilitar Admin API público (NO recomendado en producción)
+enable_kong_admin_api = false
+
+# Nombre del key pair para SSH (opcional, dejar vacío si no se usa)
+key_pair_name = ""

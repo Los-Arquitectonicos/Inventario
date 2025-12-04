@@ -18,10 +18,45 @@ from decimal import Decimal
 def generar_coleccion_completa():
     """Genera coleccion Postman con productos, bodegas y ubicaciones."""
 
-    alb_url = "https://provesi-alb-2003818714.us-east-1.elb.amazonaws.com"
-    base_url = f"{alb_url}/inventario"
+    alb_url = "provesi-alb-2028908830.us-east-1.elb.amazonaws.com"
+    base_url = f"https://{alb_url}/inventario"
     
     requests = []
+    
+    # 0. Login - Obtener JWT Token
+    requests.append({
+        "name": "0. Login - Obtener JWT Token",
+        "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+                "mode": "raw",
+                "raw": json.dumps({
+                    "username": "admin",
+                    "password": "admin123"
+                }, indent=2)
+            },
+            "url": {
+                "raw": f"{base_url}/auth/login/",
+                "protocol": "https",
+                "host": [alb_url],
+                "path": ["inventario", "auth", "login", ""]
+            }
+        },
+        "response": [],
+        "event": [
+            {
+                "listen": "test",
+                "script": {
+                    "exec": [
+                        "var jsonData = pm.response.json();",
+                        "pm.collectionVariables.set('jwt_token', jsonData.access);"
+                    ],
+                    "type": "text/javascript"
+                }
+            }
+        ]
+    })
     
     # 1. Bodegas (10 total) - PRIMERO porque las ubicaciones las necesitan
     ciudades = [
@@ -42,7 +77,10 @@ def generar_coleccion_completa():
             "name": f"Bodega {i}: {ciudad}",
             "request": {
                 "method": "POST",
-                "header": [{"key": "Content-Type", "value": "application/json"}],
+                "header": [
+                    {"key": "Content-Type", "value": "application/json"},
+                    {"key": "Authorization", "value": "Bearer {{jwt_token}}"}
+                ],
                 "body": {
                     "mode": "raw",
                     "raw": json.dumps({
@@ -53,8 +91,8 @@ def generar_coleccion_completa():
                 },
                 "url": {
                     "raw": f"{base_url}/bodegas/crear/",
-                    "protocol": "http",
-                    "host": [alb_url.replace("http://", "")],
+                    "protocol": "https",
+                    "host": [alb_url],
                     "path": ["inventario", "bodegas", "crear", ""]
                 }
             },
@@ -101,7 +139,10 @@ def generar_coleccion_completa():
             "name": f"Producto {i+1}: {nombre_final}",
             "request": {
                 "method": "POST",
-                "header": [{"key": "Content-Type", "value": "application/json"}],
+                "header": [
+                    {"key": "Content-Type", "value": "application/json"},
+                    {"key": "Authorization", "value": "Bearer {{jwt_token}}"}
+                ],
                 "body": {
                     "mode": "raw",
                     "raw": json.dumps({
@@ -119,8 +160,8 @@ def generar_coleccion_completa():
                 },
                 "url": {
                     "raw": f"{base_url}/productos/crear/",
-                    "protocol": "http",
-                    "host": [alb_url.replace("http://", "")],
+                    "protocol": "https",
+                    "host": [alb_url],
                     "path": ["inventario", "productos", "crear", ""]
                 }
             },
@@ -152,15 +193,18 @@ def generar_coleccion_completa():
                 "name": f"B{bodega_num} Ubicacion {j+1}: {pasillo}-{estante}-{nivel}",
                 "request": {
                     "method": "POST",
-                    "header": [{"key": "Content-Type", "value": "application/json"}],
+                    "header": [
+                        {"key": "Content-Type", "value": "application/json"},
+                        {"key": "Authorization", "value": "Bearer {{jwt_token}}"}
+                    ],
                     "body": {
                         "mode": "raw",
                         "raw": raw_body
                     },
                     "url": {
                         "raw": f"{base_url}/ubicaciones/crear/",
-                        "protocol": "http",
-                        "host": [alb_url.replace("http://", "")],
+                        "protocol": "https",
+                        "host": [alb_url],
                         "path": ["inventario", "ubicaciones", "crear", ""]
                     }
                 },
