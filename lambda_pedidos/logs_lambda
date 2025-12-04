@@ -1,41 +1,9 @@
 INIT_START Runtime Version: python:3.14.v30	Runtime Version ARN: arn:aws:lambda:us-east-1::runtime:385976ccfc84dbbc4d14a018678b4b1815e7957d85765e7c781f009319418b70
-START RequestId: 2a316a03-ddbc-4368-8ad5-ab72b6423c1b Version: $LATEST
-[INFO]	2025-12-04T01:49:57.976Z	2a316a03-ddbc-4368-8ad5-ab72b6423c1b	📨 POST /pedidos
-[INFO]	2025-12-04T01:49:57.976Z	2a316a03-ddbc-4368-8ad5-ab72b6423c1b	Creando pedido para cliente 1
-[WARNING]	2025-12-04T01:49:58.334Z	2a316a03-ddbc-4368-8ad5-ab72b6423c1b	Cliente 1 no encontrado
-END RequestId: 2a316a03-ddbc-4368-8ad5-ab72b6423c1b
-REPORT RequestId: 2a316a03-ddbc-4368-8ad5-ab72b6423c1b	Duration: 414.90 ms	Billed Duration: 1271 ms	Memory Size: 128 MB	Max Memory Used: 75 MB	Init Duration: 856.08 ms	
-START RequestId: ec30ca76-9011-4c1d-bd0f-b62325040f05 Version: $LATEST
-[INFO]	2025-12-04T01:49:58.736Z	ec30ca76-9011-4c1d-bd0f-b62325040f05	📨 GET /pedidos
-[INFO]	2025-12-04T01:49:58.736Z	ec30ca76-9011-4c1d-bd0f-b62325040f05	Listando pedidos con filtros: 
-{}
-
-END RequestId: ec30ca76-9011-4c1d-bd0f-b62325040f05
-REPORT RequestId: ec30ca76-9011-4c1d-bd0f-b62325040f05	Duration: 3000.00 ms	Billed Duration: 3000 ms	Memory Size: 128 MB	Max Memory Used: 75 MB	Status: timeout
-START RequestId: 4d3cfeb5-ba80-4c2c-adc9-c5fcd3ed306c Version: $LATEST
-[INFO]	2025-12-04T01:50:02.875Z	4d3cfeb5-ba80-4c2c-adc9-c5fcd3ed306c	📨 GET /pedidos
-[INFO]	2025-12-04T01:50:02.875Z	4d3cfeb5-ba80-4c2c-adc9-c5fcd3ed306c	Listando pedidos con filtros: {'cliente_id': '1'}
-END RequestId: 4d3cfeb5-ba80-4c2c-adc9-c5fcd3ed306c
-REPORT RequestId: 4d3cfeb5-ba80-4c2c-adc9-c5fcd3ed306c	Duration: 3000.00 ms	Billed Duration: 3000 ms	Memory Size: 128 MB	Max Memory Used: 74 MB	Status: timeout
-START RequestId: 2b035f41-b11e-4e5a-8626-6b9ff40b2fa8 Version: $LATEST
-[INFO]	2025-12-04T01:50:06.945Z	2b035f41-b11e-4e5a-8626-6b9ff40b2fa8	📨 GET /pedidos
-[INFO]	2025-12-04T01:50:06.946Z	2b035f41-b11e-4e5a-8626-6b9ff40b2fa8	Listando pedidos con filtros: {'estado': 'pendiente'}
-END RequestId: 2b035f41-b11e-4e5a-8626-6b9ff40b2fa8
-REPORT RequestId: 2b035f41-b11e-4e5a-8626-6b9ff40b2fa8	Duration: 3000.00 ms	Billed Duration: 3000 ms	Memory Size: 128 MB	Max Memory Used: 74 MB	Status: timeout
-START RequestId: 7556cf64-f4a0-44b7-9b04-9ddade9cdec9 Version: $LATEST
-[INFO]	2025-12-04T01:50:11.015Z	7556cf64-f4a0-44b7-9b04-9ddade9cdec9	📨 POST /pedidos
-[INFO]	2025-12-04T01:50:11.015Z	7556cf64-f4a0-44b7-9b04-9ddade9cdec9	Creando pedido para cliente 99999
-[WARNING]	2025-12-04T01:50:11.334Z	7556cf64-f4a0-44b7-9b04-9ddade9cdec9	Cliente 99999 no encontrado
-END RequestId: 7556cf64-f4a0-44b7-9b04-9ddade9cdec9
-REPORT RequestId: 7556cf64-f4a0-44b7-9b04-9ddade9cdec9	Duration: 1139.15 ms	Billed Duration: 1140 ms	Memory Size: 128 MB	Max Memory Used: 75 MB	
-START RequestId: 1f96b689-6d3a-4cb6-9b01-3e10c9918f4e Version: $LATEST
-[INFO]	2025-12-04T01:50:11.695Z	1f96b689-6d3a-4cb6-9b01-3e10c9918f4e	📨 POST /pedidos
-[INFO]	2025-12-04T01:50:11.695Z	1f96b689-6d3a-4cb6-9b01-3e10c9918f4e	Creando pedido para cliente 1
-[WARNING]	2025-12-04T01:50:11.970Z	1f96b689-6d3a-4cb6-9b01-3e10c9918f4e	Cliente 1 no encontrado
-END RequestId: 1f96b689-6d3a-4cb6-9b01-3e10c9918f4e
-REPORT RequestId: 1f96b689-6d3a-4cb6-9b01-3e10c9918f4e	Duration: 315.45 ms	Billed Duration: 316 ms	Memory Size: 128 MB	Max Memory Used: 75 MB	
-START RequestId: 6d0c602e-2f42-4983-a8f4-4a1847ffea5d Version: $LATEST
-[INFO]	2025-12-04T01:50:12.329Z	6d0c602e-2f42-4983-a8f4-4a1847ffea5d	📨 GET /pedidos/PED-999999
-[INFO]	2025-12-04T01:50:12.329Z	6d0c602e-2f42-4983-a8f4-4a1847ffea5d	Consultando pedido PED-999999
-END RequestId: 6d0c602e-2f42-4983-a8f4-4a1847ffea5d
-REPORT RequestId: 6d0c602e-2f42-4983-a8f4-4a1847ffea5d	Duration: 3000.00 ms	Billed Duration: 3000 ms	Memory Size: 128 MB	Max Memory Used: 75 MB	Status: timeout
+START RequestId: 1a1a0372-f18b-4802-9224-415588bf708b Version: $LATEST
+[INFO]	2025-12-04T02:03:29.096Z	1a1a0372-f18b-4802-9224-415588bf708b	📨 GET /
+END RequestId: 1a1a0372-f18b-4802-9224-415588bf708b
+REPORT RequestId: 1a1a0372-f18b-4802-9224-415588bf708b	Duration: 15.03 ms	Billed Duration: 799 ms	Memory Size: 128 MB	Max Memory Used: 69 MB	Init Duration: 783.77 ms	
+START RequestId: 79357433-3cf3-4258-9acb-4bcb389402f3 Version: $LATEST
+[INFO]	2025-12-04T02:03:29.446Z	79357433-3cf3-4258-9acb-4bcb389402f3	📨 GET /favicon.ico
+END RequestId: 79357433-3cf3-4258-9acb-4bcb389402f3
+REPORT RequestId: 79357433-3cf3-4258-9acb-4bcb389402f3	Duration: 1.97 ms	Billed Duration: 2 ms	Memory Size: 128 MB	Max Memory Used: 69 MB	
