@@ -30,8 +30,18 @@ def test_crear_pedido():
     payload = {
         "cliente_id": 1,
         "productos": [
-            {"producto_id": 1, "cantidad": 2},
-            {"producto_id": 2, "cantidad": 1}
+            {
+                "producto_id": 1,
+                "cantidad": 2,
+                "nombre": "Laptop Dell XPS 15",
+                "precio": 1500.00
+            },
+            {
+                "producto_id": 2,
+                "cantidad": 1,
+                "nombre": "Mouse Logitech MX Master",
+                "precio": 99.99
+            }
         ],
         "notas": f"Pedido de prueba - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
     }
@@ -126,23 +136,37 @@ def test_error_cases():
     """Prueba 6: Casos de error"""
     print("\n🧪 TEST 6: Casos de error")
     
-    # Error: Cliente inexistente
-    print("❌ Intentar crear pedido con cliente inexistente")
+    # Error: Cliente inexistente (ahora se permite)
+    print("✅ Crear pedido con cualquier cliente_id")
     payload = {
         "cliente_id": 99999,
-        "productos": [{"producto_id": 1, "cantidad": 1}]
+        "productos": [
+            {
+                "producto_id": 1,
+                "cantidad": 1,
+                "nombre": "Producto Test",
+                "precio": 50.0
+            }
+        ]
     }
     response = requests.post(f"{FUNCTION_URL}/pedidos", json=payload)
-    print_response("Cliente Inexistente", response)
+    print_response("Cliente ID 99999", response)
     
-    # Error: Producto inexistente
-    print("❌ Intentar crear pedido con producto inexistente")
+    # Error: Producto inexistente (ahora se permite)
+    print("✅ Crear pedido con cualquier producto_id")
     payload = {
         "cliente_id": 1,
-        "productos": [{"producto_id": 99999, "cantidad": 1}]
+        "productos": [
+            {
+                "producto_id": 99999,
+                "cantidad": 1,
+                "nombre": "Producto Inexistente Test",
+                "precio": 100.0
+            }
+        ]
     }
     response = requests.post(f"{FUNCTION_URL}/pedidos", json=payload)
-    print_response("Producto Inexistente", response)
+    print_response("Producto ID 99999", response)
     
     # Error: Pedido inexistente
     print("❌ Intentar obtener pedido inexistente")

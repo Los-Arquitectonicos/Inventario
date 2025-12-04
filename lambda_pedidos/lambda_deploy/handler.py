@@ -16,7 +16,8 @@ sys.path.insert(0, '/opt/python')
 
 from models import Order, OrderProduct, OrderStatus
 from db_client import get_orders_collection, generate_order_number
-from provesi_client import validate_producto, validate_cliente
+# provesi_client importación comentada - ya no se usa validación externa
+# from provesi_client import validate_producto, validate_cliente
 from response_builder import success_response, error_response, validation_error_response, server_error_response, not_found_response
 
 logger = logging.getLogger()
@@ -129,10 +130,8 @@ def crear_pedido(body: Dict) -> Dict:
         cliente_id = int(body['cliente_id'])
         notas = body.get('notas', '')
         
-        # Validar cliente existe en ProvesiWMS
-        cliente_info = validate_cliente(cliente_id)
-        if not cliente_info:
-            return validation_error_response(f"Cliente {cliente_id} no existe en ProvesiWMS")
+        # NOTA: NO se valida con ProvesiWMS para evitar dependencias
+        # El servicio de pedidos confía en los datos recibidos
         
         # Validar productos y construir lista
         productos = []
@@ -143,23 +142,15 @@ def crear_pedido(body: Dict) -> Dict:
             if cantidad <= 0:
                 return validation_error_response(f"Cantidad debe ser mayor a 0 para producto {producto_id}")
             
-            # Validar producto existe
-            producto_info = validate_producto(producto_id)
-            if not producto_info:
-                return validation_error_response(f"Producto {producto_id} no existe en ProvesiWMS")
-            
-            # Verificar stock
-            if producto_info['stock'] < cantidad:
-                return validation_error_response(
-                    f"Stock insuficiente para {producto_info['nombre']}. "
-                    f"Disponible: {producto_info['stock']}, Solicitado: {cantidad}"
-                )
+            # Obtener datos opcionales del producto desde el request
+            nombre_producto = item.get('nombre', f'Producto {producto_id}')
+            precio_unitario = float(item.get('precio', 0.0))
             
             productos.append(OrderProduct(
                 producto_id=producto_id,
-                nombre=producto_info['nombre'],
+                nombre=nombre_producto,
                 cantidad=cantidad,
-                precio_unitario=producto_info['precio']
+                precio_unitario=precio_unitario
             ))
         
         # Generar número de pedido
