@@ -7,7 +7,7 @@ import json
 from datetime import datetime
 
 # Configuración
-FUNCTION_URL = "https://s4fah7sb5idis3qzs6i3kddkgq0lkrpy.lambda-url.us-east-1.on.aws"
+FUNCTION_URL = "https://txsntfwdg3cmiliy7d2uo343by0gyzcp.lambda-url.us-east-1.on.aws"
 
 def print_response(title, response):
     """Imprimir respuesta formateada"""

@@ -18,8 +18,8 @@ from decimal import Decimal
 def generar_coleccion_completa():
     """Genera coleccion Postman con productos, bodegas y ubicaciones."""
 
-    alb_url = "https://provesi-alb-2003818714.us-east-1.elb.amazonaws.com"
-    base_url = f"{alb_url}/inventario"
+    alb_url = "provesi-alb-2028908830.us-east-1.elb.amazonaws.com"
+    base_url = f"https://{alb_url}/inventario"
     
     requests = []
     
@@ -53,8 +53,8 @@ def generar_coleccion_completa():
                 },
                 "url": {
                     "raw": f"{base_url}/bodegas/crear/",
-                    "protocol": "http",
-                    "host": [alb_url.replace("http://", "")],
+                    "protocol": "https",
+                    "host": [alb_url],
                     "path": ["inventario", "bodegas", "crear", ""]
                 }
             },
@@ -119,8 +119,8 @@ def generar_coleccion_completa():
                 },
                 "url": {
                     "raw": f"{base_url}/productos/crear/",
-                    "protocol": "http",
-                    "host": [alb_url.replace("http://", "")],
+                    "protocol": "https",
+                    "host": [alb_url],
                     "path": ["inventario", "productos", "crear", ""]
                 }
             },
@@ -159,8 +159,8 @@ def generar_coleccion_completa():
                     },
                     "url": {
                         "raw": f"{base_url}/ubicaciones/crear/",
-                        "protocol": "http",
-                        "host": [alb_url.replace("http://", "")],
+                        "protocol": "https",
+                        "host": [alb_url],
                         "path": ["inventario", "ubicaciones", "crear", ""]
                     }
                 },

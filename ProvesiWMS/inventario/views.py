@@ -86,6 +86,7 @@ def productos_sin_stock(request):
         'productos': productos
     })
 
+@csrf_exempt
 @jwt_required
 @require_permission('can_manage_inventory')
 def crear_producto(request):
@@ -276,6 +277,7 @@ class BodegaDetailView(DetailView):
         context['capacidad_total'] = self.object.obtener_capacidad_total() # type: ignore
         return context
 
+@csrf_exempt
 def crear_bodega(request):
     """
     Vista para crear una nueva bodega.
@@ -369,6 +371,7 @@ def eliminar_bodega(request, bodega_id):
 # CRUD UBICACIONES DE BODEGA
 # =========================
 
+@csrf_exempt
 def crear_ubicacion_bodega(request):
     """
     Vista para crear una nueva ubicación de bodega.

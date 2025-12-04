@@ -5,6 +5,10 @@ import os
 import requests
 import logging
 from typing import Optional, Dict
+import urllib3
+
+# Desactivar warnings de SSL para certificados self-signed
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 logger = logging.getLogger()
 
@@ -21,7 +25,7 @@ def validate_producto(producto_id: int) -> Optional[Dict]:
     """
     try:
         url = f"{PROVESI_API_URL}/api/productos/{producto_id}/"
-        response = requests.get(url, timeout=PROVESI_TIMEOUT)
+        response = requests.get(url, timeout=PROVESI_TIMEOUT, verify=False)
         
         if response.status_code == 404:
             logger.warning(f"Producto {producto_id} no encontrado")
@@ -51,7 +55,7 @@ def validate_cliente(cliente_id: int) -> Optional[Dict]:
     """
     try:
         url = f"{PROVESI_API_URL}/api/clientes/{cliente_id}/"
-        response = requests.get(url, timeout=PROVESI_TIMEOUT)
+        response = requests.get(url, timeout=PROVESI_TIMEOUT, verify=False)
         
         if response.status_code == 404:
             logger.warning(f"Cliente {cliente_id} no encontrado")

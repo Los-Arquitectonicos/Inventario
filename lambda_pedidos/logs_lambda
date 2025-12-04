@@ -1,0 +1,19 @@
+INIT_START Runtime Version: python:3.14.v30	Runtime Version ARN: arn:aws:lambda:us-east-1::runtime:385976ccfc84dbbc4d14a018678b4b1815e7957d85765e7c781f009319418b70
+[WARNING]	2025-12-04T00:17:05.397Z		LAMBDA_WARNING: Unhandled exception. The most likely cause is an issue in the function code. However, in rare cases, a Lambda runtime update can cause unexpected function behavior. For functions using managed runtimes, runtime updates can be triggered by a function change, or can be applied automatically. To determine if the runtime has been updated, check the runtime version in the INIT_START log entry. If this error correlates with a change in the runtime version, you may be able to mitigate this error by temporarily rolling back to the previous runtime version. For more information, see https://docs.aws.amazon.com/lambda/latest/dg/runtimes-update.html
+[ERROR] Runtime.ImportModuleError: Unable to import module 'handler': No module named 'models'
+Traceback (most recent call last):
+INIT_REPORT Init Duration: 230.80 ms	Phase: init	Status: error	Error Type: Runtime.ImportModuleError
+[WARNING]	2025-12-04T00:17:05.546Z		LAMBDA_WARNING: Unhandled exception. The most likely cause is an issue in the function code. However, in rare cases, a Lambda runtime update can cause unexpected function behavior. For functions using managed runtimes, runtime updates can be triggered by a function change, or can be applied automatically. To determine if the runtime has been updated, check the runtime version in the INIT_START log entry. If this error correlates with a change in the runtime version, you may be able to mitigate this error by temporarily rolling back to the previous runtime version. For more information, see https://docs.aws.amazon.com/lambda/latest/dg/runtimes-update.html
+[ERROR] Runtime.ImportModuleError: Unable to import module 'handler': No module named 'models'
+Traceback (most recent call last):
+INIT_REPORT Init Duration: 116.05 ms	Phase: invoke	Status: error	Error Type: Runtime.ImportModuleError
+START RequestId: e218e78f-c2cf-457f-bf3f-55252ae07e25 Version: $LATEST
+END RequestId: e218e78f-c2cf-457f-bf3f-55252ae07e25
+REPORT RequestId: e218e78f-c2cf-457f-bf3f-55252ae07e25	Duration: 126.32 ms	Billed Duration: 127 ms	Memory Size: 128 MB	Max Memory Used: 48 MB	Status: error	Error Type: Runtime.ImportModuleError
+[WARNING]	2025-12-04T00:17:05.946Z		LAMBDA_WARNING: Unhandled exception. The most likely cause is an issue in the function code. However, in rare cases, a Lambda runtime update can cause unexpected function behavior. For functions using managed runtimes, runtime updates can be triggered by a function change, or can be applied automatically. To determine if the runtime has been updated, check the runtime version in the INIT_START log entry. If this error correlates with a change in the runtime version, you may be able to mitigate this error by temporarily rolling back to the previous runtime version. For more information, see https://docs.aws.amazon.com/lambda/latest/dg/runtimes-update.html
+[ERROR] Runtime.ImportModuleError: Unable to import module 'handler': No module named 'models'
+Traceback (most recent call last):
+INIT_REPORT Init Duration: 110.74 ms	Phase: invoke	Status: error	Error Type: Runtime.ImportModuleError
+START RequestId: 1b63571f-84b4-42ae-b59e-94d527e4f5a3 Version: $LATEST
+END RequestId: 1b63571f-84b4-42ae-b59e-94d527e4f5a3
+REPORT RequestId: 1b63571f-84b4-42ae-b59e-94d527e4f5a3	Duration: 122.06 ms	Billed Duration: 123 ms	Memory Size: 128 MB	Max Memory Used: 48 MB	Status: error	Error Type: Runtime.ImportModuleError

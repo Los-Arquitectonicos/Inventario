@@ -63,7 +63,7 @@ zip handler.zip handler.py
 
 Tu Function URL actual es:
 ```
-https://s4fah7sb5idis3qzs6i3kddkgq0lkrpy.lambda-url.us-east-1.on.aws/
+https://txsntfwdg3cmiliy7d2uo343by0gyzcp.lambda-url.us-east-1.on.aws/
 ```
 
 ## 🧪 Pruebas
@@ -71,7 +71,7 @@ https://s4fah7sb5idis3qzs6i3kddkgq0lkrpy.lambda-url.us-east-1.on.aws/
 ### Crear un pedido
 
 ```bash
-curl -X POST https://s4fah7sb5idis3qzs6i3kddkgq0lkrpy.lambda-url.us-east-1.on.aws/pedidos \
+curl -X POST https://txsntfwdg3cmiliy7d2uo343by0gyzcp.lambda-url.us-east-1.on.aws/pedidos \
   -H "Content-Type: application/json" \
   -d '{
     "cliente_id": 1,
@@ -85,32 +85,32 @@ curl -X POST https://s4fah7sb5idis3qzs6i3kddkgq0lkrpy.lambda-url.us-east-1.on.aw
 ### Listar todos los pedidos
 
 ```bash
-curl https://s4fah7sb5idis3qzs6i3kddkgq0lkrpy.lambda-url.us-east-1.on.aws/pedidos
+curl https://txsntfwdg3cmiliy7d2uo343by0gyzcp.lambda-url.us-east-1.on.aws/pedidos
 ```
 
 ### Listar pedidos con filtros
 
 ```bash
 # Por cliente
-curl "https://s4fah7sb5idis3qzs6i3kddkgq0lkrpy.lambda-url.us-east-1.on.aws/pedidos?cliente_id=1"
+curl "https://txsntfwdg3cmiliy7d2uo343by0gyzcp.lambda-url.us-east-1.on.aws/pedidos?cliente_id=1"
 
 # Por estado
-curl "https://s4fah7sb5idis3qzs6i3kddkgq0lkrpy.lambda-url.us-east-1.on.aws/pedidos?estado=pendiente"
+curl "https://txsntfwdg3cmiliy7d2uo343by0gyzcp.lambda-url.us-east-1.on.aws/pedidos?estado=pendiente"
 
 # Combinado
-curl "https://s4fah7sb5idis3qzs6i3kddkgq0lkrpy.lambda-url.us-east-1.on.aws/pedidos?cliente_id=1&estado=pendiente"
+curl "https://txsntfwdg3cmiliy7d2uo343by0gyzcp.lambda-url.us-east-1.on.aws/pedidos?cliente_id=1&estado=pendiente"
 ```
 
 ### Obtener pedido específico
 
 ```bash
-curl https://s4fah7sb5idis3qzs6i3kddkgq0lkrpy.lambda-url.us-east-1.on.aws/pedidos/PED-000001
+curl https://txsntfwdg3cmiliy7d2uo343by0gyzcp.lambda-url.us-east-1.on.aws/pedidos/PED-000001
 ```
 
 ### Actualizar seguimiento
 
 ```bash
-curl -X PUT https://s4fah7sb5idis3qzs6i3kddkgq0lkrpy.lambda-url.us-east-1.on.aws/pedidos/PED-000001/seguimiento \
+curl -X PUT https://txsntfwdg3cmiliy7d2uo343by0gyzcp.lambda-url.us-east-1.on.aws/pedidos/PED-000001/seguimiento \
   -H "Content-Type: application/json" \
   -d '{
     "nuevo_estado": "confirmado",
@@ -125,7 +125,7 @@ curl -X PUT https://s4fah7sb5idis3qzs6i3kddkgq0lkrpy.lambda-url.us-east-1.on.aws
 ```yaml
 services:
   - name: pedidos-lambda
-    url: https://s4fah7sb5idis3qzs6i3kddkgq0lkrpy.lambda-url.us-east-1.on.aws
+    url: https://txsntfwdg3cmiliy7d2uo343by0gyzcp.lambda-url.us-east-1.on.aws
     routes:
       - name: pedidos-route
         paths:
