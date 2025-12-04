@@ -17,7 +17,7 @@
         ],
         "body": {
           "mode": "raw",
-          "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"ProvesiAdmin2024!\"\n}"
+          "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"admin123\"\n}"
         },
         "url": {
           "raw": "https://provesi-alb-2028908830.us-east-1.elb.amazonaws.com/inventario/auth/login/",
@@ -40,7 +40,7 @@
           "script": {
             "exec": [
               "var jsonData = pm.response.json();",
-              "pm.collectionVariables.set('jwt_token', jsonData.token);"
+              "pm.collectionVariables.set('jwt_token', jsonData.access);"
             ],
             "type": "text/javascript"
           }

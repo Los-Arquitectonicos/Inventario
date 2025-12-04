@@ -50,7 +50,7 @@ def generar_coleccion_completa():
                 "script": {
                     "exec": [
                         "var jsonData = pm.response.json();",
-                        "pm.collectionVariables.set('jwt_token', jsonData.token);"
+                        "pm.collectionVariables.set('jwt_token', jsonData.access);"
                     ],
                     "type": "text/javascript"
                 }
