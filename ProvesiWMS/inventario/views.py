@@ -2442,7 +2442,12 @@ def api_cliente_detalle(request, pk):
     """
     if request.method == 'GET':
         try:
-            cliente = get_object_or_404(Cliente, pk=pk)
+            cliente = Cliente.objects.filter(pk=pk).first()
+            
+            if not cliente:
+                return JsonResponse({
+                    'error': 'Cliente no encontrado'
+                }, status=404)
             
             return JsonResponse({
                 'id': cliente.id,
@@ -2474,7 +2479,12 @@ def api_producto_detalle(request, pk):
     """
     if request.method == 'GET':
         try:
-            producto = get_object_or_404(Producto, pk=pk)
+            producto = Producto.objects.filter(pk=pk).first()
+            
+            if not producto:
+                return JsonResponse({
+                    'error': 'Producto no encontrado'
+                }, status=404)
             
             # Calcular stock total
             stock_total = Articulo.objects.filter(producto=producto).count()
