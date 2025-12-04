@@ -2426,3 +2426,75 @@ def eliminar_todos_productos(request):
             'error': 'Método no permitido. Use DELETE'
         }, status=405)
 
+
+# =========================
+# APIs PARA LAMBDA/VALIDACIÓN
+# =========================
+
+@csrf_exempt
+@jwt_required
+def api_cliente_detalle(request, pk):
+    """
+    API endpoint para obtener los detalles de un cliente específico.
+    Usado por Lambda para validar clientes en pedidos.
+    
+    GET /api/clientes/<id>/ - Retorna datos del cliente
+    """
+    if request.method == 'GET':
+        try:
+            cliente = get_object_or_404(Cliente, pk=pk)
+            
+            return JsonResponse({
+                'id': cliente.id,
+                'nombre': cliente.nombre,
+                'email': cliente.email,
+                'telefono': cliente.telefono,
+                'direccion': cliente.direccion,
+                'ciudad': cliente.ciudad
+            })
+            
+        except Exception as e:
+            return JsonResponse({
+                'error': f'Error obteniendo cliente: {str(e)}'
+            }, status=500)
+    else:
+        return JsonResponse({
+            'error': 'Método no permitido. Use GET'
+        }, status=405)
+
+
+@csrf_exempt
+@jwt_required
+def api_producto_detalle(request, pk):
+    """
+    API endpoint para obtener los detalles de un producto específico.
+    Usado por Lambda para validar productos en pedidos.
+    
+    GET /api/productos/<id>/ - Retorna datos del producto
+    """
+    if request.method == 'GET':
+        try:
+            producto = get_object_or_404(Producto, pk=pk)
+            
+            # Calcular stock total
+            stock_total = Articulo.objects.filter(producto=producto).count()
+            
+            return JsonResponse({
+                'id': producto.id,
+                'nombre': producto.nombre,
+                'descripcion': producto.descripcion,
+                'precio': float(producto.precio),
+                'stock': stock_total,
+                'categoria': producto.categoria
+            })
+            
+        except Exception as e:
+            return JsonResponse({
+                'error': f'Error obteniendo producto: {str(e)}'
+            }, status=500)
+    else:
+        return JsonResponse({
+            'error': 'Método no permitido. Use GET'
+        }, status=405)
+
+
