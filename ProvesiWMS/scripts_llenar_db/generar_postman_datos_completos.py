@@ -23,6 +23,41 @@ def generar_coleccion_completa():
     
     requests = []
     
+    # 0. Login - Obtener JWT Token
+    requests.append({
+        "name": "0. Login - Obtener JWT Token",
+        "request": {
+            "method": "POST",
+            "header": [{"key": "Content-Type", "value": "application/json"}],
+            "body": {
+                "mode": "raw",
+                "raw": json.dumps({
+                    "username": "admin",
+                    "password": "admin123"
+                }, indent=2)
+            },
+            "url": {
+                "raw": f"{base_url}/auth/login/",
+                "protocol": "https",
+                "host": [alb_url],
+                "path": ["inventario", "auth", "login", ""]
+            }
+        },
+        "response": [],
+        "event": [
+            {
+                "listen": "test",
+                "script": {
+                    "exec": [
+                        "var jsonData = pm.response.json();",
+                        "pm.collectionVariables.set('jwt_token', jsonData.token);"
+                    ],
+                    "type": "text/javascript"
+                }
+            }
+        ]
+    })
+    
     # 1. Bodegas (10 total) - PRIMERO porque las ubicaciones las necesitan
     ciudades = [
         ("Bogota", "Zona Industrial Norte"),
@@ -42,7 +77,10 @@ def generar_coleccion_completa():
             "name": f"Bodega {i}: {ciudad}",
             "request": {
                 "method": "POST",
-                "header": [{"key": "Content-Type", "value": "application/json"}],
+                "header": [
+                    {"key": "Content-Type", "value": "application/json"},
+                    {"key": "Authorization", "value": "Bearer {{jwt_token}}"}
+                ],
                 "body": {
                     "mode": "raw",
                     "raw": json.dumps({
@@ -101,7 +139,10 @@ def generar_coleccion_completa():
             "name": f"Producto {i+1}: {nombre_final}",
             "request": {
                 "method": "POST",
-                "header": [{"key": "Content-Type", "value": "application/json"}],
+                "header": [
+                    {"key": "Content-Type", "value": "application/json"},
+                    {"key": "Authorization", "value": "Bearer {{jwt_token}}"}
+                ],
                 "body": {
                     "mode": "raw",
                     "raw": json.dumps({
@@ -152,7 +193,10 @@ def generar_coleccion_completa():
                 "name": f"B{bodega_num} Ubicacion {j+1}: {pasillo}-{estante}-{nivel}",
                 "request": {
                     "method": "POST",
-                    "header": [{"key": "Content-Type", "value": "application/json"}],
+                    "header": [
+                        {"key": "Content-Type", "value": "application/json"},
+                        {"key": "Authorization", "value": "Bearer {{jwt_token}}"}
+                    ],
                     "body": {
                         "mode": "raw",
                         "raw": raw_body
